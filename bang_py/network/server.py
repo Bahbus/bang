@@ -1,0 +1,57 @@
+import asyncio
+import websockets
+from dataclasses import dataclass, field
+from typing import Dict, List
+
+from ..game_manager import GameManager
+from ..player import Player, Role
+
+@dataclass
+class Connection:
+    websocket: websockets.WebSocketServerProtocol
+    player: Player
+
+def _serialize_players(players: List[Player]) -> List[dict]:
+    return [
+        {"name": p.name, "health": p.health, "role": p.role.name}
+        for p in players
+    ]
+
+class BangServer:
+    def __init__(self, host: str = "localhost", port: int = 8765):
+        self.host = host
+        self.port = port
+        self.game = GameManager()
+        self.connections: Dict[websockets.WebSocketServerProtocol, Connection] = {}
+
+    async def handler(self, websocket):
+        await websocket.send("Enter your name:")
+        name = await websocket.recv()
+        player = Player(name, role=Role.OUTLAW)
+        self.game.add_player(player)
+        self.connections[websocket] = Connection(websocket, player)
+        await websocket.send("Joined game as {}".format(player.name))
+        await self.broadcast_players()
+        try:
+            async for message in websocket:
+                if message == "end_turn":
+                    self.game.end_turn()
+                    await self.broadcast_players()
+        finally:
+            self.game.players.remove(player)
+            del self.connections[websocket]
+            await self.broadcast_players()
+
+    async def broadcast_players(self):
+        data = str(_serialize_players(self.game.players))
+        for conn in list(self.connections.values()):
+            await conn.websocket.send(data)
+
+    async def start(self):
+        async with websockets.serve(self.handler, self.host, self.port):
+            print(f"Server started on {self.host}:{self.port}")
+            await asyncio.Future()  # run forever
+
+if __name__ == "__main__":
+    server = BangServer()
+    asyncio.run(server.start())

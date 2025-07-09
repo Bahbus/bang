@@ -1,5 +1,0 @@
-[gd_scene format=3]
-
-[node name="Main" type="Node"]
-
-[node name="GameManager" parent="." instance=ExtResource("res://scenes/GameManager.tscn")]

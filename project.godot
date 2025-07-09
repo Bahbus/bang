@@ -1,9 +1,0 @@
-; Engine configuration file.
-; It's not advised to edit this file manually, as it can be
-; automatically replaced by the engine.
-
-config_version=5
-
-[application]
-config/name="Bang Multiplayer"
-run/main_scene="res://main.tscn"
