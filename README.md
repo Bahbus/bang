@@ -22,14 +22,3 @@ python3 -m bang_py.network.client
 You will be prompted for a name and then receive updates about the game state.
 
 This networking layer is experimental and only demonstrates joining the game and ending turns over websockets.
-
-## Running tests
-
-Install `pytest` and run the test suite:
-
-```bash
-pip install pytest
-pytest
-```
-
-A GitHub Actions workflow is provided to run these tests automatically on each push and pull request.
