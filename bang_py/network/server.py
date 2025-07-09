@@ -1,7 +1,8 @@
 import asyncio
+import json
 import random
 from websockets.server import serve, WebSocketServerProtocol
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List
 
 from ..game_manager import GameManager
@@ -50,7 +51,7 @@ class BangServer:
             await self.broadcast_players()
 
     async def broadcast_players(self):
-        data = str(_serialize_players(self.game.players))
+        data = json.dumps(_serialize_players(self.game.players))
         for conn in list(self.connections.values()):
             await conn.websocket.send(data)
 
