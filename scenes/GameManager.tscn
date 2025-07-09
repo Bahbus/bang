@@ -1,4 +1,0 @@
-[gd_scene format=3]
-
-[node name="GameManager" type="Node"]
-script = ExtResource("res://scripts/GameManager.gd")
