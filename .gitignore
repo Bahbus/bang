@@ -1,0 +1,30 @@
+# Python cache and artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# pytest cache
+.pytest_cache/
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# mypy
+.mypy_cache/
+
+# virtual environments
+venv/
+ENV/
+.env
+.venv/
+
+# distribution files
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# logs
+*.log
+
