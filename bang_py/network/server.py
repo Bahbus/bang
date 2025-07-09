@@ -1,6 +1,6 @@
 import asyncio
 import random
-import websockets
+from websockets.server import serve, WebSocketServerProtocol
 from dataclasses import dataclass, field
 from typing import Dict, List
 
@@ -9,7 +9,7 @@ from ..player import Player, Role
 
 @dataclass
 class Connection:
-    websocket: websockets.WebSocketServerProtocol
+    websocket: WebSocketServerProtocol
     player: Player
 
 def _serialize_players(players: List[Player]) -> List[dict]:
@@ -24,7 +24,7 @@ class BangServer:
         self.port = port
         self.room_code = room_code or str(random.randint(1000, 9999))
         self.game = GameManager()
-        self.connections: Dict[websockets.WebSocketServerProtocol, Connection] = {}
+        self.connections: Dict[WebSocketServerProtocol, Connection] = {}
 
     async def handler(self, websocket):
         await websocket.send("Enter room code:")
@@ -55,7 +55,7 @@ class BangServer:
             await conn.websocket.send(data)
 
     async def start(self):
-        async with websockets.serve(self.handler, self.host, self.port):
+        async with serve(self.handler, self.host, self.port):
             print(f"Server started on {self.host}:{self.port} (code: {self.room_code})")
             await asyncio.Future()  # run forever
 
