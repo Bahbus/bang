@@ -1,4 +1,5 @@
 import asyncio
+import random
 import websockets
 from dataclasses import dataclass, field
 from typing import Dict, List
@@ -18,13 +19,19 @@ def _serialize_players(players: List[Player]) -> List[dict]:
     ]
 
 class BangServer:
-    def __init__(self, host: str = "localhost", port: int = 8765):
+    def __init__(self, host: str = "localhost", port: int = 8765, room_code: str | None = None):
         self.host = host
         self.port = port
+        self.room_code = room_code or str(random.randint(1000, 9999))
         self.game = GameManager()
         self.connections: Dict[websockets.WebSocketServerProtocol, Connection] = {}
 
     async def handler(self, websocket):
+        await websocket.send("Enter room code:")
+        code = await websocket.recv()
+        if code != self.room_code:
+            await websocket.send("Invalid room code")
+            return
         await websocket.send("Enter your name:")
         name = await websocket.recv()
         player = Player(name, role=Role.OUTLAW)
@@ -49,7 +56,7 @@ class BangServer:
 
     async def start(self):
         async with websockets.serve(self.handler, self.host, self.port):
-            print(f"Server started on {self.host}:{self.port}")
+            print(f"Server started on {self.host}:{self.port} (code: {self.room_code})")
             await asyncio.Future()  # run forever
 
 if __name__ == "__main__":
