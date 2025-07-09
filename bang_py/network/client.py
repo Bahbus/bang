@@ -1,4 +1,5 @@
 import asyncio
+import json
 import websockets
 
 async def main(uri: str = "ws://localhost:8765", room_code: str = "", name: str | None = None):
@@ -17,7 +18,11 @@ async def main(uri: str = "ws://localhost:8765", room_code: str = "", name: str 
         join_msg = await websocket.recv()
         print(join_msg)
         async for message in websocket:
-            print("Game state:", message)
+            try:
+                data = json.loads(message)
+            except json.JSONDecodeError:
+                data = message
+            print("Game state:", data)
 
 if __name__ == "__main__":
     asyncio.run(main())

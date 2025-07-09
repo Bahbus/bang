@@ -1,4 +1,5 @@
 import asyncio
+import json
 import random
 import threading
 import queue
@@ -48,7 +49,11 @@ class ClientThread(threading.Thread):
             join_msg = await self.websocket.recv()
             self.msg_queue.put(join_msg)
             async for message in self.websocket:
-                self.msg_queue.put(message)
+                try:
+                    data = json.loads(message)
+                except json.JSONDecodeError:
+                    data = message
+                self.msg_queue.put(str(data))
         except Exception as exc:
             self.msg_queue.put(f"Connection error: {exc}")
         finally:
