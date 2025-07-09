@@ -28,36 +28,44 @@ class ClientThread(threading.Thread):
         self.name = name
         self.msg_queue = msg_queue
         self.loop = asyncio.new_event_loop()
+        self.websocket: websockets.WebSocketClientProtocol | None = None
 
     def run(self) -> None:
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self._run())
+        self.loop.close()
 
     async def _run(self) -> None:
         try:
-            async with websockets.connect(self.uri) as websocket:
-                await websocket.recv()  # prompt for code
-                await websocket.send(self.room_code)
-                response = await websocket.recv()
-                if response != "Enter your name:":
-                    self.msg_queue.put(response)
-                    return
-                await websocket.send(self.name)
-                join_msg = await websocket.recv()
-                self.msg_queue.put(join_msg)
-                async for message in websocket:
-                    self.msg_queue.put(message)
+            self.websocket = await websockets.connect(self.uri)
+            await self.websocket.recv()  # prompt for code
+            await self.websocket.send(self.room_code)
+            response = await self.websocket.recv()
+            if response != "Enter your name:":
+                self.msg_queue.put(response)
+                return
+            await self.websocket.send(self.name)
+            join_msg = await self.websocket.recv()
+            self.msg_queue.put(join_msg)
+            async for message in self.websocket:
+                self.msg_queue.put(message)
         except Exception as exc:
             self.msg_queue.put(f"Connection error: {exc}")
+        finally:
+            if self.websocket:
+                await self.websocket.close()
+                self.websocket = None
 
     def send_end_turn(self) -> None:
         if self.loop.is_running():
             asyncio.run_coroutine_threadsafe(self._send("end_turn"), self.loop)
 
     async def _send(self, msg: str) -> None:
+        if not self.websocket or self.websocket.closed:
+            self.msg_queue.put("Send error: not connected")
+            return
         try:
-            async with websockets.connect(self.uri) as websocket:
-                await websocket.send(msg)
+            await self.websocket.send(msg)
         except Exception as exc:
             self.msg_queue.put(f"Send error: {exc}")
 
