@@ -1,0 +1,18 @@
+# Agent Guidelines
+
+This repository contains a Python implementation of the Bang card game, a small
+websocket server, and a Tkinter UI. To maintain consistency, follow these rules
+when making changes.
+
+## Development
+- Use Python 3.10+.
+- After modifying code, run `pytest` from the repository root to ensure tests
+  pass.
+
+## Style
+- Follow standard PEP8 conventions and keep lines under 100 characters.
+- Include type hints and docstrings for public classes and functions when
+  appropriate.
+
+## Pull Requests
+- Summarize key changes and mention test results in the PR body.
