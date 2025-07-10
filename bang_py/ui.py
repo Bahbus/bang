@@ -163,19 +163,36 @@ class BangUI:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.text = tk.Text(self.root, height=15, width=40, state="disabled")
-        self.text.grid(row=0, column=0, columnspan=2)
-        play_btn = ttk.Button(self.root, text="Play Card 0", command=self._play_first)
-        play_btn.grid(row=1, column=0, pady=5)
+        self.players_text = tk.Text(self.root, height=5, width=40, state="disabled")
+        self.players_text.grid(row=0, column=0, columnspan=2)
+
+        self.text = tk.Text(self.root, height=10, width=40, state="disabled")
+        self.text.grid(row=1, column=0, columnspan=2)
+
+        self.hand_frame = ttk.Frame(self.root)
+        self.hand_frame.grid(row=2, column=0, columnspan=2, pady=5)
+
         end_btn = ttk.Button(self.root, text="End Turn", command=self._end_turn)
-        end_btn.grid(row=1, column=1, pady=5)
+        end_btn.grid(row=3, column=0, columnspan=2, pady=5)
 
     def _process_queue(self) -> None:
         while not self.msg_queue.empty():
             msg = self.msg_queue.get()
-            self.text.configure(state="normal")
-            self.text.insert(tk.END, msg + "\n")
-            self.text.configure(state="disabled")
+            try:
+                data = json.loads(msg)
+            except json.JSONDecodeError:
+                self._append_message(msg)
+                continue
+
+            if isinstance(data, dict) and "players" in data:
+                self._update_players(data["players"])
+                self._update_hand(data.get("hand", []))
+                if "message" in data:
+                    self._append_message(data["message"])
+                    if any(k in data["message"].lower() for k in ["win", "eliminated"]):
+                        messagebox.showinfo("Game Update", data["message"])
+            else:
+                self._append_message(msg)
         if self.client and self.client.is_alive():
             self.root.after(100, self._process_queue)
 
@@ -183,10 +200,36 @@ class BangUI:
         if self.client:
             self.client.send_end_turn()
 
-    def _play_first(self) -> None:
+    def _play_card(self, index: int) -> None:
         if self.client and self.client.websocket:
-            payload = json.dumps({"action": "play_card", "card_index": 0})
+            payload = json.dumps({"action": "play_card", "card_index": index})
             asyncio.run_coroutine_threadsafe(self.client.websocket.send(payload), self.client.loop)
+
+    def _update_hand(self, cards: list[str]) -> None:
+        for widget in self.hand_frame.winfo_children():
+            widget.destroy()
+        for i, card in enumerate(cards):
+            btn = ttk.Button(self.hand_frame, text=card, command=lambda idx=i: self._play_card(idx))
+            btn.grid(row=0, column=i, padx=2)
+
+    def _update_players(self, players: list[dict]) -> None:
+        lines = []
+        for idx, p in enumerate(players):
+            equip = ", ".join(p.get("equipment", []))
+            line = f"{idx}: {p['name']} ({p['role']}) HP {p['health']}"
+            if equip:
+                line += f" [{equip}]"
+            lines.append(line)
+        text = "\n".join(lines)
+        self.players_text.configure(state="normal")
+        self.players_text.delete("1.0", tk.END)
+        self.players_text.insert(tk.END, text)
+        self.players_text.configure(state="disabled")
+
+    def _append_message(self, msg: str) -> None:
+        self.text.configure(state="normal")
+        self.text.insert(tk.END, msg + "\n")
+        self.text.configure(state="disabled")
 
     def run(self) -> None:
         self.root.mainloop()

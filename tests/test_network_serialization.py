@@ -11,8 +11,18 @@ def test_serialize_players_json_roundtrip():
     json_str = json.dumps(serialized)
     loaded = json.loads(json_str)
     assert loaded == [
-        {"name": "Alice", "health": players[0].health, "role": "OUTLAW"},
-        {"name": "Bob", "health": players[1].health, "role": "SHERIFF"},
+        {
+            "name": "Alice",
+            "health": players[0].health,
+            "role": "OUTLAW",
+            "equipment": [],
+        },
+        {
+            "name": "Bob",
+            "health": players[1].health,
+            "role": "SHERIFF",
+            "equipment": [],
+        },
     ]
 
 
@@ -20,5 +30,12 @@ def test_serialize_players_with_health_changes():
     sheriff = Player("Bill", role=Role.SHERIFF)
     sheriff.health = 3
     data = _serialize_players([sheriff])
-    assert data == [{"name": "Bill", "health": 3, "role": "SHERIFF"}]
+    assert data == [
+        {
+            "name": "Bill",
+            "health": 3,
+            "role": "SHERIFF",
+            "equipment": [],
+        }
+    ]
 
