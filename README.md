@@ -34,3 +34,31 @@ bang-ui
 
 Enter your name and choose **Host Game** or **Join Game**. Hosting launches a local server and shows a room code to share with friends. Joining requires the host address, port, and the room code.
 
+## Characters
+
+Players can now be assigned one of the classic Bang characters. Each character has a unique ability that modifies the rules of play. The full roster from the base game is provided:
+
+- Bart Cassidy
+- Black Jack
+- Calamity Janet
+- El Gringo
+- Jesse Jones
+- Jourdonnais
+- Kit Carlson
+- Lucky Duke
+- Paul Regret
+- Pedro Ramirez
+- Rose Doolan
+- Sid Ketchum
+- Slab the Killer
+- Suzy Lafayette
+- Vulture Sam
+- Willy the Kid
+
+Create a player with a character using:
+
+```python
+from bang_py.characters import RoseDoolan
+player = Player("Rose", character=RoseDoolan())
+```
+

@@ -5,6 +5,7 @@ from typing import Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from .cards.equipment import EquipmentCard
+    from .characters import Character
 
 
 class Role(Enum):
@@ -18,6 +19,7 @@ class Role(Enum):
 class Player:
     name: str
     role: Role = Role.OUTLAW
+    character: "Character | None" = None
     max_health: int = 4
     health: int = field(init=False)
     metadata: dict = field(default_factory=dict)
@@ -48,6 +50,8 @@ class Player:
         bonus = 0
         for eq in self.equipment.values():
             bonus += getattr(eq, "range_modifier", 0)
+        if self.character is not None:
+            bonus += getattr(self.character, "range_modifier", 0)
         return bonus
 
     @property
@@ -56,6 +60,8 @@ class Player:
         bonus = 0
         for eq in self.equipment.values():
             bonus += getattr(eq, "distance_modifier", 0)
+        if self.character is not None:
+            bonus += getattr(self.character, "distance_modifier", 0)
         return bonus
 
     @property
