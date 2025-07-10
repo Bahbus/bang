@@ -3,6 +3,9 @@ from __future__ import annotations
 from .card import Card
 from ..player import Player
 from typing import TYPE_CHECKING
+from ..helpers import is_heart, is_spade_between
+from ..characters import Jourdonnais, LuckyDuke
+from .barrel import BarrelCard
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..deck import Deck
@@ -17,7 +20,17 @@ class BangCard(Card):
         if deck:
             barrel = target.equipment.get("Barrel")
             if barrel and getattr(barrel, "draw_check", None):
-                if barrel.draw_check(deck):
+                if barrel.draw_check(deck, target):
+                    target.metadata["dodged"] = True
+                    return
+            if isinstance(target.character, Jourdonnais):
+                if BarrelCard().draw_check(deck, target):
+                    target.metadata["dodged"] = True
+                    return
+            if isinstance(target.character, LuckyDuke):
+                card1 = deck.draw()
+                card2 = deck.draw()
+                if is_heart(card1) or is_heart(card2):
                     target.metadata["dodged"] = True
                     return
         target.take_damage(1)

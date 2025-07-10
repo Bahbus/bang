@@ -4,6 +4,7 @@ from .equipment import EquipmentCard
 from ..player import Player
 from typing import TYPE_CHECKING
 from ..helpers import is_spade_between
+from ..characters import LuckyDuke
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..deck import Deck
@@ -23,7 +24,12 @@ class DynamiteCard(EquipmentCard):
 
         Returns True if it exploded on the current player.
         """
-        card = deck.draw()
+        if isinstance(current.character, LuckyDuke):
+            c1 = deck.draw()
+            c2 = deck.draw()
+            card = c1 if not is_spade_between(c1, 2, 9) else c2
+        else:
+            card = deck.draw()
         current.equipment.pop(self.card_name, None)
         if is_spade_between(card, 2, 9):
             current.take_damage(3)

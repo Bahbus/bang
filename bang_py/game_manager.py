@@ -6,7 +6,22 @@ import random
 
 from .deck import Deck
 from .cards.card import Card
-from .characters import BartCassidy, JesseJones
+from .characters import (
+    BartCassidy,
+    BlackJack,
+    CalamityJanet,
+    ElGringo,
+    JesseJones,
+    Jourdonnais,
+    KitCarlson,
+    LuckyDuke,
+    PedroRamirez,
+    SidKetchum,
+    SuzyLafayette,
+    VultureSam,
+)
+from .cards.bang import BangCard
+from .cards.missed import MissedCard
 
 from .player import Player, Role
 
@@ -65,7 +80,8 @@ class GameManager:
                 player.hand.append(card)
 
     def draw_phase(self, player: Player) -> None:
-        if isinstance(player.character, JesseJones):
+        char = player.character
+        if isinstance(char, JesseJones):
             opponents = [p for p in self.players if p is not player and p.hand]
             if opponents:
                 source = random.choice(opponents)
@@ -73,6 +89,29 @@ class GameManager:
                 player.hand.append(card)
                 self.draw_card(player)
                 return
+        if isinstance(char, BlackJack):
+            first = self.deck.draw()
+            if first:
+                player.hand.append(first)
+            second = self.deck.draw()
+            if second:
+                player.hand.append(second)
+                if getattr(second, "suit", None) in ("Hearts", "Diamonds"):
+                    self.draw_card(player)
+            return
+        if isinstance(char, KitCarlson):
+            cards = [self.deck.draw(), self.deck.draw(), self.deck.draw()]
+            keep = [c for c in cards if c][:2]
+            for c in keep:
+                player.hand.append(c)
+            discard = next((c for c in cards if c and c not in keep), None)
+            if discard:
+                self.discard_pile.append(discard)
+            return
+        if isinstance(char, PedroRamirez) and self.discard_pile:
+            player.hand.append(self.discard_pile.pop())
+            self.draw_card(player)
+            return
         self.draw_card(player, 2)
 
     def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
@@ -80,29 +119,58 @@ class GameManager:
             return
         player.hand.remove(card)
         before = target.health if target else None
-        card.play(target)
+        if isinstance(player.character, CalamityJanet) and isinstance(card, MissedCard) and target:
+            BangCard().play(target, self.deck)
+        else:
+            if isinstance(card, BangCard):
+                card.play(target, self.deck)
+            else:
+                card.play(target)
         if target and before is not None and target.health < before:
-            self.on_player_damaged(target)
+            self.on_player_damaged(target, player)
         if target and before is not None and target.health > before:
             self.on_player_healed(target)
         self.discard_pile.append(card)
+        if isinstance(player.character, SuzyLafayette) and not player.hand:
+            self.draw_card(player)
 
     def discard_card(self, player: Player, card: Card) -> None:
         if card in player.hand:
             player.hand.remove(card)
             self.discard_pile.append(card)
+            if isinstance(player.character, SuzyLafayette) and not player.hand:
+                self.draw_card(player)
+
+    def sid_ketchum_ability(self, player: Player) -> None:
+        if not isinstance(player.character, SidKetchum):
+            return
+        if len(player.hand) < 2 or player.health >= player.max_health:
+            return
+        for _ in range(2):
+            card = player.hand.pop()
+            self.discard_pile.append(card)
+        player.heal(1)
+        self.on_player_healed(player)
 
     def _get_player_by_index(self, idx: int) -> Optional[Player]:
         if 0 <= idx < len(self.players):
             return self.players[idx]
         return None
 
-    def on_player_damaged(self, player: Player) -> None:
+    def on_player_damaged(self, player: Player, source: Optional[Player] = None) -> None:
         for cb in self.player_damaged_listeners:
             cb(player)
-        if player.character and player.character.__class__.__name__ == "BartCassidy":
+        if isinstance(player.character, BartCassidy):
             self.draw_card(player)
+        if isinstance(player.character, ElGringo) and source and source.hand:
+            stolen = random.choice(source.hand)
+            source.hand.remove(stolen)
+            player.hand.append(stolen)
         if player.health <= 0:
+            for p in self.players:
+                if p is not player and isinstance(p.character, VultureSam):
+                    p.hand.extend(player.hand)
+                    player.hand.clear()
             self._check_win_conditions()
 
     def on_player_healed(self, player: Player) -> None:
