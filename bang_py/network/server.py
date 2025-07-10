@@ -60,6 +60,11 @@ class BangServer:
             print(f"Server started on {self.host}:{self.port} (code: {self.room_code})")
             await asyncio.Future()  # run forever
 
-if __name__ == "__main__":
+def main() -> None:
+    """Entry point for the ``bang-server`` console script."""
     server = BangServer()
     asyncio.run(server.start())
+
+
+if __name__ == "__main__":
+    main()
