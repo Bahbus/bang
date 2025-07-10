@@ -13,16 +13,30 @@ from .network.server import BangServer
 class ServerThread(threading.Thread):
     """Run a :class:`BangServer` in a daemon thread for the UI."""
 
-    def __init__(self, host: str, port: int, room_code: str, expansions: list[str]):
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        room_code: str,
+        expansions: list[str],
+        max_players: int,
+    ) -> None:
         super().__init__(daemon=True)
         self.host = host
         self.port = port
         self.room_code = room_code
         self.expansions = expansions
+        self.max_players = max_players
 
     def run(self) -> None:
         asyncio.run(
-            BangServer(self.host, self.port, self.room_code, self.expansions).start()
+            BangServer(
+                self.host,
+                self.port,
+                self.room_code,
+                self.expansions,
+                self.max_players,
+            ).start()
         )
 
 
@@ -99,6 +113,8 @@ class BangUI:
         self.exp_dodge_city = tk.BooleanVar(value=False)
         self.exp_high_noon = tk.BooleanVar(value=False)
         self.exp_fistful = tk.BooleanVar(value=False)
+        self.keybindings: dict[str, str] = {"end_turn": "e"}
+        self._bound_key = ""
         self._build_start_menu()
 
     def _build_start_menu(self) -> None:
@@ -130,7 +146,15 @@ class BangUI:
         ttk.Checkbutton(win, text="Dodge City", variable=self.exp_dodge_city).grid(row=2, column=1, sticky="w")
         ttk.Checkbutton(win, text="High Noon", variable=self.exp_high_noon).grid(row=3, column=1, sticky="w")
         ttk.Checkbutton(win, text="Fistful of Cards", variable=self.exp_fistful).grid(row=4, column=1, sticky="w")
-        ttk.Button(win, text="Close", command=win.destroy).grid(row=5, column=0, columnspan=2, pady=5)
+        ttk.Label(win, text="End Turn Key").grid(row=5, column=0, sticky="w")
+        self.end_turn_key_var = tk.StringVar(value=self.keybindings.get("end_turn", "e"))
+        ttk.Entry(win, textvariable=self.end_turn_key_var, width=5).grid(row=5, column=1, sticky="w")
+
+        def save_and_close() -> None:
+            self.keybindings["end_turn"] = self.end_turn_key_var.get().strip() or "e"
+            win.destroy()
+
+        ttk.Button(win, text="Save", command=save_and_close).grid(row=6, column=0, columnspan=2, pady=5)
 
     def _host_menu(self) -> None:
         name = self.name_var.get().strip()
@@ -142,14 +166,23 @@ class BangUI:
             widget.destroy()
 
         self.port_var = tk.StringVar(value="8765")
+        self.max_players_var = tk.StringVar(value="7")
         ttk.Label(self.root, text="Host Port:").grid(row=0, column=0, sticky="e")
         ttk.Entry(self.root, textvariable=self.port_var).grid(row=0, column=1)
+        ttk.Label(self.root, text="Max Players:").grid(row=1, column=0, sticky="e")
+        ttk.Entry(self.root, textvariable=self.max_players_var).grid(row=1, column=1)
+
+        ttk.Label(self.root, text="Expansions:").grid(row=2, column=0, sticky="w")
+        ttk.Checkbutton(self.root, text="Dodge City", variable=self.exp_dodge_city).grid(row=2, column=1, sticky="w")
+        ttk.Checkbutton(self.root, text="High Noon", variable=self.exp_high_noon).grid(row=3, column=1, sticky="w")
+        ttk.Checkbutton(self.root, text="Fistful of Cards", variable=self.exp_fistful).grid(row=4, column=1, sticky="w")
 
         start_btn = ttk.Button(self.root, text="Start", command=self._start_host)
-        start_btn.grid(row=1, column=0, columnspan=2, pady=5)
+        start_btn.grid(row=5, column=0, columnspan=2, pady=5)
 
     def _start_host(self) -> None:
         port = int(self.port_var.get())
+        max_players = int(self.max_players_var.get())
         room_code = str(random.randint(1000, 9999))
         expansions = []
         if self.exp_dodge_city.get():
@@ -158,7 +191,7 @@ class BangUI:
             expansions.append("high_noon")
         if self.exp_fistful.get():
             expansions.append("fistful_of_cards")
-        self.server_thread = ServerThread("", port, room_code, expansions)
+        self.server_thread = ServerThread("", port, room_code, expansions, max_players)
         self.server_thread.start()
         uri = f"ws://localhost:{port}"
         self._start_client(uri, room_code)
@@ -199,6 +232,7 @@ class BangUI:
         self.client = ClientThread(uri, code, name, self.msg_queue)
         self.client.start()
         self._build_game_view()
+        self._bind_keys()
         self.root.after(100, self._process_queue)
 
     def _build_game_view(self) -> None:
@@ -272,6 +306,13 @@ class BangUI:
         self.text.configure(state="normal")
         self.text.insert(tk.END, msg + "\n")
         self.text.configure(state="disabled")
+
+    def _bind_keys(self) -> None:
+        if self._bound_key:
+            self.root.unbind_all(f"<{self._bound_key}>")
+        key = self.keybindings.get("end_turn", "e")
+        self.root.bind_all(f"<{key}>", lambda _e: self._end_turn())
+        self._bound_key = key
 
     def run(self) -> None:
         self.root.mainloop()

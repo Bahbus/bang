@@ -33,8 +33,9 @@ bang-ui
 ```
 
 Enter your name and choose **Host Game** or **Join Game**. Hosting launches a local
-server and shows a room code to share with friends. Joining requires the host
-address, port, and the room code.
+server and shows a room code to share with friends. The host screen now lets you
+set the maximum number of players and which expansions to enable. Joining requires
+the host address, port, and the room code.
 
 Once connected you will see:
 
@@ -42,8 +43,9 @@ Once connected you will see:
 2. A log area for game messages.
 3. Buttons representing the cards in your hand that can be clicked to play them.
 
-Use the **End Turn** button when you are finished. Win or elimination messages are
-shown both in the log and as a popup dialog.
+Use the **End Turn** button or press the configured key (default `e`) when you are
+finished. Win or elimination messages are shown both in the log and as a popup
+dialog.
 
 ## Characters
 
