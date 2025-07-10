@@ -31,6 +31,7 @@ def _serialize_players(players: List[Player]) -> List[dict]:
     ]
 
 class BangServer:
+    """Run a websocket server for a single Bang game and manage clients."""
     def __init__(self, host: str = "localhost", port: int = 8765, room_code: str | None = None):
         self.host = host
         self.port = port
@@ -41,7 +42,8 @@ class BangServer:
         self.game.player_healed_listeners.append(self._on_player_healed)
         self.game.game_over_listeners.append(self._on_game_over)
 
-    async def handler(self, websocket):
+    async def handler(self, websocket: WebSocketServerProtocol) -> None:
+        """Register a new client and process game commands sent over the socket."""
         await websocket.send("Enter room code:")
         code = await websocket.recv()
         if code != self.room_code:
