@@ -20,6 +20,7 @@ from .characters import (
     SidKetchum,
     SuzyLafayette,
     VultureSam,
+    WillyTheKid,
 )
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
@@ -39,6 +40,7 @@ class GameManager:
     player_damaged_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     player_healed_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     turn_started_listeners: List[Callable[[Player], None]] = field(default_factory=list)
+    game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
 
     def add_player(self, player: Player) -> None:
         self.players.append(player)
@@ -58,12 +60,15 @@ class GameManager:
         idx = self.turn_order[self.current_turn]
         player = self.players[idx]
         self.draw_phase(player)
+        player.metadata["bangs_played"] = 0
         for cb in self.turn_started_listeners:
             cb(player)
 
     def end_turn(self) -> None:
         if not self.turn_order:
             return
+        idx = self.turn_order[self.current_turn]
+        self.discard_phase(self.players[idx])
         self.current_turn = (self.current_turn + 1) % len(self.turn_order)
         self._begin_turn()
 
@@ -115,9 +120,27 @@ class GameManager:
             return
         self.draw_card(player, 2)
 
+    def discard_phase(self, player: Player) -> None:
+        """Discard down to the player's hand limit at the end of their turn."""
+        limit = player.health
+        while len(player.hand) > limit:
+            card = player.hand.pop()
+            self.discard_pile.append(card)
+
     def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
         if card not in player.hand:
             return
+        # Determine if this card counts as a Bang!
+        is_bang = isinstance(card, BangCard) or (
+            isinstance(player.character, CalamityJanet) and isinstance(card, MissedCard) and target
+        )
+        if is_bang:
+            count = int(player.metadata.get("bangs_played", 0))
+            gun = player.equipment.get("Gun")
+            unlimited = isinstance(player.character, WillyTheKid) or getattr(gun, "unlimited_bang", False)
+            if count >= 1 and not unlimited:
+                # Cannot play more Bang! cards this turn
+                return
         player.hand.remove(card)
         before = target.health if target else None
         if isinstance(player.character, CalamityJanet) and isinstance(card, MissedCard) and target:
@@ -132,6 +155,8 @@ class GameManager:
         if target and before is not None and target.health > before:
             self.on_player_healed(target)
         self.discard_pile.append(card)
+        if is_bang:
+            player.metadata["bangs_played"] = int(player.metadata.get("bangs_played", 0)) + 1
         if isinstance(player.character, SuzyLafayette) and not player.hand:
             self.draw_card(player)
 
@@ -172,24 +197,29 @@ class GameManager:
                 if p is not player and isinstance(p.character, VultureSam):
                     p.hand.extend(player.hand)
                     player.hand.clear()
-            self._check_win_conditions()
+            result = self._check_win_conditions()
 
     def on_player_healed(self, player: Player) -> None:
         for cb in self.player_healed_listeners:
             cb(player)
 
-    def _check_win_conditions(self) -> None:
+    def _check_win_conditions(self) -> Optional[str]:
         alive = [p for p in self.players if p.is_alive()]
         self.turn_order = [i for i in self.turn_order if self.players[i].is_alive()]
         sheriff_alive = any(p.role == Role.SHERIFF for p in alive)
         outlaws_alive = any(p.role == Role.OUTLAW for p in alive)
         renegade_alive = any(p.role == Role.RENEGADE for p in alive)
 
+        result = None
         if not sheriff_alive:
             if len(alive) == 1 and alive[0].role == Role.RENEGADE:
-                print("Renegade wins!")
+                result = "Renegade wins!"
             else:
-                print("Outlaws win!")
+                result = "Outlaws win!"
         elif not outlaws_alive and not renegade_alive:
-            print("Sheriff and Deputies win!")
+            result = "Sheriff and Deputies win!"
+        if result:
+            for cb in self.game_over_listeners:
+                cb(result)
+        return result
 
