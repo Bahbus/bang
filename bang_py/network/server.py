@@ -2,7 +2,7 @@ import asyncio
 import json
 import random
 from dataclasses import dataclass
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 try:  # Optional websockets import for test environments
     from websockets.server import serve, WebSocketServerProtocol
@@ -31,6 +31,9 @@ class BangServer:
         self.room_code = room_code or str(random.randint(1000, 9999))
         self.game = GameManager()
         self.connections: Dict[WebSocketServerProtocol, Connection] = {}
+        self.game.player_damaged_listeners.append(self._on_player_damaged)
+        self.game.player_healed_listeners.append(self._on_player_healed)
+        self.game.game_over_listeners.append(self._on_game_over)
 
     async def handler(self, websocket):
         await websocket.send("Enter room code:")
@@ -44,7 +47,7 @@ class BangServer:
         self.game.add_player(player)
         self.connections[websocket] = Connection(websocket, player)
         await websocket.send("Joined game as {}".format(player.name))
-        await self.broadcast_players()
+        await self.broadcast_state()
         try:
             async for message in websocket:
                 try:
@@ -53,7 +56,19 @@ class BangServer:
                     data = message
                 if data == "end_turn":
                     self.game.end_turn()
-                    await self.broadcast_players()
+                    await self.broadcast_state()
+                elif isinstance(data, dict) and data.get("action") == "draw":
+                    num = int(data.get("num", 1))
+                    player = self.connections[websocket].player
+                    self.game.draw_card(player, num)
+                    await self.broadcast_state()
+                elif isinstance(data, dict) and data.get("action") == "discard":
+                    idx = data.get("card_index")
+                    player = self.connections[websocket].player
+                    if idx is not None and 0 <= idx < len(player.hand):
+                        card = player.hand[idx]
+                        self.game.discard_card(player, card)
+                        await self.broadcast_state()
                 elif isinstance(data, dict) and data.get("action") == "play_card":
                     idx = data.get("card_index")
                     target_idx = data.get("target")
@@ -64,16 +79,37 @@ class BangServer:
                             target = self.game._get_player_by_index(target_idx)
                         card = player.hand[idx]
                         self.game.play_card(player, card, target)
-                        await self.broadcast_players()
+                        desc = f"{player.name} played {card.__class__.__name__}"
+                        if target:
+                            desc += f" on {target.name}"
+                        await self.broadcast_state(desc)
         finally:
             self.game.players.remove(player)
             del self.connections[websocket]
-            await self.broadcast_players()
+            await self.broadcast_state()
 
-    async def broadcast_players(self):
-        data = json.dumps(_serialize_players(self.game.players))
+    async def broadcast_state(self, message: str | None = None) -> None:
+        payload = {"players": _serialize_players(self.game.players)}
+        if message:
+            payload["message"] = message
+        data = json.dumps(payload)
         for conn in list(self.connections.values()):
             await conn.websocket.send(data)
+
+    def _on_player_damaged(self, player: Player) -> None:
+        msg = (
+            f"{player.name} was eliminated"
+            if not player.is_alive()
+            else f"{player.name} took damage ({player.health})"
+        )
+        asyncio.create_task(self.broadcast_state(msg))
+
+    def _on_player_healed(self, player: Player) -> None:
+        msg = f"{player.name} healed to {player.health}"
+        asyncio.create_task(self.broadcast_state(msg))
+
+    def _on_game_over(self, result: str) -> None:
+        asyncio.create_task(self.broadcast_state(result))
 
     async def start(self):
         if serve is None:
