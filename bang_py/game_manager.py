@@ -22,6 +22,13 @@ from .characters import (
     SuzyLafayette,
     VultureSam,
     WillyTheKid,
+    PixiePete,
+    JoseDelgado,
+    SeanMallory,
+    TequilaJoe,
+    VeraCuster,
+    ApacheKid,
+    GregDigger,
 )
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
@@ -35,6 +42,12 @@ from .cards.duel import DuelCard
 from .cards.general_store import GeneralStoreCard
 from .cards.saloon import SaloonCard
 from .cards.gatling import GatlingCard
+from .cards.punch import PunchCard
+from .cards.whisky import WhiskyCard
+from .cards.beer import BeerCard
+from .cards.high_noon_card import HighNoonCard
+from .cards.pony_express import PonyExpressCard
+from .cards.tequila import TequilaCard
 
 from .player import Player, Role
 
@@ -44,7 +57,8 @@ class GameManager:
     """Manage players, deck and discard pile while controlling turn order and
     triggering game events."""
     players: List[Player] = field(default_factory=list)
-    deck: Deck = field(default_factory=create_standard_deck)
+    deck: Deck | None = None
+    expansions: List[str] = field(default_factory=list)
     discard_pile: List[Card] = field(default_factory=list)
     current_turn: int = 0
     turn_order: List[int] = field(default_factory=list)
@@ -54,6 +68,10 @@ class GameManager:
     player_healed_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     turn_started_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        if self.deck is None:
+            self.deck = create_standard_deck(self.expansions)
 
     def add_player(self, player: Player) -> None:
         """Add a player to the game and record the game reference."""
@@ -153,11 +171,24 @@ class GameManager:
             player.hand.append(self.discard_pile.pop())
             self.draw_card(player)
             return
+        if isinstance(char, PixiePete):
+            self.draw_card(player, 3)
+            return
+        if isinstance(char, JoseDelgado):
+            equip = next((c for c in player.hand if hasattr(c, "slot")), None)
+            if equip:
+                player.hand.remove(equip)
+                self.discard_pile.append(equip)
+                self.draw_card(player, 2)
+            self.draw_card(player)
+            return
         self.draw_card(player, 2)
 
     def discard_phase(self, player: Player) -> None:
         """Discard down to the player's hand limit at the end of their turn."""
         limit = player.health
+        if isinstance(player.character, SeanMallory):
+            limit = 99
         while len(player.hand) > limit:
             card = player.hand.pop()
             self.discard_pile.append(card)
@@ -165,6 +196,11 @@ class GameManager:
     def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
         if card not in player.hand:
             return
+        if target and isinstance(target.character, ApacheKid):
+            if getattr(card, "suit", None) == "Diamonds":
+                player.hand.remove(card)
+                self.discard_pile.append(card)
+                return
         if isinstance(card, BangCard) and target:
             if player.distance_to(target) > player.attack_range:
                 return
@@ -222,6 +258,23 @@ class GameManager:
             card.play(player, player, game=self)
         elif isinstance(card, GatlingCard):
             card.play(player, player, game=self)
+        elif isinstance(card, WhiskyCard):
+            card.play(target or player, player, game=self)
+        elif isinstance(card, BeerCard):
+            before_hp = (target or player).health
+            card.play(target or player)
+            if isinstance(player.character, TequilaJoe) and (target or player).health < (target or player).max_health:
+                (target or player).heal(1)
+            if (target or player).health > before_hp:
+                self.on_player_healed(target or player)
+        elif isinstance(card, PonyExpressCard):
+            card.play(player, player, game=self)
+        elif isinstance(card, TequilaCard):
+            card.play(target or player, player, game=self)
+        elif isinstance(card, HighNoonCard):
+            card.play(player, player, game=self)
+        elif isinstance(card, PunchCard) and target:
+            card.play(target, player)
         else:
             card.play(target)
         if target and before is not None and target.health < before:
@@ -267,6 +320,12 @@ class GameManager:
             source.hand.remove(stolen)
             player.hand.append(stolen)
         if player.health <= 0:
+            for p in self.players:
+                if isinstance(p.character, GregDigger) and p.is_alive():
+                    before = p.health
+                    p.heal(2)
+                    if p.health > before:
+                        self.on_player_healed(p)
             for p in self.players:
                 if p is not player and isinstance(p.character, VultureSam):
                     p.hand.extend(player.hand)

@@ -109,6 +109,41 @@ class WillyTheKid(Character):
     description = "You may play any number of Bang! cards during your turn."
 
 
+class PixiePete(Character):
+    name = "Pixie Pete"
+    description = "During your draw phase, draw three cards instead of two."
+
+
+class JoseDelgado(Character):
+    name = "Jose Delgado"
+    description = "You may discard an equipment card to draw two cards."
+
+
+class SeanMallory(Character):
+    name = "Sean Mallory"
+    description = "You have no limit to the number of cards in hand."
+
+
+class TequilaJoe(Character):
+    name = "Tequila Joe"
+    description = "Beer cards heal you by 2 life points."
+
+
+class VeraCuster(Character):
+    name = "Vera Custer"
+    description = "At the start of your turn, copy another living character's ability."
+
+
+class ApacheKid(Character):
+    name = "Apache Kid"
+    description = "You are unaffected by Diamond suited cards."
+
+
+class GregDigger(Character):
+    name = "Greg Digger"
+    description = "Each time a player is eliminated, regain two life points."
+
+
 __all__ = [
     "Character",
     "BartCassidy",
@@ -127,4 +162,11 @@ __all__ = [
     "SuzyLafayette",
     "VultureSam",
     "WillyTheKid",
+    "PixiePete",
+    "JoseDelgado",
+    "SeanMallory",
+    "TequilaJoe",
+    "VeraCuster",
+    "ApacheKid",
+    "GregDigger",
 ]
