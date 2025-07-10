@@ -18,7 +18,8 @@ class BartCassidy(Character):
 class BlackJack(Character):
     name = "Black Jack"
     description = (
-        "During your draw phase, reveal the second card. If it's Heart or Diamond, draw one additional card."
+        "During your draw phase, reveal the second card. "
+        "If it's Heart or Diamond, draw one additional card."
     )
 
 
@@ -37,7 +38,8 @@ class ElGringo(Character):
 class JesseJones(Character):
     name = "Jesse Jones"
     description = (
-        "At the start of your draw phase, you may draw the first card from another player's hand instead of the deck."
+        "At the start of your draw phase, you may draw the first card from another "
+        "player's hand instead of the deck."
     )
 
 
@@ -69,7 +71,8 @@ class PaulRegret(Character):
 class PedroRamirez(Character):
     name = "Pedro Ramirez"
     description = (
-        "At the start of your draw phase, you may take the top card from the discard pile instead of drawing."
+        "At the start of your draw phase, you may take the top card from the discard "
+        "pile instead of drawing."
     )
 
 
