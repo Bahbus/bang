@@ -20,6 +20,7 @@ from bang_py.characters import (
 )
 from bang_py.game_manager import GameManager
 from bang_py.deck import Deck
+from bang_py.deck_factory import create_standard_deck
 from bang_py.cards.bang import BangCard
 from bang_py.cards.beer import BeerCard
 from bang_py.cards.missed import MissedCard
@@ -65,7 +66,9 @@ def test_all_character_classes_instantiable():
 
 
 def test_bart_cassidy_draw_on_damage():
-    gm = GameManager(deck=Deck([BangCard()]))
+    deck = create_standard_deck()
+    deck.cards.append(BangCard())
+    gm = GameManager(deck=deck)
     p1 = Player("Bart", character=BartCassidy())
     p2 = Player("Shooter")
     gm.add_player(p1)
@@ -76,8 +79,12 @@ def test_bart_cassidy_draw_on_damage():
 
 
 def test_black_jack_extra_draw():
-    deck = Deck([])
-    deck.cards = [BeerCard(suit="Clubs"), BeerCard(suit="Diamonds"), BeerCard(suit="Spades")]
+    deck = create_standard_deck()
+    deck.cards.extend([
+        BeerCard(suit="Clubs"),
+        BeerCard(suit="Diamonds"),
+        BeerCard(suit="Spades"),
+    ])
     gm = GameManager(deck=deck)
     p = Player("BJ", character=BlackJack())
     gm.add_player(p)
@@ -109,7 +116,8 @@ def test_el_gringo_steals_on_damage():
 
 
 def test_jesse_jones_draws_from_opponent():
-    deck = Deck([BangCard()])
+    deck = create_standard_deck()
+    deck.cards.append(BangCard())
     gm = GameManager(deck=deck)
     jj = Player("JJ", character=JesseJones())
     other = Player("Other")
@@ -122,16 +130,16 @@ def test_jesse_jones_draws_from_opponent():
 
 
 def test_jourdonnais_has_virtual_barrel():
-    deck = Deck([])
-    deck.cards = [BeerCard(suit="Hearts")]
+    deck = create_standard_deck()
+    deck.cards.append(BeerCard(suit="Hearts"))
     target = Player("Jour", character=Jourdonnais())
     BangCard().play(target, deck)
     assert target.metadata.get("dodged") is True
 
 
 def test_kit_carlson_draw_three_keep_two():
-    deck = Deck([])
-    deck.cards = [BangCard(), BeerCard(), MissedCard()]
+    deck = create_standard_deck()
+    deck.cards.extend([BangCard(), BeerCard(), MissedCard()])
     gm = GameManager(deck=deck)
     kit = Player("Kit", character=KitCarlson())
     gm.add_player(kit)
@@ -141,8 +149,8 @@ def test_kit_carlson_draw_three_keep_two():
 
 
 def test_lucky_duke_draw_two_on_jail():
-    deck = Deck([])
-    deck.cards = [BangCard(suit="Clubs"), BangCard(suit="Hearts")]
+    deck = create_standard_deck()
+    deck.cards.extend([BangCard(suit="Clubs"), BangCard(suit="Hearts")])
     player = Player("Lucky", character=LuckyDuke())
     jail = JailCard()
     jail.play(player)
@@ -151,7 +159,8 @@ def test_lucky_duke_draw_two_on_jail():
 
 
 def test_pedro_ramirez_takes_from_discard():
-    deck = Deck([BangCard()])
+    deck = create_standard_deck()
+    deck.cards.append(BangCard())
     gm = GameManager(deck=deck)
     gm.discard_pile.append(MissedCard())
     pedro = Player("Pedro", character=PedroRamirez())
@@ -172,7 +181,9 @@ def test_sid_ketchum_discard_two_to_heal():
 
 
 def test_suzy_lafayette_draws_when_empty():
-    gm = GameManager(deck=Deck([BangCard()]))
+    deck = create_standard_deck()
+    deck.cards.append(BangCard())
+    gm = GameManager(deck=deck)
     suzy = Player("Suzy", character=SuzyLafayette())
     target = Player("Target")
     gm.add_player(suzy)
