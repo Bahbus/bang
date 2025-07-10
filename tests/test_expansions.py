@@ -97,3 +97,36 @@ def test_tequila_joe_beer_heals_two():
     gm.play_card(tj, card, tj)
     assert tj.health == tj.max_health
 
+
+def test_bullet_characters_instantiable():
+    from bang_py.characters import (
+        BelleStar,
+        BillNoface,
+        ChuckWengam,
+        DocHolyday,
+        ElenaFuente,
+        HerbHunter,
+        MollyStark,
+        PatBrennan,
+        UncleWill,
+        JohnnyKisch,
+        ClausTheSaint,
+    )
+
+    chars = [
+        BelleStar,
+        BillNoface,
+        ChuckWengam,
+        DocHolyday,
+        ElenaFuente,
+        HerbHunter,
+        MollyStark,
+        PatBrennan,
+        UncleWill,
+        JohnnyKisch,
+        ClausTheSaint,
+    ]
+
+    instances = [cls() for cls in chars]
+    assert len(instances) == len(chars)
+
