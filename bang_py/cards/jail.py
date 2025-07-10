@@ -4,6 +4,7 @@ from .equipment import EquipmentCard
 from ..player import Player
 from typing import TYPE_CHECKING
 from ..helpers import is_heart
+from ..characters import LuckyDuke
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..deck import Deck
@@ -21,6 +22,12 @@ class JailCard(EquipmentCard):
 
         Returns True if the player's turn is skipped.
         """
-        card = deck.draw()
+        if isinstance(player.character, LuckyDuke):
+            card1 = deck.draw()
+            card2 = deck.draw()
+            result = is_heart(card1) or is_heart(card2)
+        else:
+            card1 = deck.draw()
+            result = is_heart(card1)
         player.equipment.pop(self.card_name, None)
-        return not is_heart(card)
+        return not result

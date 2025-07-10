@@ -34,7 +34,7 @@ def main() -> None:
 
     target = gm.players[1]
     bang.play(target)
-    gm.on_player_damaged(target)
+    gm.on_player_damaged(target, gm.players[0])
 
     beer.play(target)
     gm.on_player_healed(target)
