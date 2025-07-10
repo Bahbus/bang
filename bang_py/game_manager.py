@@ -30,6 +30,8 @@ from .player import Player, Role
 
 @dataclass
 class GameManager:
+    """Manage players, deck and discard pile while controlling turn order and
+    triggering game events."""
     players: List[Player] = field(default_factory=list)
     deck: Deck = field(default_factory=create_standard_deck)
     discard_pile: List[Card] = field(default_factory=list)
