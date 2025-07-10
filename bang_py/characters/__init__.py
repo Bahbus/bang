@@ -144,6 +144,83 @@ class GregDigger(Character):
     description = "Each time a player is eliminated, regain two life points."
 
 
+class BelleStar(Character):
+    name = "Belle Star"
+    description = (
+        "During your turn, cards in play in front of other players have no effect."
+    )
+
+
+class BillNoface(Character):
+    name = "Bill Noface"
+    description = (
+        "During phase 1 of your turn, draw 1 card plus 1 for each wound you have."
+    )
+
+
+class ChuckWengam(Character):
+    name = "Chuck Wengam"
+    description = (
+        "During your turn, you may lose 1 life point to draw 2 cards."
+    )
+
+
+class DocHolyday(Character):
+    name = "Doc Holyday"
+    description = (
+        "Once during your turn, discard any two cards for a Bang! that doesn't count toward your limit."
+    )
+
+
+class ElenaFuente(Character):
+    name = "Elena Fuente"
+    description = "You may play any card from your hand as a Missed!."
+    max_health_modifier = -1
+
+
+class HerbHunter(Character):
+    name = "Herb Hunter"
+    description = (
+        "Whenever another player is eliminated, draw two extra cards."
+    )
+
+
+class MollyStark(Character):
+    name = "Molly Stark"
+    description = (
+        "Each time you play or discard a Missed!, Beer or Bang! out of turn, draw a card."
+    )
+
+
+class PatBrennan(Character):
+    name = "Pat Brennan"
+    description = (
+        "During phase 1 of your turn, you may draw a card in play instead of from the deck."
+    )
+
+
+class UncleWill(Character):
+    name = "Uncle Will"
+    description = (
+        "Once during your turn, you may play any card from your hand as a General Store."
+    )
+
+
+class JohnnyKisch(Character):
+    name = "Johnny Kisch"
+    description = (
+        "Each time you put a card into play, discard all other cards with the same name in play."
+    )
+
+
+class ClausTheSaint(Character):
+    name = "Claus the Saint"
+    description = (
+        "During your draw phase, draw one more card than the number of players, keep two, then give one to each other player."
+    )
+    max_health_modifier = -1
+
+
 __all__ = [
     "Character",
     "BartCassidy",
@@ -169,4 +246,15 @@ __all__ = [
     "VeraCuster",
     "ApacheKid",
     "GregDigger",
+    "BelleStar",
+    "BillNoface",
+    "ChuckWengam",
+    "DocHolyday",
+    "ElenaFuente",
+    "HerbHunter",
+    "MollyStark",
+    "PatBrennan",
+    "UncleWill",
+    "JohnnyKisch",
+    "ClausTheSaint",
 ]

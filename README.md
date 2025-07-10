@@ -66,6 +66,28 @@ Players can now be assigned one of the classic Bang characters. Each character h
 - Vulture Sam
 - Willy the Kid
 
+Additional characters from the Dodge City and Bullet expansions are also
+included:
+
+- Belle Star
+- Bill Noface
+- Chuck Wengam
+- Doc Holyday
+- Elena Fuente
+- Greg Digger
+- Herb Hunter
+- Jose Delgado
+- Molly Stark
+- Pat Brennan
+- Pixie Pete
+- Sean Mallory
+- Tequila Joe
+- Vera Custer
+- Apache Kid
+- Johnny Kisch
+- Uncle Will
+- Claus the Saint
+
 Create a player with a character using:
 
 ```python
