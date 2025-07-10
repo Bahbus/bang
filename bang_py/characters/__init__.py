@@ -5,6 +5,7 @@ class Character:
     description: str = ""
     range_modifier: int = 0
     distance_modifier: int = 0
+    max_health_modifier: int = 0
 
 
 class BartCassidy(Character):

@@ -28,6 +28,12 @@ class Player:
     hand: List["Card"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
+        """Initialize max health from role and character modifiers."""
+        base = 5 if self.role == Role.SHERIFF else 4
+        self.max_health = base
+        if self.character is not None:
+            bonus = getattr(self.character, "max_health_modifier", 0)
+            self.max_health += int(bonus)
         self.health = self.max_health
 
     def equip(self, card: "EquipmentCard") -> None:

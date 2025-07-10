@@ -5,6 +5,8 @@ from bang_py.network.server import _serialize_players
 
 def test_serialize_players_json_roundtrip():
     players = [Player("Alice"), Player("Bob", role=Role.SHERIFF)]
+    assert players[0].max_health == 4
+    assert players[1].max_health == 5
     serialized = _serialize_players(players)
     json_str = json.dumps(serialized)
     loaded = json.loads(json_str)
