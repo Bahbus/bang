@@ -17,6 +17,13 @@ async def main(uri: str = "ws://localhost:8765", room_code: str = "", name: str 
         await websocket.send(name)
         join_msg = await websocket.recv()
         print(join_msg)
+
+        async def send_play(idx: int, target: int | None = None) -> None:
+            payload = {"action": "play_card", "card_index": idx}
+            if target is not None:
+                payload["target"] = target
+            await websocket.send(json.dumps(payload))
+
         async for message in websocket:
             try:
                 data = json.loads(message)

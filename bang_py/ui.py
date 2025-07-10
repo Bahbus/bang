@@ -165,8 +165,10 @@ class BangUI:
 
         self.text = tk.Text(self.root, height=15, width=40, state="disabled")
         self.text.grid(row=0, column=0, columnspan=2)
+        play_btn = ttk.Button(self.root, text="Play Card 0", command=self._play_first)
+        play_btn.grid(row=1, column=0, pady=5)
         end_btn = ttk.Button(self.root, text="End Turn", command=self._end_turn)
-        end_btn.grid(row=1, column=0, columnspan=2, pady=5)
+        end_btn.grid(row=1, column=1, pady=5)
 
     def _process_queue(self) -> None:
         while not self.msg_queue.empty():
@@ -180,6 +182,11 @@ class BangUI:
     def _end_turn(self) -> None:
         if self.client:
             self.client.send_end_turn()
+
+    def _play_first(self) -> None:
+        if self.client and self.client.websocket:
+            payload = json.dumps({"action": "play_card", "card_index": 0})
+            asyncio.run_coroutine_threadsafe(self.client.websocket.send(payload), self.client.loop)
 
     def run(self) -> None:
         self.root.mainloop()
