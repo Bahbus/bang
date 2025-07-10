@@ -15,3 +15,10 @@ def test_serialize_players_json_roundtrip():
         {"name": "Bob", "health": players[1].health, "role": "SHERIFF"},
     ]
 
+
+def test_serialize_players_with_health_changes():
+    sheriff = Player("Bill", role=Role.SHERIFF)
+    sheriff.health = 3
+    data = _serialize_players([sheriff])
+    assert data == [{"name": "Bill", "health": 3, "role": "SHERIFF"}]
+

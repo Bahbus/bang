@@ -2,7 +2,8 @@ import asyncio
 import json
 
 import pytest
-import websockets
+
+websockets = pytest.importorskip("websockets")
 
 from bang_py.network.server import BangServer
 from bang_py.cards.bang import BangCard
