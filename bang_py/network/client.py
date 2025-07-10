@@ -24,5 +24,11 @@ async def main(uri: str = "ws://localhost:8765", room_code: str = "", name: str 
                 data = message
             print("Game state:", data)
 
-if __name__ == "__main__":
+
+def run() -> None:
+    """Entry point for the ``bang-client`` console script."""
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    run()

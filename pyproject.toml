@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bang-game"
+version = "0.1.0"
+description = "Bang card game with optional websocket server and Tkinter UI"
+authors = [{name = "Unknown"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+dependencies = [
+    "websockets>=10.0",
+]
+
+[project.scripts]
+bang-server = "bang_py.network.server:main"
+bang-client = "bang_py.network.client:run"
+bang-ui = "bang_py.ui:main"
