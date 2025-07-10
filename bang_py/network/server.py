@@ -1,9 +1,14 @@
 import asyncio
 import json
 import random
-from websockets.server import serve, WebSocketServerProtocol
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Any
+
+try:  # Optional websockets import for test environments
+    from websockets.server import serve, WebSocketServerProtocol
+except ModuleNotFoundError:  # pragma: no cover - handled in start()
+    serve = None  # type: ignore[assignment]
+    WebSocketServerProtocol = Any  # type: ignore[assignment]
 
 from ..game_manager import GameManager
 from ..player import Player, Role
@@ -56,8 +61,14 @@ class BangServer:
             await conn.websocket.send(data)
 
     async def start(self):
+        if serve is None:
+            raise RuntimeError(
+                "websockets package is required to run the server"
+            )
         async with serve(self.handler, self.host, self.port):
-            print(f"Server started on {self.host}:{self.port} (code: {self.room_code})")
+            print(
+                f"Server started on {self.host}:{self.port} (code: {self.room_code})"
+            )
             await asyncio.Future()  # run forever
 
 def main() -> None:
