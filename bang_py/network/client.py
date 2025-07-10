@@ -24,12 +24,24 @@ async def main(uri: str = "ws://localhost:8765", room_code: str = "", name: str 
                 payload["target"] = target
             await websocket.send(json.dumps(payload))
 
+        async def send_draw(num: int = 1) -> None:
+            await websocket.send(json.dumps({"action": "draw", "num": num}))
+
+        async def send_discard(idx: int) -> None:
+            await websocket.send(json.dumps({"action": "discard", "card_index": idx}))
+
         async for message in websocket:
             try:
                 data = json.loads(message)
             except json.JSONDecodeError:
                 data = message
-            print("Game state:", data)
+            if isinstance(data, dict):
+                msg = data.get("message")
+                if msg:
+                    print(msg)
+                print("Players:", data.get("players"))
+            else:
+                print(data)
 
 
 def run() -> None:
