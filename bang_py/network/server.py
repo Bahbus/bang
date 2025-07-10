@@ -32,11 +32,18 @@ def _serialize_players(players: List[Player]) -> List[dict]:
 
 class BangServer:
     """Run a websocket server for a single Bang game and manage clients."""
-    def __init__(self, host: str = "localhost", port: int = 8765, room_code: str | None = None):
+
+    def __init__(
+        self,
+        host: str = "localhost",
+        port: int = 8765,
+        room_code: str | None = None,
+        expansions: list[str] | None = None,
+    ):
         self.host = host
         self.port = port
         self.room_code = room_code or str(random.randint(1000, 9999))
-        self.game = GameManager()
+        self.game = GameManager(expansions=expansions or [])
         self.connections: Dict[WebSocketServerProtocol, Connection] = {}
         self.game.player_damaged_listeners.append(self._on_player_damaged)
         self.game.player_healed_listeners.append(self._on_player_healed)

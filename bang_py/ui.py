@@ -12,14 +12,18 @@ from .network.server import BangServer
 
 class ServerThread(threading.Thread):
     """Run a :class:`BangServer` in a daemon thread for the UI."""
-    def __init__(self, host: str, port: int, room_code: str):
+
+    def __init__(self, host: str, port: int, room_code: str, expansions: list[str]):
         super().__init__(daemon=True)
         self.host = host
         self.port = port
         self.room_code = room_code
+        self.expansions = expansions
 
     def run(self) -> None:
-        asyncio.run(BangServer(self.host, self.port, self.room_code).start())
+        asyncio.run(
+            BangServer(self.host, self.port, self.room_code, self.expansions).start()
+        )
 
 
 class ClientThread(threading.Thread):
@@ -89,6 +93,12 @@ class BangUI:
         self.msg_queue: queue.Queue[str] = queue.Queue()
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
+        # basic settings
+        self.audio_sound = tk.BooleanVar(value=True)
+        self.graphics_quality = tk.BooleanVar(value=True)
+        self.exp_dodge_city = tk.BooleanVar(value=False)
+        self.exp_high_noon = tk.BooleanVar(value=False)
+        self.exp_fistful = tk.BooleanVar(value=False)
         self._build_start_menu()
 
     def _build_start_menu(self) -> None:
@@ -103,6 +113,24 @@ class BangUI:
         host_btn.grid(row=1, column=0, pady=5)
         join_btn = ttk.Button(self.root, text="Join Game", command=self._join_menu)
         join_btn.grid(row=1, column=1, pady=5)
+        settings_btn = ttk.Button(self.root, text="Settings", command=self._settings_window)
+        settings_btn.grid(row=2, column=0, columnspan=2, pady=5)
+
+    def _settings_window(self) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("Settings")
+
+        ttk.Label(win, text="Audio").grid(row=0, column=0, sticky="w")
+        ttk.Checkbutton(win, text="Sound", variable=self.audio_sound).grid(row=0, column=1, sticky="w")
+
+        ttk.Label(win, text="Graphics").grid(row=1, column=0, sticky="w")
+        ttk.Checkbutton(win, text="High Quality", variable=self.graphics_quality).grid(row=1, column=1, sticky="w")
+
+        ttk.Label(win, text="Expansions").grid(row=2, column=0, sticky="w")
+        ttk.Checkbutton(win, text="Dodge City", variable=self.exp_dodge_city).grid(row=2, column=1, sticky="w")
+        ttk.Checkbutton(win, text="High Noon", variable=self.exp_high_noon).grid(row=3, column=1, sticky="w")
+        ttk.Checkbutton(win, text="Fistful of Cards", variable=self.exp_fistful).grid(row=4, column=1, sticky="w")
+        ttk.Button(win, text="Close", command=win.destroy).grid(row=5, column=0, columnspan=2, pady=5)
 
     def _host_menu(self) -> None:
         name = self.name_var.get().strip()
@@ -123,7 +151,14 @@ class BangUI:
     def _start_host(self) -> None:
         port = int(self.port_var.get())
         room_code = str(random.randint(1000, 9999))
-        self.server_thread = ServerThread("", port, room_code)
+        expansions = []
+        if self.exp_dodge_city.get():
+            expansions.append("dodge_city")
+        if self.exp_high_noon.get():
+            expansions.append("high_noon")
+        if self.exp_fistful.get():
+            expansions.append("fistful_of_cards")
+        self.server_thread = ServerThread("", port, room_code, expansions)
         self.server_thread.start()
         uri = f"ws://localhost:{port}"
         self._start_client(uri, room_code)

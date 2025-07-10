@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import List, Tuple, Type
+from typing import Iterable, List, Tuple, Type
 
 from .deck import Deck
 from .cards import (
@@ -27,6 +27,17 @@ from .cards import (
     GeneralStoreCard,
     SaloonCard,
     GatlingCard,
+    PunchCard,
+    HideoutCard,
+    BinocularsCard,
+    BuffaloRifleCard,
+    WhiskyCard,
+    HighNoonCard,
+    SombreroCard,
+    IronPlateCard,
+    TequilaCard,
+    PonyExpressCard,
+    DerringerCard,
 )
 from .cards.card import Card
 
@@ -56,6 +67,33 @@ CARD_COUNTS: List[Tuple[Type[Card], int]] = [
     (GatlingCard, 1),
 ]
 
+# Additional cards provided by expansions
+DODGE_CITY_COUNTS: List[Tuple[Type[Card], int]] = [
+    (PunchCard, 4),
+    (HideoutCard, 2),
+    (BinocularsCard, 2),
+    (BuffaloRifleCard, 1),
+    (SombreroCard, 1),
+    (IronPlateCard, 1),
+    (DerringerCard, 2),
+]
+
+FISTFUL_COUNTS: List[Tuple[Type[Card], int]] = [
+    (WhiskyCard, 2),
+    (TequilaCard, 3),
+    (PonyExpressCard, 2),
+]
+
+HIGH_NOON_COUNTS: List[Tuple[Type[Card], int]] = [
+    (HighNoonCard, 1),
+]
+
+EXPANSION_CARDS = {
+    "dodge_city": DODGE_CITY_COUNTS,
+    "fistful_of_cards": FISTFUL_COUNTS,
+    "high_noon": HIGH_NOON_COUNTS,
+}
+
 
 def _generate_suits(count: int) -> List[str]:
     """Return a shuffled list of suits with nearly even distribution."""
@@ -68,16 +106,27 @@ def _generate_suits(count: int) -> List[str]:
     return suits_pool
 
 
-def create_standard_deck() -> Deck:
-    """Return a Deck built with cards using a balanced suit distribution."""
-    total = sum(c for _, c in CARD_COUNTS)
+def create_standard_deck(expansions: Iterable[str] | None = None) -> Deck:
+    """Return a Deck built with cards using a balanced suit distribution.
+
+    Parameters
+    ----------
+    expansions:
+        Iterable of expansion names to include additional cards.
+    """
+    card_counts = CARD_COUNTS[:]
+    if expansions:
+        for exp in expansions:
+            card_counts.extend(EXPANSION_CARDS.get(exp, []))
+
+    total = sum(c for _, c in card_counts)
     suits = _generate_suits(total)
     ranks = list(range(1, 14)) * (total // 13 + 1)
     random.shuffle(ranks)
 
     cards: List[Card] = []
     idx = 0
-    for card_cls, count in CARD_COUNTS:
+    for card_cls, count in card_counts:
         for _ in range(count):
             suit = suits[idx % len(suits)]
             rank = ranks[idx % len(ranks)]

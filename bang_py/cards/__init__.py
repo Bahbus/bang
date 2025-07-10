@@ -21,6 +21,17 @@ from .duel import DuelCard
 from .general_store import GeneralStoreCard
 from .saloon import SaloonCard
 from .gatling import GatlingCard
+from .punch import PunchCard
+from .hideout import HideoutCard
+from .binoculars import BinocularsCard
+from .buffalo_rifle import BuffaloRifleCard
+from .whisky import WhiskyCard
+from .high_noon_card import HighNoonCard
+from .sombrero import SombreroCard
+from .iron_plate import IronPlateCard
+from .tequila import TequilaCard
+from .pony_express import PonyExpressCard
+from .derringer import DerringerCard
 
 __all__ = [
     "BangCard",
@@ -46,4 +57,16 @@ __all__ = [
     "GeneralStoreCard",
     "SaloonCard",
     "GatlingCard",
+    "PunchCard",
+    "HideoutCard",
+    "BinocularsCard",
+    "BuffaloRifleCard",
+    "WhiskyCard",
+    "HighNoonCard",
+    "SombreroCard",
+    "IronPlateCard",
+    "TequilaCard",
+    "PonyExpressCard",
+    "DerringerCard",
 ]
+
