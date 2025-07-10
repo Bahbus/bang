@@ -11,6 +11,7 @@ from .network.server import BangServer
 
 
 class ServerThread(threading.Thread):
+    """Run a :class:`BangServer` in a daemon thread for the UI."""
     def __init__(self, host: str, port: int, room_code: str):
         super().__init__(daemon=True)
         self.host = host
@@ -22,6 +23,7 @@ class ServerThread(threading.Thread):
 
 
 class ClientThread(threading.Thread):
+    """Manage a websocket client connection in a background thread."""
     def __init__(self, uri: str, room_code: str, name: str, msg_queue: queue.Queue):
         super().__init__(daemon=True)
         self.uri = uri
@@ -76,6 +78,11 @@ class ClientThread(threading.Thread):
 
 
 class BangUI:
+    """Tkinter interface used to host, join and play a Bang game.
+
+    It starts server and client threads as needed and displays game updates in
+    a simple window.
+    """
     def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("Bang!")
