@@ -219,3 +219,29 @@ def test_willy_the_kid_can_play_multiple_bangs():
     gm.play_card(willy, willy.hand[0], target)
     gm.play_card(willy, willy.hand[0], target)
     assert len(willy.hand) == 0
+
+
+def test_slab_the_killer_requires_two_missed():
+    gm = GameManager()
+    slab = Player("Slab", character=SlabTheKiller())
+    target = Player("Target")
+    gm.add_player(slab)
+    gm.add_player(target)
+    target.hand.extend([MissedCard(), MissedCard()])
+    slab.hand.append(BangCard())
+    gm.play_card(slab, slab.hand[0], target)
+    assert target.health == target.max_health
+    assert len(target.hand) == 0
+
+
+def test_slab_the_killer_bang_hits_without_two_missed():
+    gm = GameManager()
+    slab = Player("Slab", character=SlabTheKiller())
+    target = Player("Target")
+    gm.add_player(slab)
+    gm.add_player(target)
+    target.hand.append(MissedCard())
+    slab.hand.append(BangCard())
+    gm.play_card(slab, slab.hand[0], target)
+    assert target.health == target.max_health - 1
+    assert len(target.hand) == 1

@@ -18,6 +18,7 @@ from .characters import (
     LuckyDuke,
     PedroRamirez,
     SidKetchum,
+    SlabTheKiller,
     SuzyLafayette,
     VultureSam,
     WillyTheKid,
@@ -180,7 +181,18 @@ class GameManager:
         if isinstance(player.character, CalamityJanet) and isinstance(card, MissedCard) and target:
             BangCard().play(target, self.deck)
         elif isinstance(card, BangCard):
-            card.play(target, self.deck)
+            if target and isinstance(player.character, SlabTheKiller):
+                misses = [c for c in target.hand if isinstance(c, MissedCard)]
+                if len(misses) >= 2:
+                    for _ in range(2):
+                        mcard = misses.pop()
+                        target.hand.remove(mcard)
+                        self.discard_pile.append(mcard)
+                    target.metadata["dodged"] = True
+                else:
+                    card.play(target, self.deck)
+            else:
+                card.play(target, self.deck)
         elif isinstance(card, StagecoachCard):
             self.draw_card(player, 2)
         elif isinstance(card, WellsFargoCard):
