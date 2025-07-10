@@ -1,12 +1,15 @@
 from bang_py.game_manager import GameManager
 from bang_py.deck import Deck
+from bang_py.deck_factory import create_standard_deck
 from bang_py.player import Player
 from bang_py.cards.bang import BangCard
 from bang_py.characters import BartCassidy
 
 
 def test_drawing_and_playing():
-    gm = GameManager(deck=Deck([BangCard(), BangCard()]))
+    deck = create_standard_deck()
+    deck.cards.extend([BangCard(), BangCard()])
+    gm = GameManager(deck=deck)
     p1 = Player("A")
     p2 = Player("B")
     gm.add_player(p1)
@@ -19,7 +22,9 @@ def test_drawing_and_playing():
 
 
 def test_bart_cassidy_draw_on_damage():
-    gm = GameManager(deck=Deck([BangCard()]))
+    deck = create_standard_deck()
+    deck.cards.append(BangCard())
+    gm = GameManager(deck=deck)
     p1 = Player("Bart", character=BartCassidy())
     p2 = Player("B")
     gm.add_player(p1)

@@ -5,6 +5,7 @@ from typing import Callable, List, Optional
 import random
 
 from .deck import Deck
+from .deck_factory import create_standard_deck
 from .cards.card import Card
 from .characters import (
     BartCassidy,
@@ -29,7 +30,7 @@ from .player import Player, Role
 @dataclass
 class GameManager:
     players: List[Player] = field(default_factory=list)
-    deck: Deck = field(default_factory=Deck)
+    deck: Deck = field(default_factory=create_standard_deck)
     discard_pile: List[Card] = field(default_factory=list)
     current_turn: int = 0
     turn_order: List[int] = field(default_factory=list)

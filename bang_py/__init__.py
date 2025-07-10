@@ -1,6 +1,7 @@
 """Bang card game modules"""
 
 from .game_manager import GameManager
+from .deck_factory import create_standard_deck
 from .player import Player, Role
 from .characters import (
     Character,
@@ -43,6 +44,7 @@ __all__ = [
     "SuzyLafayette",
     "VultureSam",
     "WillyTheKid",
+    "create_standard_deck",
 ]
 try:
     from .network.server import BangServer

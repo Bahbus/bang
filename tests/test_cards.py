@@ -9,6 +9,7 @@ from bang_py.cards.mustang import MustangCard
 from bang_py.cards.jail import JailCard
 from bang_py.cards.dynamite import DynamiteCard
 from bang_py.deck import Deck
+from bang_py.deck_factory import create_standard_deck
 from bang_py.player import Player
 
 
@@ -72,7 +73,8 @@ def test_mustang_increases_distance():
 def test_barrel_dodges_bang_on_heart():
     target = Player("Target")
     BarrelCard().play(target)
-    deck = Deck([BeerCard(suit="Hearts")])
+    deck = create_standard_deck()
+    deck.cards.append(BeerCard(suit="Hearts"))
     BangCard().play(target, deck)
     assert target.health == target.max_health
     assert target.metadata.get("dodged") is True
@@ -81,7 +83,8 @@ def test_barrel_dodges_bang_on_heart():
 def test_barrel_fails_on_non_heart():
     target = Player("Target")
     BarrelCard().play(target)
-    deck = Deck([BeerCard(suit="Clubs")])
+    deck = create_standard_deck()
+    deck.cards.append(BeerCard(suit="Clubs"))
     BangCard().play(target, deck)
     assert target.health == target.max_health - 1
 
@@ -90,7 +93,8 @@ def test_jail_skip_turn():
     player = Player("Prisoner")
     jail = JailCard()
     jail.play(player)
-    deck = Deck([BangCard(suit="Clubs")])
+    deck = create_standard_deck()
+    deck.cards.append(BangCard(suit="Clubs"))
     skipped = jail.check_turn(player, deck)
     assert skipped is True
     assert "Jail" not in player.equipment
@@ -100,7 +104,8 @@ def test_jail_freed_on_heart():
     player = Player("Prisoner")
     jail = JailCard()
     jail.play(player)
-    deck = Deck([BangCard(suit="Hearts")])
+    deck = create_standard_deck()
+    deck.cards.append(BangCard(suit="Hearts"))
     skipped = jail.check_turn(player, deck)
     assert skipped is False
     assert "Jail" not in player.equipment
@@ -111,7 +116,8 @@ def test_dynamite_explodes():
     p2 = Player("Two")
     dyn = DynamiteCard()
     dyn.play(p1)
-    deck = Deck([BangCard(suit="Spades", rank=5)])
+    deck = create_standard_deck()
+    deck.cards.append(BangCard(suit="Spades", rank=5))
     exploded = dyn.check_dynamite(p1, p2, deck)
     assert exploded is True
     assert p1.health == p1.max_health - 3
@@ -123,7 +129,8 @@ def test_dynamite_passes():
     p2 = Player("Two")
     dyn = DynamiteCard()
     dyn.play(p1)
-    deck = Deck([BangCard(suit="Hearts", rank=1)])
+    deck = create_standard_deck()
+    deck.cards.append(BangCard(suit="Hearts", rank=1))
     exploded = dyn.check_dynamite(p1, p2, deck)
     assert exploded is False
     assert "Dynamite" not in p1.equipment
