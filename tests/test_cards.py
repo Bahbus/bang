@@ -1,6 +1,11 @@
 from bang_py.cards.bang import BangCard
 from bang_py.cards.beer import BeerCard
 from bang_py.cards.missed import MissedCard
+from bang_py.cards.barrel import BarrelCard
+from bang_py.cards.schofield import SchofieldCard
+from bang_py.cards.volcanic import VolcanicCard
+from bang_py.cards.scope import ScopeCard
+from bang_py.cards.mustang import MustangCard
 from bang_py.player import Player
 
 
@@ -23,3 +28,39 @@ def test_missed_card_sets_dodged_metadata():
     target = Player("Target")
     MissedCard().play(target)
     assert target.metadata.get("dodged") is True
+
+
+def test_equipment_replaces_same_name():
+    target = Player("Target")
+    BarrelCard().play(target)
+    assert "Barrel" in target.equipment
+    # Play another barrel, should replace existing (no duplicate entries)
+    BarrelCard().play(target)
+    assert list(target.equipment.keys()).count("Barrel") == 1
+
+
+def test_gun_slot_only_one_equipped():
+    target = Player("Target")
+    SchofieldCard().play(target)
+    assert target.equipment["Gun"].card_name == "Schofield"
+    VolcanicCard().play(target)
+    assert target.equipment["Gun"].card_name == "Volcanic"
+
+
+def test_scope_increases_attack_range():
+    player = Player("Shooter")
+    assert player.attack_range == 1
+    ScopeCard().play(player)
+    assert player.attack_range == 2
+    SchofieldCard().play(player)
+    assert player.attack_range == 3  # gun range 2 + scope 1
+
+
+def test_mustang_increases_distance():
+    p1 = Player("One")
+    p2 = Player("Two")
+    assert p1.distance_to(p2) == 1
+    MustangCard().play(p2)
+    assert p1.distance_to(p2) == 2
+    ScopeCard().play(p1)
+    assert p1.distance_to(p2) == 1
