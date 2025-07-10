@@ -55,6 +55,8 @@ class GameManager:
     game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
 
     def add_player(self, player: Player) -> None:
+        """Add a player to the game and record the game reference."""
+        player.metadata["game"] = self
         self.players.append(player)
 
     def start_game(self) -> None:

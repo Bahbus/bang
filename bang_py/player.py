@@ -78,8 +78,26 @@ class Player:
         return self.gun_range + self.range_bonus
 
     def distance_to(self, other: "Player") -> int:
-        """Calculate distance to another player considering equipment."""
-        return max(1, 1 + other.distance_bonus - self.range_bonus)
+        """Calculate distance to another player considering seating and equipment."""
+        game = self.metadata.get("game")
+        players = getattr(game, "players", None)
+
+        base = 1
+        if players and self in players and other in players:
+            base = self._seated_distance(self, other, players)
+
+        distance = base + other.distance_bonus - self.range_bonus
+        return max(1, distance)
+
+    @staticmethod
+    def _seated_distance(player: "Player", other: "Player", players: List["Player"]) -> int:
+        """Return the seat distance between two players counting only the living."""
+
+        alive = [p for p in players if p.is_alive()]
+        p_index = alive.index(player)
+        o_index = alive.index(other)
+        diff = abs(p_index - o_index)
+        return min(diff, len(alive) - diff)
 
     def take_damage(self, amount: int) -> None:
         self.health = max(0, self.health - amount)
