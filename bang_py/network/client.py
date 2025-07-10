@@ -2,7 +2,29 @@ import asyncio
 import json
 import websockets
 
-async def main(uri: str = "ws://localhost:8765", room_code: str = "", name: str | None = None):
+async def main(
+    uri: str = "ws://localhost:8765", room_code: str = "", name: str | None = None
+) -> None:
+    """Connect to a ``bang-server`` instance and handle basic interaction.
+
+    Parameters
+    ----------
+    uri:
+        WebSocket URI of the running server.
+    room_code:
+        Code required to join the game. If empty the prompt from the server is
+        shown and the code can be entered interactively.
+    name:
+        Optional player name. If ``None``, the user is prompted for it.
+
+    Workflow
+    --------
+    The client connects to ``uri`` and exchanges the room code and player name.
+    It then defines helper coroutines ``send_play``, ``send_draw`` and
+    ``send_discard`` for sending common actions. Incoming messages are parsed
+    as JSON when possible and printed to the console along with the list of
+    players.
+    """
     async with websockets.connect(uri) as websocket:
         prompt = await websocket.recv()
         print(prompt)
