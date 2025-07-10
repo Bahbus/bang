@@ -139,7 +139,10 @@ class GameManager:
         if is_bang:
             count = int(player.metadata.get("bangs_played", 0))
             gun = player.equipment.get("Gun")
-            unlimited = isinstance(player.character, WillyTheKid) or getattr(gun, "unlimited_bang", False)
+            unlimited = (
+                isinstance(player.character, WillyTheKid)
+                or getattr(gun, "unlimited_bang", False)
+            )
             if count >= 1 and not unlimited:
                 # Cannot play more Bang! cards this turn
                 return
