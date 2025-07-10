@@ -39,12 +39,14 @@ class BangServer:
         port: int = 8765,
         room_code: str | None = None,
         expansions: list[str] | None = None,
-    ):
+        max_players: int = 7,
+    ) -> None:
         self.host = host
         self.port = port
         self.room_code = room_code or str(random.randint(1000, 9999))
         self.game = GameManager(expansions=expansions or [])
         self.connections: Dict[WebSocketServerProtocol, Connection] = {}
+        self.max_players = max_players
         self.game.player_damaged_listeners.append(self._on_player_damaged)
         self.game.player_healed_listeners.append(self._on_player_healed)
         self.game.game_over_listeners.append(self._on_game_over)
@@ -58,6 +60,9 @@ class BangServer:
             return
         await websocket.send("Enter your name:")
         name = await websocket.recv()
+        if len(self.game.players) >= self.max_players:
+            await websocket.send("Game full")
+            return
         player = Player(name, role=Role.OUTLAW)
         self.game.add_player(player)
         self.connections[websocket] = Connection(websocket, player)
