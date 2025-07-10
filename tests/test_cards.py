@@ -6,6 +6,9 @@ from bang_py.cards.schofield import SchofieldCard
 from bang_py.cards.volcanic import VolcanicCard
 from bang_py.cards.scope import ScopeCard
 from bang_py.cards.mustang import MustangCard
+from bang_py.cards.jail import JailCard
+from bang_py.cards.dynamite import DynamiteCard
+from bang_py.deck import Deck
 from bang_py.player import Player
 
 
@@ -64,3 +67,64 @@ def test_mustang_increases_distance():
     assert p1.distance_to(p2) == 2
     ScopeCard().play(p1)
     assert p1.distance_to(p2) == 1
+
+
+def test_barrel_dodges_bang_on_heart():
+    target = Player("Target")
+    BarrelCard().play(target)
+    deck = Deck([BeerCard(suit="Hearts")])
+    BangCard().play(target, deck)
+    assert target.health == target.max_health
+    assert target.metadata.get("dodged") is True
+
+
+def test_barrel_fails_on_non_heart():
+    target = Player("Target")
+    BarrelCard().play(target)
+    deck = Deck([BeerCard(suit="Clubs")])
+    BangCard().play(target, deck)
+    assert target.health == target.max_health - 1
+
+
+def test_jail_skip_turn():
+    player = Player("Prisoner")
+    jail = JailCard()
+    jail.play(player)
+    deck = Deck([BangCard(suit="Clubs")])
+    skipped = jail.check_turn(player, deck)
+    assert skipped is True
+    assert "Jail" not in player.equipment
+
+
+def test_jail_freed_on_heart():
+    player = Player("Prisoner")
+    jail = JailCard()
+    jail.play(player)
+    deck = Deck([BangCard(suit="Hearts")])
+    skipped = jail.check_turn(player, deck)
+    assert skipped is False
+    assert "Jail" not in player.equipment
+
+
+def test_dynamite_explodes():
+    p1 = Player("One")
+    p2 = Player("Two")
+    dyn = DynamiteCard()
+    dyn.play(p1)
+    deck = Deck([BangCard(suit="Spades", rank=5)])
+    exploded = dyn.check_dynamite(p1, p2, deck)
+    assert exploded is True
+    assert p1.health == p1.max_health - 3
+    assert "Dynamite" not in p1.equipment
+
+
+def test_dynamite_passes():
+    p1 = Player("One")
+    p2 = Player("Two")
+    dyn = DynamiteCard()
+    dyn.play(p1)
+    deck = Deck([BangCard(suit="Hearts", rank=1)])
+    exploded = dyn.check_dynamite(p1, p2, deck)
+    assert exploded is False
+    assert "Dynamite" not in p1.equipment
+    assert "Dynamite" in p2.equipment
