@@ -24,6 +24,15 @@ from .characters import (
 )
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
+from .cards.stagecoach import StagecoachCard
+from .cards.wells_fargo import WellsFargoCard
+from .cards.cat_balou import CatBalouCard
+from .cards.panic import PanicCard
+from .cards.indians import IndiansCard
+from .cards.duel import DuelCard
+from .cards.general_store import GeneralStoreCard
+from .cards.saloon import SaloonCard
+from .cards.gatling import GatlingCard
 
 from .player import Player, Role
 
@@ -150,11 +159,28 @@ class GameManager:
         before = target.health if target else None
         if isinstance(player.character, CalamityJanet) and isinstance(card, MissedCard) and target:
             BangCard().play(target, self.deck)
+        elif isinstance(card, BangCard):
+            card.play(target, self.deck)
+        elif isinstance(card, StagecoachCard):
+            self.draw_card(player, 2)
+        elif isinstance(card, WellsFargoCard):
+            self.draw_card(player, 3)
+        elif isinstance(card, CatBalouCard) and target:
+            card.play(target, game=self)
+        elif isinstance(card, PanicCard) and target:
+            card.play(target, player, game=self)
+        elif isinstance(card, IndiansCard):
+            card.play(player, player, game=self)
+        elif isinstance(card, DuelCard) and target:
+            card.play(target, player, game=self)
+        elif isinstance(card, GeneralStoreCard):
+            card.play(player, player, game=self)
+        elif isinstance(card, SaloonCard):
+            card.play(player, player, game=self)
+        elif isinstance(card, GatlingCard):
+            card.play(player, player, game=self)
         else:
-            if isinstance(card, BangCard):
-                card.play(target, self.deck)
-            else:
-                card.play(target)
+            card.play(target)
         if target and before is not None and target.health < before:
             self.on_player_damaged(target, player)
         if target and before is not None and target.health > before:

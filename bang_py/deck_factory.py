@@ -18,6 +18,15 @@ from .cards import (
     MustangCard,
     JailCard,
     DynamiteCard,
+    StagecoachCard,
+    WellsFargoCard,
+    CatBalouCard,
+    PanicCard,
+    IndiansCard,
+    DuelCard,
+    GeneralStoreCard,
+    SaloonCard,
+    GatlingCard,
 )
 from .cards.card import Card
 
@@ -36,6 +45,15 @@ CARD_COUNTS: List[Tuple[Type[Card], int]] = [
     (MustangCard, 2),
     (JailCard, 3),
     (DynamiteCard, 1),
+    (StagecoachCard, 2),
+    (WellsFargoCard, 1),
+    (CatBalouCard, 4),
+    (PanicCard, 4),
+    (IndiansCard, 2),
+    (DuelCard, 3),
+    (GeneralStoreCard, 2),
+    (SaloonCard, 1),
+    (GatlingCard, 1),
 ]
 
 
