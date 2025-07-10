@@ -1,11 +1,12 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Dict, TYPE_CHECKING
+from typing import Dict, List, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from .cards.equipment import EquipmentCard
     from .characters import Character
+    from .cards.card import Card
 
 
 class Role(Enum):
@@ -24,6 +25,7 @@ class Player:
     health: int = field(init=False)
     metadata: dict = field(default_factory=dict)
     equipment: Dict[str, "EquipmentCard"] = field(default_factory=dict)
+    hand: List["Card"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         self.health = self.max_health

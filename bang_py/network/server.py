@@ -47,9 +47,24 @@ class BangServer:
         await self.broadcast_players()
         try:
             async for message in websocket:
-                if message == "end_turn":
+                try:
+                    data = json.loads(message)
+                except json.JSONDecodeError:
+                    data = message
+                if data == "end_turn":
                     self.game.end_turn()
                     await self.broadcast_players()
+                elif isinstance(data, dict) and data.get("action") == "play_card":
+                    idx = data.get("card_index")
+                    target_idx = data.get("target")
+                    player = self.connections[websocket].player
+                    if idx is not None and 0 <= idx < len(player.hand):
+                        target = None
+                        if target_idx is not None:
+                            target = self.game._get_player_by_index(target_idx)
+                        card = player.hand[idx]
+                        self.game.play_card(player, card, target)
+                        await self.broadcast_players()
         finally:
             self.game.players.remove(player)
             del self.connections[websocket]
