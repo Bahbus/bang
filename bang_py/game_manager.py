@@ -29,6 +29,7 @@ from .cards.stagecoach import StagecoachCard
 from .cards.wells_fargo import WellsFargoCard
 from .cards.cat_balou import CatBalouCard
 from .cards.panic import PanicCard
+from .cards.jail import JailCard
 from .cards.indians import IndiansCard
 from .cards.duel import DuelCard
 from .cards.general_store import GeneralStoreCard
@@ -163,6 +164,14 @@ class GameManager:
 
     def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
         if card not in player.hand:
+            return
+        if isinstance(card, BangCard) and target:
+            if player.distance_to(target) > player.attack_range:
+                return
+        if isinstance(card, PanicCard) and target:
+            if player.distance_to(target) > 1:
+                return
+        if isinstance(card, JailCard) and target and target.role == Role.SHERIFF:
             return
         # Determine if this card counts as a Bang!
         is_bang = isinstance(card, BangCard) or (
