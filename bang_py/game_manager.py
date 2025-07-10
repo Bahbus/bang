@@ -70,6 +70,26 @@ class GameManager:
             return
         idx = self.turn_order[self.current_turn]
         player = self.players[idx]
+        # Handle start-of-turn equipment effects
+        dyn = player.equipment.get("Dynamite")
+        if dyn and getattr(dyn, "check_dynamite", None):
+            next_idx = self.turn_order[(self.current_turn + 1) % len(self.turn_order)]
+            next_player = self.players[next_idx]
+            exploded = dyn.check_dynamite(player, next_player, self.deck)
+            if exploded:
+                self.discard_pile.append(dyn)
+                self.on_player_damaged(player)
+                if not player.is_alive():
+                    self._begin_turn()
+                    return
+        jail = player.equipment.get("Jail")
+        if jail and getattr(jail, "check_turn", None):
+            skipped = jail.check_turn(player, self.deck)
+            self.discard_pile.append(jail)
+            if skipped:
+                self.current_turn = (self.current_turn + 1) % len(self.turn_order)
+                self._begin_turn()
+                return
         self.draw_phase(player)
         player.metadata["bangs_played"] = 0
         for cb in self.turn_started_listeners:
