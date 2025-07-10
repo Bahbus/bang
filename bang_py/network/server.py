@@ -19,8 +19,14 @@ class Connection:
     player: Player
 
 def _serialize_players(players: List[Player]) -> List[dict]:
+    """Return minimal player info for the UI."""
     return [
-        {"name": p.name, "health": p.health, "role": p.role.name}
+        {
+            "name": p.name,
+            "health": p.health,
+            "role": p.role.name,
+            "equipment": [eq.card_name for eq in p.equipment.values()],
+        }
         for p in players
     ]
 
@@ -89,12 +95,15 @@ class BangServer:
             await self.broadcast_state()
 
     async def broadcast_state(self, message: str | None = None) -> None:
-        payload = {"players": _serialize_players(self.game.players)}
-        if message:
-            payload["message"] = message
-        data = json.dumps(payload)
+        """Send updated game state to all connected clients."""
         for conn in list(self.connections.values()):
-            await conn.websocket.send(data)
+            payload = {
+                "players": _serialize_players(self.game.players),
+                "hand": [c.card_name for c in conn.player.hand],
+            }
+            if message:
+                payload["message"] = message
+            await conn.websocket.send(json.dumps(payload))
 
     def _on_player_damaged(self, player: Player) -> None:
         msg = (
