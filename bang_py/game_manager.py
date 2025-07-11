@@ -413,15 +413,19 @@ class GameManager:
         elif isinstance(card, WhiskyCard):
             card.play(target or player, player, game=self)
         elif isinstance(card, BeerCard):
-            before_hp = (target or player).health
-            card.play(target or player)
-            if (
-                has_ability(player, TequilaJoe)
-                and (target or player).health < (target or player).max_health
-            ):
-                (target or player).heal(1)
-            if (target or player).health > before_hp:
-                self.on_player_healed(target or player)
+            if self.event_flags.get("no_beer_play"):
+                self.discard_pile.append(card)
+                return
+            else:
+                before_hp = (target or player).health
+                card.play(target or player)
+                if (
+                    has_ability(player, TequilaJoe)
+                    and (target or player).health < (target or player).max_health
+                ):
+                    (target or player).heal(1)
+                if (target or player).health > before_hp:
+                    self.on_player_healed(target or player)
         elif isinstance(card, PonyExpressCard):
             card.play(player, player, game=self)
         elif isinstance(card, TequilaCard):
@@ -476,6 +480,8 @@ class GameManager:
 
     def _auto_miss(self, target: Player) -> bool:
         if self.event_flags.get("no_missed"):
+            return False
+        if target.metadata.get("auto_miss", True) is False:
             return False
         miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
         if miss:
@@ -642,6 +648,8 @@ class GameManager:
             source.hand.remove(stolen)
             player.hand.append(stolen)
         if player.health <= 0:
+            if source and self.event_flags.get("bounty"):
+                self.draw_card(source, 2)
             for p in self.players:
                 if has_ability(p, GregDigger) and p.is_alive():
                     before = p.health

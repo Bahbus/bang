@@ -108,7 +108,12 @@ popup prompt. The following abilities currently trigger prompts:
 - Jose Delgado – optionally discard an equipment card for two cards.
 - Pat Brennan – select an equipment card in play to draw.
 - Lucky Duke – pick one of two cards when his ability activates.
+- Sid Ketchum – choose two cards from your hand to discard and heal.
+- Doc Holyday – pick two cards to discard for a free Bang!.
 
 Simply click the desired option in the popup window. If no choice is made the
 default behaviour is used.
+
+The game screen also includes an **Auto Miss** checkbox to control whether
+available Missed! cards are played automatically when you are attacked.
 
