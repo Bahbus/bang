@@ -164,13 +164,17 @@ class GameManager:
                     self._begin_turn()
                     return
         jail = player.equipment.get("Jail")
-        if jail and getattr(jail, "check_turn", None):
-            skipped = jail.check_turn(player, self.deck)
-            self.discard_pile.append(jail)
-            if skipped:
-                self.current_turn = (self.current_turn + 1) % len(self.turn_order)
-                self._begin_turn()
-                return
+        if jail:
+            if self.event_flags.get("no_jail"):
+                player.equipment.pop("Jail", None)
+                self.discard_pile.append(jail)
+            elif getattr(jail, "check_turn", None):
+                skipped = jail.check_turn(player, self.deck)
+                self.discard_pile.append(jail)
+                if skipped:
+                    self.current_turn = (self.current_turn + 1) % len(self.turn_order)
+                    self._begin_turn()
+                    return
         self.draw_phase(player)
         player.metadata["bangs_played"] = 0
         for cb in self.turn_started_listeners:
@@ -329,11 +333,15 @@ class GameManager:
                 return
         if isinstance(card, JailCard) and target and target.role == Role.SHERIFF:
             return
+        if self.event_flags.get("no_jail") and isinstance(card, JailCard):
+            return
         # Determine if this card counts as a Bang!
         is_bang = isinstance(card, BangCard) or (
             has_ability(player, CalamityJanet) and isinstance(card, MissedCard) and target
         )
         if is_bang:
+            if self.event_flags.get("no_bang"):
+                return
             count = int(player.metadata.get("bangs_played", 0))
             gun = player.equipment.get("Gun")
             extra = int(player.metadata.get("doc_free_bang", 0))
@@ -451,6 +459,8 @@ class GameManager:
         self.on_player_healed(player)
 
     def _auto_miss(self, target: Player) -> bool:
+        if self.event_flags.get("no_missed"):
+            return False
         miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
         if miss:
             target.hand.remove(miss)
