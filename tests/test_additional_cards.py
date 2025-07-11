@@ -11,6 +11,7 @@ from bang_py.cards import (
     GeneralStoreCard,
     SaloonCard,
     GatlingCard,
+    BeerCard,
     BangCard,
 )
 
@@ -93,6 +94,23 @@ def test_general_store_gives_each_player_card():
     GeneralStoreCard().play(p1, p1, game=gm)
     assert len(p1.hand) == 1
     assert len(p2.hand) == 1
+
+
+def test_general_store_selection_order():
+    deck = Deck([])
+    c1, c2, c3 = BangCard(), BeerCard(), GatlingCard()
+    deck.cards = [c1, c2, c3]
+    gm = GameManager(deck=deck)
+    p1 = Player("A")
+    p2 = Player("B")
+    p3 = Player("C")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.add_player(p3)
+    GeneralStoreCard().play(p1, p1, game=gm)
+    assert p1.hand == [c3]
+    assert p2.hand == [c2]
+    assert p3.hand == [c1]
 
 
 def test_saloon_heals_everyone():
