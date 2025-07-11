@@ -14,10 +14,10 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 class BangCard(Card):
     card_name = "Bang!"
 
-    def play(self, target: Player, deck: Deck | None = None) -> None:
+    def play(self, target: Player, deck: Deck | None = None, *, ignore_equipment: bool = False) -> None:
         if not target:
             return
-        if deck:
+        if deck and not ignore_equipment:
             barrel = target.equipment.get("Barrel")
             if barrel and getattr(barrel, "draw_check", None):
                 if barrel.draw_check(deck, target):
