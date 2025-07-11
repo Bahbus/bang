@@ -107,7 +107,13 @@ class Player:
         game = self.metadata.get("game")
         if getattr(game, "event_flags", {}).get("range_unlimited"):
             return 99
-        return self.gun_range + self.range_bonus
+        rng = self.gun_range + self.range_bonus
+        if (
+            getattr(game, "event_flags", {}).get("vendetta")
+            and self.role == Role.OUTLAW
+        ):
+            rng += 1
+        return rng
 
     def distance_to(self, other: "Player") -> int:
         """Return distance to another player considering equipment and abilities."""

@@ -11,6 +11,35 @@ def _noop(game: "GameManager") -> None:
     return
 
 
+def _judge(game: "GameManager") -> None:
+    """Beer cards cannot be played."""
+    game.event_flags["no_beer_play"] = True
+
+
+def _ghost_town(game: "GameManager") -> None:
+    """Revive eliminated players with 1 health."""
+    game.event_flags["ghost_town"] = True
+    revived = []
+    for i, p in enumerate(game.players):
+        if not p.is_alive():
+            p.health = 1
+            revived.append(i)
+    if revived:
+        game.turn_order = [
+            i for i, pl in enumerate(game.players) if pl.is_alive()
+        ]
+
+
+def _bounty(game: "GameManager") -> None:
+    """Reward eliminations with two cards."""
+    game.event_flags["bounty"] = True
+
+
+def _vendetta(game: "GameManager") -> None:
+    """Outlaws gain +1 attack range."""
+    game.event_flags["vendetta"] = True
+
+
 def _thirst(game: "GameManager") -> None:
     game.event_flags["draw_count"] = 1
 
@@ -46,8 +75,8 @@ def create_high_noon_deck() -> List[EventCard]:
         EventCard("Shootout", _shootout, "Play two Bang!s per turn"),
         EventCard("Blessing", lambda g: [p.heal(1) for p in g.players], "All players heal"),
         EventCard("Gold Rush", lambda g: g.event_flags.update(draw_count=3), "Draw three cards"),
-        EventCard("The Judge", _noop, "Beer has no effect"),
-        EventCard("Ghost Town", _noop, "Eliminated players return for one turn"),
+        EventCard("The Judge", _judge, "Beer cards cannot be played"),
+        EventCard("Ghost Town", _ghost_town, "Eliminated players return"),
         EventCard("Law of the West", lambda g: g.event_flags.update(range_unlimited=True), "Unlimited range"),
         EventCard("Siesta", lambda g: g.event_flags.update(draw_count=3), "Draw three cards"),
         EventCard("Cattle Drive", lambda g: [p.hand.pop() for p in g.players if p.hand], "Discard a card"),
@@ -68,8 +97,8 @@ def create_fistful_deck() -> List[EventCard]:
         EventCard("Gold Rush", lambda g: g.event_flags.update(draw_count=3), "Draw extra"),
         EventCard("Hard Liquor", lambda g: g.event_flags.update(beer_heal=2), "Beer heals 2"),
         EventCard("The River", _noop, "Discards pass left"),
-        EventCard("Bounty", _noop, "Rewards for eliminations"),
-        EventCard("Vendetta", _noop, "Outlaws have +1 range"),
+        EventCard("Bounty", _bounty, "Rewards for eliminations"),
+        EventCard("Vendetta", _vendetta, "Outlaws have +1 range"),
         EventCard("Prison Break", lambda g: g.event_flags.update(no_jail=True), "Jail discarded"),
         EventCard("High Stakes", lambda g: g.event_flags.update(bang_limit=2), "Two Bang!s"),
         EventCard("Ghost Town", _noop, "Eliminated return"),

@@ -67,6 +67,7 @@ class BangServer:
             await websocket.send("Game full")
             return
         player = Player(name, role=Role.OUTLAW)
+        player.metadata["auto_miss"] = True
         self.game.add_player(player)
         self.connections[websocket] = Connection(websocket, player)
         await websocket.send("Joined game as {}".format(player.name))
@@ -201,6 +202,10 @@ class BangServer:
                             if self.game.uncle_will_ability(player, card):
                                 await self.broadcast_state()
                                 continue
+                    await self.broadcast_state()
+                elif isinstance(data, dict) and data.get("action") == "set_auto_miss":
+                    enabled = bool(data.get("enabled", True))
+                    self.connections[websocket].player.metadata["auto_miss"] = enabled
                     await self.broadcast_state()
         finally:
             self.game.players.remove(player)

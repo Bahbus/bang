@@ -116,6 +116,8 @@ class BangUI:
         self.keybindings: dict[str, str] = {"end_turn": "e"}
         self._bound_key = ""
         self.current_character = ""
+        self.auto_miss_var = tk.BooleanVar(value=True)
+        self.hand_names: list[str] = []
         self._build_start_menu()
 
     def _build_start_menu(self) -> None:
@@ -256,6 +258,13 @@ class BangUI:
         end_btn = ttk.Button(self.root, text="End Turn", command=self._end_turn)
         end_btn.grid(row=4, column=0, columnspan=2, pady=5)
 
+        ttk.Checkbutton(
+            self.root,
+            text="Auto Miss",
+            variable=self.auto_miss_var,
+            command=self._send_auto_miss,
+        ).grid(row=5, column=0, columnspan=2)
+
     def _process_queue(self) -> None:
         while not self.msg_queue.empty():
             msg = self.msg_queue.get()
@@ -304,12 +313,23 @@ class BangUI:
             payload = json.dumps({"action": "play_card", "card_index": index})
             asyncio.run_coroutine_threadsafe(self.client.websocket.send(payload), self.client.loop)
 
+    def _send_auto_miss(self) -> None:
+        if self.client and self.client.websocket:
+            payload = json.dumps({
+                "action": "set_auto_miss",
+                "enabled": self.auto_miss_var.get(),
+            })
+            asyncio.run_coroutine_threadsafe(
+                self.client.websocket.send(payload), self.client.loop
+            )
+
     def _use_ability(
         self,
         ability: str,
         target: int | None = None,
         card_index: int | None = None,
         card: str | None = None,
+        indices: list[int] | None = None,
     ) -> None:
         if self.client and self.client.websocket:
             payload = {"action": "use_ability", "ability": ability}
@@ -327,6 +347,8 @@ class BangUI:
                     payload["card_index"] = card_index
             if card is not None:
                 payload["card"] = card
+            if indices is not None:
+                payload["indices"] = indices
             asyncio.run_coroutine_threadsafe(
                 self.client.websocket.send(json.dumps(payload)), self.client.loop
             )
@@ -334,13 +356,24 @@ class BangUI:
     def _update_hand(self, cards: list[str]) -> None:
         for widget in self.hand_frame.winfo_children():
             widget.destroy()
+        self.hand_names = cards
         for i, card in enumerate(cards):
             btn = ttk.Button(self.hand_frame, text=card, command=lambda idx=i: self._play_card(idx))
             btn.grid(row=0, column=i, padx=2)
-        if self.current_character in {
-            "Sid Ketchum",
+        if self.current_character == "Sid Ketchum":
+            ttk.Button(
+                self.hand_frame,
+                text="Use Ability",
+                command=self._prompt_sid_ketchum,
+            ).grid(row=1, column=0, columnspan=len(cards), pady=2)
+        elif self.current_character == "Doc Holyday":
+            ttk.Button(
+                self.hand_frame,
+                text="Use Ability",
+                command=self._prompt_doc_holyday,
+            ).grid(row=1, column=0, columnspan=len(cards), pady=2)
+        elif self.current_character in {
             "Chuck Wengam",
-            "Doc Holyday",
             "Jesse Jones",
             "Kit Carlson",
             "Pedro Ramirez",
@@ -504,6 +537,42 @@ class BangUI:
                     win.destroy(),
                 ),
             ).pack(fill="x")
+
+    def _prompt_sid_ketchum(self) -> None:
+        if not self.hand_names:
+            return
+        win = tk.Toplevel(self.root)
+        win.title("Sid Ketchum")
+        lb = tk.Listbox(win, selectmode="multiple")
+        for card in self.hand_names:
+            lb.insert(tk.END, card)
+        lb.pack()
+        ttk.Button(
+            win,
+            text="Discard",
+            command=lambda: (
+                self._use_ability("sid_ketchum", indices=list(lb.curselection())),
+                win.destroy(),
+            ),
+        ).pack(fill="x")
+
+    def _prompt_doc_holyday(self) -> None:
+        if not self.hand_names:
+            return
+        win = tk.Toplevel(self.root)
+        win.title("Doc Holyday")
+        lb = tk.Listbox(win, selectmode="multiple")
+        for card in self.hand_names:
+            lb.insert(tk.END, card)
+        lb.pack()
+        ttk.Button(
+            win,
+            text="Discard",
+            command=lambda: (
+                self._use_ability("doc_holyday", indices=list(lb.curselection())),
+                win.destroy(),
+            ),
+        ).pack(fill="x")
 
     def _pick_general_store(self, index: int) -> None:
         if self.client and self.client.websocket:
