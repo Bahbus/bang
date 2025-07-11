@@ -13,31 +13,21 @@ class GeneralStoreCard(Card):
     card_name = "General Store"
 
     def play(
-        self, target: Player, player: Player | None = None, game: GameManager | None = None
+        self,
+        target: Player,
+        player: Player | None = None,
+        game: GameManager | None = None,
+        choices: List[int] | None = None,
     ) -> None:
-        """Draw ``len(players)`` cards and allow each player to select one."""
+        """Reveal cards equal to players and let each choose in order."""
         if not game or not player:
             return
 
-        alive = [p for p in game.players if p.is_alive()]
-        cards: List[Card] = []
-        for _ in range(len(alive)):
-            card = game.deck.draw()
-            if card is None:
-                if game.discard_pile:
-                    game.deck.cards.extend(game.discard_pile)
-                    game.discard_pile.clear()
-                    random.shuffle(game.deck.cards)
-                    card = game.deck.draw()
-            if card:
-                cards.append(card)
-
-        start_idx = game.players.index(player)
-        for i in range(len(alive)):
-            p = game.players[(start_idx + i) % len(game.players)]
-            if p.is_alive() and cards:
-                chosen = cards.pop(0)
-                p.hand.append(chosen)
-
-        for leftover in cards:
-            game.discard_pile.append(leftover)
+        game.start_general_store(player)
+        order = game.general_store_order or []
+        selections = choices or []
+        for i, p in enumerate(order):
+            if game.general_store_cards is None:
+                break
+            idx = selections[i] if i < len(selections) else 0
+            game.general_store_pick(p, idx)

@@ -83,6 +83,11 @@ class GameManager:
     current_event: EventCard | None = None
     event_flags: dict = field(default_factory=dict)
 
+    # General Store state
+    general_store_cards: List[Card] | None = None
+    general_store_order: List[Player] | None = None
+    general_store_index: int = 0
+
     # Event listeners
     player_damaged_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     player_healed_listeners: List[Callable[[Player], None]] = field(default_factory=list)
@@ -537,6 +542,56 @@ class GameManager:
         if not target.is_alive() or target is player:
             return
         player.metadata["vera_copy"] = target.character.__class__
+
+    # General Store management
+    def start_general_store(self, player: Player) -> List[str]:
+        """Draw cards for General Store and record selection order."""
+        if not self.deck:
+            return []
+        alive = [p for p in self.players if p.is_alive()]
+        cards: List[Card] = []
+        for _ in range(len(alive)):
+            card = self.deck.draw()
+            if card is None:
+                if self.discard_pile:
+                    self.deck.cards.extend(self.discard_pile)
+                    self.discard_pile.clear()
+                    random.shuffle(self.deck.cards)
+                    card = self.deck.draw()
+            if card:
+                cards.append(card)
+        self.general_store_cards = cards
+        start_idx = self.players.index(player)
+        order: List[Player] = []
+        for i in range(len(self.players)):
+            p = self.players[(start_idx + i) % len(self.players)]
+            if p.is_alive():
+                order.append(p)
+        self.general_store_order = order
+        self.general_store_index = 0
+        return [c.card_name for c in cards]
+
+    def general_store_pick(self, player: Player, index: int) -> bool:
+        """Give the chosen card to the current player."""
+        if (
+            self.general_store_cards is None
+            or self.general_store_order is None
+            or self.general_store_index >= len(self.general_store_order)
+            or self.general_store_order[self.general_store_index] is not player
+        ):
+            return False
+        if not (0 <= index < len(self.general_store_cards)):
+            return False
+        card = self.general_store_cards.pop(index)
+        player.hand.append(card)
+        self.general_store_index += 1
+        if self.general_store_index >= len(self.general_store_order):
+            for leftover in self.general_store_cards:
+                self.discard_pile.append(leftover)
+            self.general_store_cards = None
+            self.general_store_order = None
+            self.general_store_index = 0
+        return True
 
     def reset_turn_flags(self, player: Player) -> None:
         player.metadata.pop("doc_used", None)

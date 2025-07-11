@@ -13,6 +13,7 @@ except ModuleNotFoundError:  # pragma: no cover - handled in start()
 from ..game_manager import GameManager
 from ..player import Player, Role
 from ..characters import VeraCuster
+from ..cards.general_store import GeneralStoreCard
 
 @dataclass
 class Connection:
@@ -100,11 +101,43 @@ class BangServer:
                         if target_idx is not None:
                             target = self.game._get_player_by_index(target_idx)
                         card = player.hand[idx]
-                        self.game.play_card(player, card, target)
-                        desc = f"{player.name} played {card.__class__.__name__}"
-                        if target:
-                            desc += f" on {target.name}"
-                        await self.broadcast_state(desc)
+                        if isinstance(card, GeneralStoreCard):
+                            player.hand.pop(idx)
+                            self.game.discard_pile.append(card)
+                            names = self.game.start_general_store(player)
+                            desc = f"{player.name} played {card.__class__.__name__}"
+                            await self.broadcast_state(desc)
+                            order = self.game.general_store_order or []
+                            if order:
+                                first = order[0]
+                                conn = self._find_connection(first)
+                                if conn:
+                                    payload = json.dumps({
+                                        "prompt": "general_store",
+                                        "cards": names,
+                                    })
+                                    asyncio.create_task(conn.websocket.send(payload))
+                        else:
+                            self.game.play_card(player, card, target)
+                            desc = f"{player.name} played {card.__class__.__name__}"
+                            if target:
+                                desc += f" on {target.name}"
+                            await self.broadcast_state(desc)
+                elif isinstance(data, dict) and data.get("action") == "general_store_pick":
+                    idx = data.get("index")
+                    player = self.connections[websocket].player
+                    if isinstance(idx, int) and self.game.general_store_cards is not None:
+                        if self.game.general_store_pick(player, idx):
+                            await self.broadcast_state()
+                            if self.game.general_store_cards is not None:
+                                nxt = self.game.general_store_order[self.game.general_store_index]
+                                conn = self._find_connection(nxt)
+                                if conn:
+                                    payload = json.dumps({
+                                        "prompt": "general_store",
+                                        "cards": [c.card_name for c in self.game.general_store_cards],
+                                    })
+                                    asyncio.create_task(conn.websocket.send(payload))
                 elif isinstance(data, dict) and data.get("action") == "use_ability":
                     ability = data.get("ability")
                     player = self.connections[websocket].player
