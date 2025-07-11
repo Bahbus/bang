@@ -7,6 +7,8 @@ from bang_py.cards import (
     HideoutCard,
     BinocularsCard,
     BuffaloRifleCard,
+    PepperboxCard,
+    HowitzerCard,
     WhiskyCard,
     HighNoonCard,
     PonyExpressCard,
@@ -43,7 +45,14 @@ from bang_py.characters import (
 def test_dodge_city_cards_added():
     deck = create_standard_deck(["dodge_city"])
     types = {type(c) for c in deck.cards}
-    assert {PunchCard, HideoutCard, BinocularsCard, BuffaloRifleCard} <= types
+    assert {
+        PunchCard,
+        HideoutCard,
+        BinocularsCard,
+        BuffaloRifleCard,
+        PepperboxCard,
+        HowitzerCard,
+    } <= types
 
 
 def test_whisky_heals_two():
@@ -340,3 +349,24 @@ def test_high_noon_event_deck_draw():
     gm.add_player(outlaw)
     gm.start_game()
     assert gm.current_event is not None
+
+
+def test_pepperbox_sets_range_three():
+    player = Player("Shooter")
+    PepperboxCard().play(player)
+    assert player.attack_range == 3
+
+
+def test_howitzer_hits_all_opponents():
+    gm = GameManager(deck=Deck([]))
+    p1 = Player("A")
+    p2 = Player("B")
+    p3 = Player("C")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.add_player(p3)
+    card = HowitzerCard()
+    p1.hand.append(card)
+    gm.play_card(p1, card)
+    assert p2.health == p2.max_health - 1
+    assert p3.health == p3.max_health - 1

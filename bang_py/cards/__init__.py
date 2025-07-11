@@ -25,6 +25,8 @@ from .punch import PunchCard
 from .hideout import HideoutCard
 from .binoculars import BinocularsCard
 from .buffalo_rifle import BuffaloRifleCard
+from .pepperbox import PepperboxCard
+from .howitzer import HowitzerCard
 from .whisky import WhiskyCard
 from .high_noon_card import HighNoonCard
 from .sombrero import SombreroCard
@@ -61,6 +63,8 @@ __all__ = [
     "HideoutCard",
     "BinocularsCard",
     "BuffaloRifleCard",
+    "PepperboxCard",
+    "HowitzerCard",
     "WhiskyCard",
     "HighNoonCard",
     "SombreroCard",

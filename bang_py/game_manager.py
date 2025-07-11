@@ -57,6 +57,7 @@ from .cards.duel import DuelCard
 from .cards.general_store import GeneralStoreCard
 from .cards.saloon import SaloonCard
 from .cards.gatling import GatlingCard
+from .cards.howitzer import HowitzerCard
 from .cards.punch import PunchCard
 from .cards.whisky import WhiskyCard
 from .cards.beer import BeerCard
@@ -423,6 +424,8 @@ class GameManager:
         elif isinstance(card, SaloonCard):
             card.play(player, player, game=self)
         elif isinstance(card, GatlingCard):
+            card.play(player, player, game=self)
+        elif isinstance(card, HowitzerCard):
             card.play(player, player, game=self)
         elif isinstance(card, WhiskyCard):
             card.play(target or player, player, game=self)
