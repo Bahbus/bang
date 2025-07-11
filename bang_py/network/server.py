@@ -12,6 +12,7 @@ except ModuleNotFoundError:  # pragma: no cover - handled in start()
 
 from ..game_manager import GameManager
 from ..player import Player, Role
+from ..characters import VeraCuster
 
 @dataclass
 class Connection:
@@ -50,6 +51,7 @@ class BangServer:
         self.game.player_damaged_listeners.append(self._on_player_damaged)
         self.game.player_healed_listeners.append(self._on_player_healed)
         self.game.game_over_listeners.append(self._on_game_over)
+        self.game.turn_started_listeners.append(self._on_turn_started)
 
     async def handler(self, websocket: WebSocketServerProtocol) -> None:
         """Register a new client and process game commands sent over the socket."""
@@ -103,6 +105,30 @@ class BangServer:
                         if target:
                             desc += f" on {target.name}"
                         await self.broadcast_state(desc)
+                elif isinstance(data, dict) and data.get("action") == "use_ability":
+                    ability = data.get("ability")
+                    player = self.connections[websocket].player
+                    if ability == "sid_ketchum":
+                        self.game.sid_ketchum_ability(player)
+                    elif ability == "chuck_wengam":
+                        self.game.chuck_wengam_ability(player)
+                    elif ability == "doc_holyday":
+                        self.game.doc_holyday_ability(player)
+                    elif ability == "vera_custer":
+                        idx = data.get("target")
+                        target = None
+                        if idx is not None:
+                            target = self.game._get_player_by_index(idx)
+                        if target:
+                            self.game.vera_custer_copy(player, target)
+                    elif ability == "uncle_will":
+                        cidx = data.get("card_index")
+                        if cidx is not None and 0 <= cidx < len(player.hand):
+                            card = player.hand[cidx]
+                            if self.game.uncle_will_ability(player, card):
+                                await self.broadcast_state()
+                                continue
+                    await self.broadcast_state()
         finally:
             self.game.players.remove(player)
             del self.connections[websocket]
@@ -114,10 +140,29 @@ class BangServer:
             payload = {
                 "players": _serialize_players(self.game.players),
                 "hand": [c.card_name for c in conn.player.hand],
+                "character": getattr(conn.player.character, "name", "")
             }
             if message:
                 payload["message"] = message
             await conn.websocket.send(json.dumps(payload))
+
+    def _find_connection(self, player: Player) -> Connection | None:
+        for conn in self.connections.values():
+            if conn.player is player:
+                return conn
+        return None
+
+    def _on_turn_started(self, player: Player) -> None:
+        if isinstance(player.character, VeraCuster):
+            options = [
+                {"index": i, "name": p.character.name}
+                for i, p in enumerate(self.game.players)
+                if p is not player and p.is_alive()
+            ]
+            conn = self._find_connection(player)
+            if conn and options:
+                payload = json.dumps({"prompt": "vera", "options": options})
+                asyncio.create_task(conn.websocket.send(payload))
 
     def _on_player_damaged(self, player: Player) -> None:
         msg = (

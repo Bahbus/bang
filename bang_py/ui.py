@@ -115,6 +115,7 @@ class BangUI:
         self.exp_fistful = tk.BooleanVar(value=False)
         self.keybindings: dict[str, str] = {"end_turn": "e"}
         self._bound_key = ""
+        self.current_character = ""
         self._build_start_menu()
 
     def _build_start_menu(self) -> None:
@@ -262,11 +263,14 @@ class BangUI:
 
             if isinstance(data, dict) and "players" in data:
                 self._update_players(data["players"])
+                self.current_character = data.get("character", self.current_character)
                 self._update_hand(data.get("hand", []))
                 if "message" in data:
                     self._append_message(data["message"])
                     if any(k in data["message"].lower() for k in ["win", "eliminated"]):
                         messagebox.showinfo("Game Update", data["message"])
+            elif isinstance(data, dict) and data.get("prompt") == "vera":
+                self._prompt_vera(data.get("options", []))
             else:
                 self._append_message(msg)
         if self.client and self.client.is_alive():
@@ -281,12 +285,38 @@ class BangUI:
             payload = json.dumps({"action": "play_card", "card_index": index})
             asyncio.run_coroutine_threadsafe(self.client.websocket.send(payload), self.client.loop)
 
+    def _use_ability(self, ability: str, target: int | None = None, card_index: int | None = None) -> None:
+        if self.client and self.client.websocket:
+            payload = {"action": "use_ability", "ability": ability}
+            if target is not None:
+                payload["target"] = target
+            if card_index is not None:
+                payload["card_index"] = card_index
+            asyncio.run_coroutine_threadsafe(
+                self.client.websocket.send(json.dumps(payload)), self.client.loop
+            )
+
     def _update_hand(self, cards: list[str]) -> None:
         for widget in self.hand_frame.winfo_children():
             widget.destroy()
         for i, card in enumerate(cards):
             btn = ttk.Button(self.hand_frame, text=card, command=lambda idx=i: self._play_card(idx))
             btn.grid(row=0, column=i, padx=2)
+        if self.current_character in {"Sid Ketchum", "Chuck Wengam", "Doc Holyday"}:
+            ttk.Button(
+                self.hand_frame,
+                text="Use Ability",
+                command=lambda: self._use_ability(
+                    self.current_character.lower().replace(" ", "_")
+                ),
+            ).grid(row=1, column=0, columnspan=len(cards), pady=2)
+        elif self.current_character == "Uncle Will":
+            for i, _ in enumerate(cards):
+                ttk.Button(
+                    self.hand_frame,
+                    text="Store",
+                    command=lambda idx=i: self._use_ability("uncle_will", card_index=idx),
+                ).grid(row=1, column=i, padx=2)
 
     def _update_players(self, players: list[dict]) -> None:
         lines = []
@@ -306,6 +336,22 @@ class BangUI:
         self.text.configure(state="normal")
         self.text.insert(tk.END, msg + "\n")
         self.text.configure(state="disabled")
+
+    def _prompt_vera(self, options: list[dict]) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("Vera Custer")
+        ttk.Label(win, text="Choose ability to copy:").pack()
+
+        for opt in options:
+            btn = ttk.Button(
+                win,
+                text=opt.get("name", ""),
+                command=lambda idx=opt.get("index"): (
+                    self._use_ability("vera_custer", target=idx),
+                    win.destroy(),
+                ),
+            )
+            btn.pack(fill="x")
 
     def _bind_keys(self) -> None:
         if self._bound_key:
