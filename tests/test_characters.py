@@ -103,6 +103,21 @@ def test_calamity_janet_plays_missed_as_bang():
     assert target.health == target.max_health - 1
 
 
+def test_calamity_janet_dodges_with_bang():
+    gm = GameManager()
+    attacker = Player("Bandit")
+    janet = Player("Janet", character=CalamityJanet())
+    gm.add_player(attacker)
+    gm.add_player(janet)
+    janet.hand.append(BangCard())
+    attacker.hand.append(BangCard())
+    gm.play_card(attacker, attacker.hand[0], janet)
+    assert janet.health == janet.max_health
+    assert janet.metadata.get("dodged") is True
+    assert len(janet.hand) == 0
+    assert sum(isinstance(c, BangCard) for c in gm.discard_pile) == 2
+
+
 def test_el_gringo_steals_on_damage():
     gm = GameManager()
     gringo = Player("Gringo", character=ElGringo())

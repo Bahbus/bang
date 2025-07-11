@@ -393,6 +393,15 @@ class GameManager:
             if has_ability(target, MollyStark):
                 self.draw_card(target)
             return True
+        if has_ability(target, CalamityJanet):
+            bang = next((c for c in target.hand if isinstance(c, BangCard)), None)
+            if bang:
+                target.hand.remove(bang)
+                self.discard_pile.append(bang)
+                target.metadata["dodged"] = True
+                if has_ability(target, MollyStark):
+                    self.draw_card(target)
+                return True
         if has_ability(target, ElenaFuente) and target.hand:
             card = target.hand.pop()
             self.discard_pile.append(card)
