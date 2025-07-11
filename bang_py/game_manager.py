@@ -7,6 +7,7 @@ import random
 from .deck import Deck
 from .deck_factory import create_standard_deck
 from .cards.card import Card
+from .helpers import has_ability
 from .characters import (
     BartCassidy,
     BlackJack,
@@ -247,7 +248,7 @@ class GameManager:
     def discard_phase(self, player: Player) -> None:
         """Discard down to the player's hand limit at the end of their turn."""
         limit = player.health
-        if isinstance(player.character, SeanMallory):
+        if has_ability(player, SeanMallory):
             limit = 99
         while len(player.hand) > limit:
             card = player.hand.pop()
@@ -256,7 +257,7 @@ class GameManager:
     def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
         if card not in player.hand:
             return
-        if target and isinstance(target.character, ApacheKid):
+        if target and has_ability(target, ApacheKid):
             if getattr(card, "suit", None) == "Diamonds":
                 player.hand.remove(card)
                 self.discard_pile.append(card)
@@ -271,14 +272,14 @@ class GameManager:
             return
         # Determine if this card counts as a Bang!
         is_bang = isinstance(card, BangCard) or (
-            isinstance(player.character, CalamityJanet) and isinstance(card, MissedCard) and target
+            has_ability(player, CalamityJanet) and isinstance(card, MissedCard) and target
         )
         if is_bang:
             count = int(player.metadata.get("bangs_played", 0))
             gun = player.equipment.get("Gun")
             extra = int(player.metadata.get("doc_free_bang", 0))
             unlimited = (
-                isinstance(player.character, WillyTheKid)
+                has_ability(player, WillyTheKid)
                 or getattr(gun, "unlimited_bang", False)
                 or extra > 0
             )
@@ -287,18 +288,18 @@ class GameManager:
                 return
         player.hand.remove(card)
         before = target.health if target else None
-        if isinstance(player.character, CalamityJanet) and isinstance(card, MissedCard) and target:
+        if has_ability(player, CalamityJanet) and isinstance(card, MissedCard) and target:
             BangCard().play(target, self.deck)
         elif isinstance(card, BangCard):
-            ignore_eq = isinstance(player.character, BelleStar)
-            if target and isinstance(player.character, SlabTheKiller):
+            ignore_eq = has_ability(player, BelleStar)
+            if target and has_ability(player, SlabTheKiller):
                 misses = [c for c in target.hand if isinstance(c, MissedCard)]
                 if len(misses) >= 2:
                     for _ in range(2):
                         mcard = misses.pop()
                         target.hand.remove(mcard)
                         self.discard_pile.append(mcard)
-                        if isinstance(target.character, MollyStark):
+                        if has_ability(target, MollyStark):
                             self.draw_card(target)
                     target.metadata["dodged"] = True
                 else:
@@ -331,7 +332,7 @@ class GameManager:
         elif isinstance(card, BeerCard):
             before_hp = (target or player).health
             card.play(target or player)
-            if isinstance(player.character, TequilaJoe) and (target or player).health < (target or player).max_health:
+            if has_ability(player, TequilaJoe) and (target or player).health < (target or player).max_health:
                 (target or player).heal(1)
             if (target or player).health > before_hp:
                 self.on_player_healed(target or player)
@@ -345,7 +346,7 @@ class GameManager:
             card.play(target, player)
         else:
             card.play(target)
-        if isinstance(player.character, JohnnyKisch) and hasattr(card, "card_name"):
+        if has_ability(player, JohnnyKisch) and hasattr(card, "card_name"):
             for p in self.players:
                 if p is player:
                     continue
@@ -362,18 +363,18 @@ class GameManager:
                 player.metadata["doc_free_bang"] -= 1
             else:
                 player.metadata["bangs_played"] = int(player.metadata.get("bangs_played", 0)) + 1
-        if isinstance(player.character, SuzyLafayette) and not player.hand:
+        if has_ability(player, SuzyLafayette) and not player.hand:
             self.draw_card(player)
 
     def discard_card(self, player: Player, card: Card) -> None:
         if card in player.hand:
             player.hand.remove(card)
             self.discard_pile.append(card)
-            if isinstance(player.character, SuzyLafayette) and not player.hand:
+            if has_ability(player, SuzyLafayette) and not player.hand:
                 self.draw_card(player)
 
     def sid_ketchum_ability(self, player: Player) -> None:
-        if not isinstance(player.character, SidKetchum):
+        if not has_ability(player, SidKetchum):
             return
         if len(player.hand) < 2 or player.health >= player.max_health:
             return
@@ -389,21 +390,21 @@ class GameManager:
             target.hand.remove(miss)
             self.discard_pile.append(miss)
             target.metadata["dodged"] = True
-            if isinstance(target.character, MollyStark):
+            if has_ability(target, MollyStark):
                 self.draw_card(target)
             return True
-        if isinstance(target.character, ElenaFuente) and target.hand:
+        if has_ability(target, ElenaFuente) and target.hand:
             card = target.hand.pop()
             self.discard_pile.append(card)
             target.metadata["dodged"] = True
-            if isinstance(target.character, MollyStark):
+            if has_ability(target, MollyStark):
                 self.draw_card(target)
             return True
         return False
 
     def chuck_wengam_ability(self, player: Player) -> None:
         """Lose 1 life to draw 2 cards, usable multiple times per turn."""
-        if not isinstance(player.character, ChuckWengam):
+        if not has_ability(player, ChuckWengam):
             return
         if player.health <= 1:
             return
@@ -413,7 +414,7 @@ class GameManager:
 
     def doc_holyday_ability(self, player: Player) -> None:
         """Discard two cards to gain a Bang! that doesn't count toward the limit."""
-        if not isinstance(player.character, DocHolyday):
+        if not has_ability(player, DocHolyday):
             return
         if player.metadata.get("doc_used"):
             return
@@ -428,7 +429,7 @@ class GameManager:
 
     def pat_brennan_draw(self, player: Player) -> bool:
         """During draw phase, draw a card in play instead of from deck."""
-        if not isinstance(player.character, PatBrennan):
+        if not has_ability(player, PatBrennan):
             return False
         for p in self.players:
             for card in list(p.equipment.values()):
@@ -439,7 +440,7 @@ class GameManager:
 
     def uncle_will_ability(self, player: Player, card: Card) -> bool:
         """Play any card as General Store once per turn."""
-        if not isinstance(player.character, UncleWill):
+        if not has_ability(player, UncleWill):
             return False
         if player.metadata.get("uncle_used"):
             return False
@@ -449,10 +450,20 @@ class GameManager:
         self.discard_pile.append(card)
         return True
 
+    def vera_custer_copy(self, player: Player, target: Player) -> None:
+        """Copy another living character's ability for the turn."""
+        if not isinstance(player.character, VeraCuster):
+            return
+        if not target.is_alive() or target is player:
+            return
+        player.metadata["vera_copy"] = target.character.__class__
+
     def reset_turn_flags(self, player: Player) -> None:
         player.metadata.pop("doc_used", None)
         player.metadata.pop("doc_free_bang", None)
         player.metadata.pop("uncle_used", None)
+        if isinstance(player.character, VeraCuster):
+            player.metadata.pop("vera_copy", None)
 
     def _get_player_by_index(self, idx: int) -> Optional[Player]:
         if 0 <= idx < len(self.players):
@@ -462,24 +473,24 @@ class GameManager:
     def on_player_damaged(self, player: Player, source: Optional[Player] = None) -> None:
         for cb in self.player_damaged_listeners:
             cb(player)
-        if isinstance(player.character, BartCassidy):
+        if has_ability(player, BartCassidy):
             self.draw_card(player)
-        if isinstance(player.character, ElGringo) and source and source.hand:
+        if has_ability(player, ElGringo) and source and source.hand:
             stolen = random.choice(source.hand)
             source.hand.remove(stolen)
             player.hand.append(stolen)
         if player.health <= 0:
             for p in self.players:
-                if isinstance(p.character, GregDigger) and p.is_alive():
+                if has_ability(p, GregDigger) and p.is_alive():
                     before = p.health
                     p.heal(2)
                     if p.health > before:
                         self.on_player_healed(p)
             for p in self.players:
-                if p is not player and isinstance(p.character, HerbHunter):
+                if p is not player and has_ability(p, HerbHunter):
                     self.draw_card(p, 2)
             for p in self.players:
-                if p is not player and isinstance(p.character, VultureSam):
+                if p is not player and has_ability(p, VultureSam):
                     p.hand.extend(player.hand)
                     player.hand.clear()
             result = self._check_win_conditions()
