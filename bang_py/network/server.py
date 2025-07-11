@@ -193,7 +193,8 @@ class BangServer:
             payload = {
                 "players": _serialize_players(self.game.players),
                 "hand": [c.card_name for c in conn.player.hand],
-                "character": getattr(conn.player.character, "name", "")
+                "character": getattr(conn.player.character, "name", ""),
+                "event": getattr(self.game.current_event, "name", "")
             }
             if message:
                 payload["message"] = message

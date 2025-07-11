@@ -104,6 +104,9 @@ class Player:
     @property
     def attack_range(self) -> int:
         """Maximum range this player can target based on gun and equipment."""
+        game = self.metadata.get("game")
+        if getattr(game, "event_flags", {}).get("range_unlimited"):
+            return 99
         return self.gun_range + self.range_bonus
 
     def distance_to(self, other: "Player") -> int:

@@ -243,14 +243,18 @@ class BangUI:
         self.players_text = tk.Text(self.root, height=5, width=40, state="disabled")
         self.players_text.grid(row=0, column=0, columnspan=2)
 
+        self.event_var = tk.StringVar(value="")
+        self.event_label = ttk.Label(self.root, textvariable=self.event_var)
+        self.event_label.grid(row=1, column=0, columnspan=2)
+
         self.text = tk.Text(self.root, height=10, width=40, state="disabled")
-        self.text.grid(row=1, column=0, columnspan=2)
+        self.text.grid(row=2, column=0, columnspan=2)
 
         self.hand_frame = ttk.Frame(self.root)
-        self.hand_frame.grid(row=2, column=0, columnspan=2, pady=5)
+        self.hand_frame.grid(row=3, column=0, columnspan=2, pady=5)
 
         end_btn = ttk.Button(self.root, text="End Turn", command=self._end_turn)
-        end_btn.grid(row=3, column=0, columnspan=2, pady=5)
+        end_btn.grid(row=4, column=0, columnspan=2, pady=5)
 
     def _process_queue(self) -> None:
         while not self.msg_queue.empty():
@@ -265,6 +269,7 @@ class BangUI:
                 self._update_players(data["players"])
                 self.current_character = data.get("character", self.current_character)
                 self._update_hand(data.get("hand", []))
+                self.event_var.set(data.get("event", ""))
                 if "message" in data:
                     self._append_message(data["message"])
                     if any(k in data["message"].lower() for k in ["win", "eliminated"]):
