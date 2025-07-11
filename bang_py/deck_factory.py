@@ -38,6 +38,8 @@ from .cards import (
     TequilaCard,
     PonyExpressCard,
     DerringerCard,
+    PepperboxCard,
+    HowitzerCard,
 )
 from .cards.card import Card
 
@@ -73,6 +75,8 @@ DODGE_CITY_COUNTS: List[Tuple[Type[Card], int]] = [
     (HideoutCard, 2),
     (BinocularsCard, 2),
     (BuffaloRifleCard, 1),
+    (PepperboxCard, 1),
+    (HowitzerCard, 1),
     (SombreroCard, 1),
     (IronPlateCard, 1),
     (DerringerCard, 2),
