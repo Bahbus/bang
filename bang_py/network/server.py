@@ -109,11 +109,13 @@ class BangServer:
                     ability = data.get("ability")
                     player = self.connections[websocket].player
                     if ability == "sid_ketchum":
-                        self.game.sid_ketchum_ability(player)
+                        idxs = data.get("indices") or []
+                        self.game.sid_ketchum_ability(player, idxs)
                     elif ability == "chuck_wengam":
                         self.game.chuck_wengam_ability(player)
                     elif ability == "doc_holyday":
-                        self.game.doc_holyday_ability(player)
+                        idxs = data.get("indices") or []
+                        self.game.doc_holyday_ability(player, idxs)
                     elif ability == "vera_custer":
                         idx = data.get("target")
                         target = None
@@ -121,6 +123,24 @@ class BangServer:
                             target = self.game._get_player_by_index(idx)
                         if target:
                             self.game.vera_custer_copy(player, target)
+                    elif ability == "jesse_jones":
+                        idx = data.get("target")
+                        target = self.game._get_player_by_index(idx) if idx is not None else None
+                        self.game.draw_phase(player, jesse_target=target)
+                    elif ability == "kit_carlson":
+                        discard = data.get("discard")
+                        self.game.draw_phase(player, kit_discard=discard)
+                    elif ability == "pedro_ramirez":
+                        use_discard = bool(data.get("use_discard", True))
+                        self.game.draw_phase(player, pedro_use_discard=use_discard)
+                    elif ability == "jose_delgado":
+                        eq_idx = data.get("equipment")
+                        self.game.draw_phase(player, jose_equipment=eq_idx)
+                    elif ability == "pat_brennan":
+                        idx = data.get("target")
+                        card = data.get("card")
+                        target = self.game._get_player_by_index(idx) if idx is not None else None
+                        self.game.draw_phase(player, pat_target=target, pat_card=card)
                     elif ability == "uncle_will":
                         cidx = data.get("card_index")
                         if cidx is not None and 0 <= cidx < len(player.hand):

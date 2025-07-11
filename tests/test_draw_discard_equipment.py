@@ -45,7 +45,7 @@ def test_sid_ketchum_discard_two_to_heal():
     gm.add_player(sid)
     sid.health = sid.max_health - 1
     sid.hand.extend([BangCard(), BangCard()])
-    gm.sid_ketchum_ability(sid)
+    gm.sid_ketchum_ability(sid, [0, 1])
     assert sid.health == sid.max_health
     assert len(sid.hand) == 0
 

@@ -9,6 +9,7 @@ from bang_py.characters import (
     Jourdonnais,
     KitCarlson,
     LuckyDuke,
+    JoseDelgado,
     PaulRegret,
     PedroRamirez,
     RoseDoolan,
@@ -139,7 +140,7 @@ def test_jesse_jones_draws_from_opponent():
     other.hand.append(BangCard())
     gm.add_player(jj)
     gm.add_player(other)
-    gm.draw_phase(jj)
+    gm.draw_phase(jj, jesse_target=other)
     assert len(jj.hand) == 2
     assert len(other.hand) == 0
 
@@ -158,7 +159,7 @@ def test_kit_carlson_draw_three_keep_two():
     gm = GameManager(deck=deck)
     kit = Player("Kit", character=KitCarlson())
     gm.add_player(kit)
-    gm.draw_phase(kit)
+    gm.draw_phase(kit, kit_discard=1)
     assert len(kit.hand) == 2
     assert len(gm.discard_pile) == 1
 
@@ -180,8 +181,36 @@ def test_pedro_ramirez_takes_from_discard():
     gm.discard_pile.append(MissedCard())
     pedro = Player("Pedro", character=PedroRamirez())
     gm.add_player(pedro)
-    gm.draw_phase(pedro)
+    gm.draw_phase(pedro, pedro_use_discard=True)
     assert len(pedro.hand) == 2
+
+
+def test_pedro_ramirez_draws_from_deck_when_chosen():
+    deck = create_standard_deck()
+    deck.cards.extend([BangCard(), BeerCard()])
+    gm = GameManager(deck=deck)
+    gm.discard_pile.append(MissedCard())
+    pedro = Player("Pedro", character=PedroRamirez())
+    gm.add_player(pedro)
+    gm.draw_phase(pedro, pedro_use_discard=False)
+    assert len(pedro.hand) == 2
+
+
+def test_jose_delgado_discards_selected_equipment():
+    deck = create_standard_deck()
+    gm = GameManager(deck=deck)
+    jose = Player("Jose", character=JoseDelgado())
+    gm.add_player(jose)
+    gun = BangCard()
+    gun.slot = "Gun"
+    barrel = MissedCard()
+    barrel.slot = "Barrel"
+    jose.hand.extend([gun, barrel])
+    gm.draw_phase(jose, jose_equipment=1)
+    assert len(gm.discard_pile) == 1
+    assert gm.discard_pile[0] is barrel
+    assert len(jose.hand) == 4
+    assert gun in jose.hand and barrel not in jose.hand
 
 
 def test_sid_ketchum_discard_two_to_heal():
@@ -190,7 +219,7 @@ def test_sid_ketchum_discard_two_to_heal():
     gm.add_player(sid)
     sid.hand.extend([BangCard(), BeerCard()])
     sid.health -= 1
-    gm.sid_ketchum_ability(sid)
+    gm.sid_ketchum_ability(sid, [0, 1])
     assert sid.health == sid.max_health
     assert len(sid.hand) == 0
 
