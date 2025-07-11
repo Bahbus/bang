@@ -23,7 +23,7 @@ class PanicCard(Card):
             player.hand.append(card)
         elif target.equipment:
             card = random.choice(list(target.equipment.values()))
-            target.equipment.pop(card.card_name, None)
+            target.unequip(card.card_name)
             player.hand.append(card)
         if game:
             # No discard since card is stolen

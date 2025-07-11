@@ -4,6 +4,8 @@ from bang_py.player import Player
 from bang_py.cards.bang import BangCard
 from bang_py.cards.scope import ScopeCard
 from bang_py.cards.mustang import MustangCard
+from bang_py.cards.iron_plate import IronPlateCard
+from bang_py.cards.cat_balou import CatBalouCard
 from bang_py.characters import BlackJack, SidKetchum
 
 
@@ -46,3 +48,21 @@ def test_sid_ketchum_discard_two_to_heal():
     gm.sid_ketchum_ability(sid)
     assert sid.health == sid.max_health
     assert len(sid.hand) == 0
+
+
+def test_iron_plate_increases_max_health():
+    player = Player("Platey")
+    IronPlateCard().play(player)
+    assert player.max_health == 5
+    assert player.health == 5
+
+
+def test_iron_plate_removed_restores_max_health():
+    gm = GameManager(deck=Deck([]))
+    player = Player("Platey")
+    gm.add_player(player)
+    IronPlateCard().play(player)
+    assert player.max_health == 5
+    CatBalouCard().play(player, game=gm)
+    assert player.max_health == 4
+    assert player.health == 4

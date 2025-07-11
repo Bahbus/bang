@@ -24,6 +24,6 @@ class CatBalouCard(Card):
                 game.discard_pile.append(card)
         elif target.equipment:
             card = random.choice(list(target.equipment.values()))
-            target.equipment.pop(card.card_name, None)
+            target.unequip(card.card_name)
             if game:
                 game.discard_pile.append(card)

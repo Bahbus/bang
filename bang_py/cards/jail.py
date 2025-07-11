@@ -29,5 +29,5 @@ class JailCard(EquipmentCard):
         else:
             card1 = deck.draw()
             result = is_heart(card1)
-        player.equipment.pop(self.card_name, None)
+        player.unequip(self.card_name)
         return not result

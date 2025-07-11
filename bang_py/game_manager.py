@@ -350,7 +350,7 @@ class GameManager:
             for p in self.players:
                 if p is player:
                     continue
-                other = p.equipment.pop(card.card_name, None)
+                other = p.unequip(card.card_name)
                 if other:
                     self.discard_pile.append(other)
         if target and before is not None and target.health < before:
@@ -442,7 +442,7 @@ class GameManager:
             return False
         for p in self.players:
             for card in list(p.equipment.values()):
-                p.equipment.pop(card.card_name, None)
+                p.unequip(card.card_name)
                 player.hand.append(card)
                 return True
         return False
