@@ -221,6 +221,25 @@ class ClausTheSaint(Character):
     max_health_modifier = -1
 
 
+class BigSpencer(Character):
+    name = "Big Spencer"
+    description = "You have 9 life points and may not play Missed! cards."
+    max_health_modifier = 5
+
+class GaryLooter(Character):
+    name = "Gary Looter"
+    description = (
+        "He takes into his hand all cards other players discard at the end of"
+        " their turn."
+    )
+    max_health_modifier = 1
+
+class LeeVanKliff(Character):
+    name = "Lee Van Kliff"
+    description = (
+        "Once per turn, you may discard a Bang! to repeat the effect of a brown card you just played."
+    )
+
 __all__ = [
     "Character",
     "BartCassidy",
@@ -257,4 +276,7 @@ __all__ = [
     "UncleWill",
     "JohnnyKisch",
     "ClausTheSaint",
+    "BigSpencer",
+    "GaryLooter",
+    "LeeVanKliff",
 ]

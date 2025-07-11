@@ -41,6 +41,9 @@ from .characters import (
     MollyStark,
     JohnnyKisch,
     ClausTheSaint,
+    BigSpencer,
+    GaryLooter,
+    LeeVanKliff,
 )
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
@@ -329,9 +332,20 @@ class GameManager:
         limit = player.health
         if has_ability(player, SeanMallory):
             limit = 99
+        recipient = next(
+            (
+                p
+                for p in self.players
+                if p is not player and has_ability(p, GaryLooter) and p.is_alive()
+            ),
+            None,
+        )
         while len(player.hand) > limit:
             card = player.hand.pop()
-            self.discard_pile.append(card)
+            if recipient is not None:
+                recipient.hand.append(card)
+            else:
+                self.discard_pile.append(card)
 
     def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
         if card not in player.hand:
@@ -448,6 +462,8 @@ class GameManager:
         if target and before is not None and target.health > before:
             self.on_player_healed(target)
         self.discard_pile.append(card)
+        player.metadata["last_card_played"] = card.__class__
+        player.metadata["last_card_target"] = target
         if is_bang:
             if int(player.metadata.get("doc_free_bang", 0)) > 0:
                 player.metadata["doc_free_bang"] -= 1
@@ -480,6 +496,8 @@ class GameManager:
 
     def _auto_miss(self, target: Player) -> bool:
         if self.event_flags.get("no_missed"):
+            return False
+        if has_ability(target, BigSpencer):
             return False
         if target.metadata.get("auto_miss", True) is False:
             return False
@@ -568,6 +586,34 @@ class GameManager:
         self.discard_pile.append(card)
         return True
 
+    def lee_van_kliff_ability(self, player: Player, bang_index: int = 0) -> bool:
+        """Discard a Bang! to repeat the last brown card played."""
+        if not has_ability(player, LeeVanKliff):
+            return False
+        if player.metadata.get("lvk_used"):
+            return False
+        cls = player.metadata.get("last_card_played")
+        if not cls:
+            return False
+        if not (0 <= bang_index < len(player.hand)) or not isinstance(
+            player.hand[bang_index], BangCard
+        ):
+            return False
+        bang = player.hand.pop(bang_index)
+        self.discard_pile.append(bang)
+        target = player.metadata.get("last_card_target") or player
+        card = cls()
+        try:
+            card.play(target, player, game=self)
+        except TypeError:
+            try:
+                card.play(target, game=self)
+            except TypeError:
+                card.play(target)
+        self.discard_pile.append(card)
+        player.metadata["lvk_used"] = True
+        return True
+
     def vera_custer_copy(self, player: Player, target: Player) -> None:
         """Copy another living character's ability for the turn."""
         if not isinstance(player.character, VeraCuster):
@@ -630,6 +676,7 @@ class GameManager:
         player.metadata.pop("doc_used", None)
         player.metadata.pop("doc_free_bang", None)
         player.metadata.pop("uncle_used", None)
+        player.metadata.pop("lvk_used", None)
         if isinstance(player.character, VeraCuster):
             player.metadata.pop("vera_copy", None)
 
