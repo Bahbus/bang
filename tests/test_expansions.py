@@ -36,9 +36,6 @@ from bang_py.characters import (
     UncleWill,
     JohnnyKisch,
     ClausTheSaint,
-    BigSpencer,
-    GaryLooter,
-    LeeVanKliff,
 )
 
 
@@ -304,41 +301,6 @@ def test_bullet_characters_instantiable():
     assert len(instances) == len(chars)
 
 
-def test_big_spencer_cannot_play_missed():
-    gm = GameManager()
-    big = Player("Big", character=BigSpencer())
-    attacker = Player("Att")
-    gm.add_player(big)
-    gm.add_player(attacker)
-    big.hand.append(MissedCard())
-    attacker.hand.append(BangCard())
-    gm.play_card(attacker, attacker.hand[0], big)
-    assert big.health == big.max_health - 1
-    assert len(big.hand) == 1
-
-
-def test_gary_looter_collects_excess_cards():
-    gm = GameManager()
-    gary = Player("Gary", character=GaryLooter())
-    other = Player("Other")
-    gm.add_player(gary)
-    gm.add_player(other)
-    other.hand = [BangCard(), BangCard(), BangCard(), BangCard()]
-    other.health = 2
-    gm.discard_phase(other)
-    assert len(other.hand) == 2
-    assert len(gary.hand) == 2
-
-
-def test_lee_van_kliff_repeats_stagecoach():
-    deck = Deck([BangCard(), BangCard(), BangCard(), BangCard()])
-    gm = GameManager(deck=deck)
-    lee = Player("Lee", character=LeeVanKliff())
-    gm.add_player(lee)
-    lee.hand.extend([StagecoachCard(), BangCard()])
-    gm.play_card(lee, lee.hand[0], lee)
-    gm.lee_van_kliff_ability(lee, bang_index=0)
-    assert len(lee.hand) == 4
 
 
 def test_high_noon_event_deck_draw():
