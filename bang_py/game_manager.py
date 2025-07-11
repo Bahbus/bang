@@ -81,6 +81,7 @@ class GameManager:
     turn_order: List[int] = field(default_factory=list)
     event_deck: List[EventCard] | None = None
     current_event: EventCard | None = None
+    event_flags: dict = field(default_factory=dict)
 
     # Event listeners
     player_damaged_listeners: List[Callable[[Player], None]] = field(default_factory=list)
@@ -94,11 +95,13 @@ class GameManager:
             return
         random.shuffle(self.event_deck)
         self.current_event = self.event_deck.pop(0)
+        self.event_flags.clear()
         self.current_event.apply(self)
 
     def __post_init__(self) -> None:
         if self.deck is None:
             self.deck = create_standard_deck(self.expansions)
+        self.event_flags = {}
         if "high_noon" in self.expansions:
             self.event_deck = create_high_noon_deck()
         elif "fistful_of_cards" in self.expansions:
@@ -127,6 +130,21 @@ class GameManager:
         self.reset_turn_flags(player)
         if self.event_deck and player.role == Role.SHERIFF:
             self.draw_event_card()
+        dmg = self.event_flags.get("start_damage", 0)
+        if dmg:
+            player.take_damage(dmg)
+            self.on_player_damaged(player)
+            if not player.is_alive():
+                self._begin_turn()
+                return
+        if self.event_flags.get("damage_by_hand"):
+            dmg = len(player.hand)
+            if dmg:
+                player.take_damage(dmg)
+                self.on_player_damaged(player)
+                if not player.is_alive():
+                    self._begin_turn()
+                    return
         # Handle start-of-turn equipment effects
         dyn = player.equipment.get("Dynamite")
         if dyn and getattr(dyn, "check_dynamite", None):
@@ -174,6 +192,10 @@ class GameManager:
                 player.hand.append(card)
 
     def draw_phase(self, player: Player) -> None:
+        custom_draw = self.event_flags.get("draw_count")
+        if custom_draw is not None:
+            self.draw_card(player, custom_draw)
+            return
         char = player.character
         if isinstance(char, JesseJones):
             opponents = [p for p in self.players if p is not player and p.hand]
@@ -283,7 +305,8 @@ class GameManager:
                 or getattr(gun, "unlimited_bang", False)
                 or extra > 0
             )
-            if count >= 1 and not unlimited:
+            limit = self.event_flags.get("bang_limit", 1)
+            if count >= limit and not unlimited:
                 # Cannot play more Bang! cards this turn
                 return
         player.hand.remove(card)
