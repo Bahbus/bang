@@ -113,6 +113,23 @@ def test_general_store_selection_order():
     assert p3.hand == [c1]
 
 
+def test_general_store_allows_player_choice():
+    deck = Deck([])
+    c1, c2, c3 = BangCard(), BeerCard(), GatlingCard()
+    deck.cards = [c1, c2, c3]
+    gm = GameManager(deck=deck)
+    p1 = Player("A")
+    p2 = Player("B")
+    p3 = Player("C")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.add_player(p3)
+    GeneralStoreCard().play(p1, p1, game=gm, choices=[1, 0, 0])
+    assert p1.hand == [c2]
+    assert p2.hand == [c3]
+    assert p3.hand == [c1]
+
+
 def test_saloon_heals_everyone():
     gm = GameManager(deck=Deck([]))
     p1 = Player("A")

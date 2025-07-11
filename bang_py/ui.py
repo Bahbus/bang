@@ -271,6 +271,8 @@ class BangUI:
                         messagebox.showinfo("Game Update", data["message"])
             elif isinstance(data, dict) and data.get("prompt") == "vera":
                 self._prompt_vera(data.get("options", []))
+            elif isinstance(data, dict) and data.get("prompt") == "general_store":
+                self._prompt_general_store(data.get("cards", []))
             else:
                 self._append_message(msg)
         if self.client and self.client.is_alive():
@@ -361,6 +363,29 @@ class BangUI:
                 ),
             )
             btn.pack(fill="x")
+
+    def _prompt_general_store(self, cards: list[str]) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("General Store")
+        ttk.Label(win, text="Choose a card:").pack()
+
+        for i, card in enumerate(cards):
+            btn = ttk.Button(
+                win,
+                text=card,
+                command=lambda idx=i: (
+                    self._pick_general_store(idx),
+                    win.destroy(),
+                ),
+            )
+            btn.pack(fill="x")
+
+    def _pick_general_store(self, index: int) -> None:
+        if self.client and self.client.websocket:
+            payload = json.dumps({"action": "general_store_pick", "index": index})
+            asyncio.run_coroutine_threadsafe(
+                self.client.websocket.send(payload), self.client.loop
+            )
 
     def _bind_keys(self) -> None:
         if self._bound_key:
