@@ -7,7 +7,7 @@ import random
 from .deck import Deck
 from .deck_factory import create_standard_deck
 from .cards.card import Card
-from .helpers import has_ability
+from .helpers import has_ability, handle_out_of_turn_discard
 from .characters import (
     BartCassidy,
     BlackJack,
@@ -73,6 +73,7 @@ from .event_decks import (
 class GameManager:
     """Manage players, deck and discard pile while controlling turn order and
     triggering game events."""
+
     players: List[Player] = field(default_factory=list)
     deck: Deck | None = None
     expansions: List[str] = field(default_factory=list)
@@ -358,8 +359,7 @@ class GameManager:
                         mcard = misses.pop()
                         target.hand.remove(mcard)
                         self.discard_pile.append(mcard)
-                        if has_ability(target, MollyStark):
-                            self.draw_card(target)
+                        handle_out_of_turn_discard(self, target, mcard)
                     target.metadata["dodged"] = True
                 else:
                     card.play(target, self.deck, ignore_equipment=ignore_eq)
@@ -391,7 +391,10 @@ class GameManager:
         elif isinstance(card, BeerCard):
             before_hp = (target or player).health
             card.play(target or player)
-            if has_ability(player, TequilaJoe) and (target or player).health < (target or player).max_health:
+            if (
+                has_ability(player, TequilaJoe)
+                and (target or player).health < (target or player).max_health
+            ):
                 (target or player).heal(1)
             if (target or player).health > before_hp:
                 self.on_player_healed(target or player)
@@ -429,6 +432,7 @@ class GameManager:
         if card in player.hand:
             player.hand.remove(card)
             self.discard_pile.append(card)
+            handle_out_of_turn_discard(self, player, card)
             if has_ability(player, SuzyLafayette) and not player.hand:
                 self.draw_card(player)
 
@@ -451,25 +455,22 @@ class GameManager:
         if miss:
             target.hand.remove(miss)
             self.discard_pile.append(miss)
+            handle_out_of_turn_discard(self, target, miss)
             target.metadata["dodged"] = True
-            if has_ability(target, MollyStark):
-                self.draw_card(target)
             return True
         if has_ability(target, CalamityJanet):
             bang = next((c for c in target.hand if isinstance(c, BangCard)), None)
             if bang:
                 target.hand.remove(bang)
                 self.discard_pile.append(bang)
+                handle_out_of_turn_discard(self, target, bang)
                 target.metadata["dodged"] = True
-                if has_ability(target, MollyStark):
-                    self.draw_card(target)
                 return True
         if has_ability(target, ElenaFuente) and target.hand:
             card = target.hand.pop()
             self.discard_pile.append(card)
+            handle_out_of_turn_discard(self, target, card)
             target.metadata["dodged"] = True
-            if has_ability(target, MollyStark):
-                self.draw_card(target)
             return True
         return False
 
@@ -653,4 +654,3 @@ class GameManager:
             for cb in self.game_over_listeners:
                 cb(result)
         return result
-
