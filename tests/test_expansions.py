@@ -1,7 +1,6 @@
 from bang_py.deck_factory import create_standard_deck
-from bang_py.deck_factory import create_standard_deck
 from bang_py.game_manager import GameManager
-from bang_py.player import Player
+from bang_py.player import Player, Role
 from bang_py.cards import (
     PunchCard,
     HideoutCard,
@@ -12,8 +11,26 @@ from bang_py.cards import (
     PonyExpressCard,
     TequilaCard,
     BeerCard,
+    BarrelCard,
+    BangCard,
+    PanicCard,
+    IndiansCard,
 )
-from bang_py.characters import PixiePete, SeanMallory, TequilaJoe
+from bang_py.characters import (
+    PixiePete,
+    SeanMallory,
+    TequilaJoe,
+    BillNoface,
+    BelleStar,
+    ChuckWengam,
+    DocHolyday,
+    ElenaFuente,
+    MollyStark,
+    PatBrennan,
+    UncleWill,
+    JohnnyKisch,
+    ClausTheSaint,
+)
 
 
 def test_dodge_city_cards_added():
@@ -98,6 +115,122 @@ def test_tequila_joe_beer_heals_two():
     assert tj.health == tj.max_health
 
 
+def test_bill_noface_draws_extra():
+    gm = GameManager()
+    bn = Player("Bill", character=BillNoface())
+    gm.add_player(bn)
+    bn.health -= 2
+    gm.draw_phase(bn)
+    assert len(bn.hand) == 3
+
+
+def test_belle_star_ignores_barrel():
+    gm = GameManager()
+    belle = Player("Belle", character=BelleStar())
+    target = Player("T")
+    gm.add_player(belle)
+    gm.add_player(target)
+    BarrelCard().play(target)
+    belle.hand.append(BangCard())
+    gm.play_card(belle, belle.hand[0], target)
+    assert target.health == target.max_health - 1
+
+
+def test_chuck_wengam_ability():
+    gm = GameManager()
+    chuck = Player("Chuck", character=ChuckWengam())
+    gm.add_player(chuck)
+    gm.chuck_wengam_ability(chuck)
+    assert chuck.health == chuck.max_health - 1
+    assert len(chuck.hand) == 2
+
+
+def test_doc_holyday_free_bang():
+    gm = GameManager()
+    doc = Player("Doc", character=DocHolyday())
+    target = Player("T")
+    gm.add_player(doc)
+    gm.add_player(target)
+    doc.hand.extend([PanicCard(), PanicCard()])
+    gm.doc_holyday_ability(doc)
+    bang = next(c for c in doc.hand if isinstance(c, BangCard))
+    gm.play_card(doc, bang, target)
+    assert doc.metadata.get("bangs_played", 0) == 0
+
+
+def test_elena_fuente_any_card_as_missed():
+    gm = GameManager()
+    attacker = Player("A")
+    elena = Player("Elena", character=ElenaFuente())
+    gm.add_player(attacker)
+    gm.add_player(elena)
+    elena.hand.append(PanicCard())
+    attacker.hand.append(BangCard())
+    gm.play_card(attacker, attacker.hand[0], elena)
+    assert elena.health == elena.max_health
+
+
+def test_molly_stark_draws_when_discarding():
+    gm = GameManager()
+    molly = Player("Molly", character=MollyStark())
+    attacker = Player("A")
+    gm.add_player(molly)
+    gm.add_player(attacker)
+    molly.hand.append(BangCard())
+    ind = IndiansCard()
+    attacker.hand.append(ind)
+    gm.play_card(attacker, ind, None)
+    assert len(molly.hand) == 1
+
+
+def test_pat_brennan_draw_in_play():
+    gm = GameManager()
+    pat = Player("Pat", character=PatBrennan())
+    other = Player("O")
+    gm.add_player(pat)
+    gm.add_player(other)
+    BarrelCard().play(other)
+    gm.draw_phase(pat)
+    assert "Barrel" in pat.hand[0].card_name
+
+
+def test_uncle_will_general_store():
+    gm = GameManager()
+    uw = Player("Will", character=UncleWill())
+    other = Player("O")
+    gm.add_player(uw)
+    gm.add_player(other)
+    uw.hand.append(PanicCard())
+    gm.uncle_will_ability(uw, uw.hand[0])
+    assert len(uw.hand) == 1
+
+
+def test_johnny_kisch_discards_duplicates():
+    gm = GameManager()
+    johnny = Player("Johnny", character=JohnnyKisch())
+    other = Player("O")
+    gm.add_player(johnny)
+    gm.add_player(other)
+    BarrelCard().play(other)
+    johnny.hand.append(BarrelCard())
+    gm.play_card(johnny, johnny.hand[0], johnny)
+    assert "Barrel" not in other.equipment
+
+
+def test_claus_the_saint_distributes_cards():
+    gm = GameManager()
+    claus = Player("Claus", character=ClausTheSaint())
+    p2 = Player("P2")
+    p3 = Player("P3")
+    gm.add_player(claus)
+    gm.add_player(p2)
+    gm.add_player(p3)
+    gm.draw_phase(claus)
+    assert len(claus.hand) == 2
+    assert len(p2.hand) == 1
+    assert len(p3.hand) == 1
+
+
 def test_bullet_characters_instantiable():
     from bang_py.characters import (
         BelleStar,
@@ -129,4 +262,14 @@ def test_bullet_characters_instantiable():
 
     instances = [cls() for cls in chars]
     assert len(instances) == len(chars)
+
+
+def test_high_noon_event_deck_draw():
+    gm = GameManager(expansions=["high_noon"])
+    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    outlaw = Player("Outlaw")
+    gm.add_player(sheriff)
+    gm.add_player(outlaw)
+    gm.start_game()
+    assert gm.current_event is not None
 

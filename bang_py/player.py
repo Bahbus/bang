@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, TYPE_CHECKING
 
+from .characters import BelleStar
+
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from .cards.equipment import EquipmentCard
     from .characters import Character
@@ -78,7 +80,7 @@ class Player:
         return self.gun_range + self.range_bonus
 
     def distance_to(self, other: "Player") -> int:
-        """Calculate distance to another player considering seating and equipment."""
+        """Return distance to another player considering equipment and abilities."""
         game = self.metadata.get("game")
         players = getattr(game, "players", None)
 
@@ -86,7 +88,13 @@ class Player:
         if players and self in players and other in players:
             base = self._seated_distance(self, other, players)
 
-        distance = base + other.distance_bonus - self.range_bonus
+        ignore_other_bonus = False
+        if game and game.turn_order:
+            current = game.players[game.turn_order[game.current_turn % len(game.turn_order)]]
+            if current is self and isinstance(getattr(self, "character", None), BelleStar):
+                ignore_other_bonus = True
+
+        distance = base + (0 if ignore_other_bonus else other.distance_bonus) - self.range_bonus
         return max(1, distance)
 
     @staticmethod

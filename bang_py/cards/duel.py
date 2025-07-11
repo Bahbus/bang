@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .card import Card
 from ..player import Player
+from ..characters import MollyStark
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,6 +27,8 @@ class DuelCard(Card):
             if bang:
                 attacker.hand.remove(bang)
                 game.discard_pile.append(bang)
+                if isinstance(attacker.character, MollyStark):
+                    game.draw_card(attacker)
                 attacker, defender = defender, attacker
             else:
                 before = attacker.health

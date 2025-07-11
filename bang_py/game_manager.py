@@ -29,6 +29,17 @@ from .characters import (
     VeraCuster,
     ApacheKid,
     GregDigger,
+    BelleStar,
+    BillNoface,
+    ChuckWengam,
+    DocHolyday,
+    ElenaFuente,
+    HerbHunter,
+    PatBrennan,
+    UncleWill,
+    MollyStark,
+    JohnnyKisch,
+    ClausTheSaint,
 )
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
@@ -50,6 +61,11 @@ from .cards.pony_express import PonyExpressCard
 from .cards.tequila import TequilaCard
 
 from .player import Player, Role
+from .event_decks import (
+    EventCard,
+    create_high_noon_deck,
+    create_fistful_deck,
+)
 
 
 @dataclass
@@ -62,6 +78,8 @@ class GameManager:
     discard_pile: List[Card] = field(default_factory=list)
     current_turn: int = 0
     turn_order: List[int] = field(default_factory=list)
+    event_deck: List[EventCard] | None = None
+    current_event: EventCard | None = None
 
     # Event listeners
     player_damaged_listeners: List[Callable[[Player], None]] = field(default_factory=list)
@@ -69,9 +87,21 @@ class GameManager:
     turn_started_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
 
+    def draw_event_card(self) -> None:
+        """Draw and apply the next event card."""
+        if not self.event_deck:
+            return
+        random.shuffle(self.event_deck)
+        self.current_event = self.event_deck.pop(0)
+        self.current_event.apply(self)
+
     def __post_init__(self) -> None:
         if self.deck is None:
             self.deck = create_standard_deck(self.expansions)
+        if "high_noon" in self.expansions:
+            self.event_deck = create_high_noon_deck()
+        elif "fistful_of_cards" in self.expansions:
+            self.event_deck = create_fistful_deck()
 
     def add_player(self, player: Player) -> None:
         """Add a player to the game and record the game reference."""
@@ -90,8 +120,12 @@ class GameManager:
     def _begin_turn(self) -> None:
         if not self.turn_order:
             return
+        self.current_turn %= len(self.turn_order)
         idx = self.turn_order[self.current_turn]
         player = self.players[idx]
+        self.reset_turn_flags(player)
+        if self.event_deck and player.role == Role.SHERIFF:
+            self.draw_event_card()
         # Handle start-of-turn equipment effects
         dyn = player.equipment.get("Dynamite")
         if dyn and getattr(dyn, "check_dynamite", None):
@@ -182,6 +216,32 @@ class GameManager:
                 self.draw_card(player, 2)
             self.draw_card(player)
             return
+        if isinstance(char, BillNoface):
+            wounds = player.max_health - player.health
+            self.draw_card(player, 1 + wounds)
+            return
+        if isinstance(char, PatBrennan):
+            if not self.pat_brennan_draw(player):
+                self.draw_card(player)
+            self.draw_card(player)
+            return
+        if isinstance(char, ClausTheSaint):
+            alive = [p for p in self.players if p.is_alive()]
+            cards = []
+            for _ in range(len(alive) + 1):
+                card = self.deck.draw()
+                if card:
+                    cards.append(card)
+            keep = cards[:2]
+            for c in keep:
+                player.hand.append(c)
+            others = [p for p in alive if p is not player]
+            idx = 2
+            for p in others:
+                if idx < len(cards):
+                    p.hand.append(cards[idx])
+                    idx += 1
+            return
         self.draw_card(player, 2)
 
     def discard_phase(self, player: Player) -> None:
@@ -216,9 +276,11 @@ class GameManager:
         if is_bang:
             count = int(player.metadata.get("bangs_played", 0))
             gun = player.equipment.get("Gun")
+            extra = int(player.metadata.get("doc_free_bang", 0))
             unlimited = (
                 isinstance(player.character, WillyTheKid)
                 or getattr(gun, "unlimited_bang", False)
+                or extra > 0
             )
             if count >= 1 and not unlimited:
                 # Cannot play more Bang! cards this turn
@@ -228,6 +290,7 @@ class GameManager:
         if isinstance(player.character, CalamityJanet) and isinstance(card, MissedCard) and target:
             BangCard().play(target, self.deck)
         elif isinstance(card, BangCard):
+            ignore_eq = isinstance(player.character, BelleStar)
             if target and isinstance(player.character, SlabTheKiller):
                 misses = [c for c in target.hand if isinstance(c, MissedCard)]
                 if len(misses) >= 2:
@@ -235,11 +298,16 @@ class GameManager:
                         mcard = misses.pop()
                         target.hand.remove(mcard)
                         self.discard_pile.append(mcard)
+                        if isinstance(target.character, MollyStark):
+                            self.draw_card(target)
                     target.metadata["dodged"] = True
                 else:
-                    card.play(target, self.deck)
+                    card.play(target, self.deck, ignore_equipment=ignore_eq)
             else:
-                card.play(target, self.deck)
+                if target and self._auto_miss(target):
+                    pass
+                else:
+                    card.play(target, self.deck, ignore_equipment=ignore_eq)
         elif isinstance(card, StagecoachCard):
             self.draw_card(player, 2)
         elif isinstance(card, WellsFargoCard):
@@ -277,13 +345,23 @@ class GameManager:
             card.play(target, player)
         else:
             card.play(target)
+        if isinstance(player.character, JohnnyKisch) and hasattr(card, "card_name"):
+            for p in self.players:
+                if p is player:
+                    continue
+                other = p.equipment.pop(card.card_name, None)
+                if other:
+                    self.discard_pile.append(other)
         if target and before is not None and target.health < before:
             self.on_player_damaged(target, player)
         if target and before is not None and target.health > before:
             self.on_player_healed(target)
         self.discard_pile.append(card)
         if is_bang:
-            player.metadata["bangs_played"] = int(player.metadata.get("bangs_played", 0)) + 1
+            if int(player.metadata.get("doc_free_bang", 0)) > 0:
+                player.metadata["doc_free_bang"] -= 1
+            else:
+                player.metadata["bangs_played"] = int(player.metadata.get("bangs_played", 0)) + 1
         if isinstance(player.character, SuzyLafayette) and not player.hand:
             self.draw_card(player)
 
@@ -304,6 +382,77 @@ class GameManager:
             self.discard_pile.append(card)
         player.heal(1)
         self.on_player_healed(player)
+
+    def _auto_miss(self, target: Player) -> bool:
+        miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
+        if miss:
+            target.hand.remove(miss)
+            self.discard_pile.append(miss)
+            target.metadata["dodged"] = True
+            if isinstance(target.character, MollyStark):
+                self.draw_card(target)
+            return True
+        if isinstance(target.character, ElenaFuente) and target.hand:
+            card = target.hand.pop()
+            self.discard_pile.append(card)
+            target.metadata["dodged"] = True
+            if isinstance(target.character, MollyStark):
+                self.draw_card(target)
+            return True
+        return False
+
+    def chuck_wengam_ability(self, player: Player) -> None:
+        """Lose 1 life to draw 2 cards, usable multiple times per turn."""
+        if not isinstance(player.character, ChuckWengam):
+            return
+        if player.health <= 1:
+            return
+        player.take_damage(1)
+        self.on_player_damaged(player)
+        self.draw_card(player, 2)
+
+    def doc_holyday_ability(self, player: Player) -> None:
+        """Discard two cards to gain a Bang! that doesn't count toward the limit."""
+        if not isinstance(player.character, DocHolyday):
+            return
+        if player.metadata.get("doc_used"):
+            return
+        if len(player.hand) < 2:
+            return
+        for _ in range(2):
+            card = player.hand.pop()
+            self.discard_pile.append(card)
+        player.metadata["doc_used"] = True
+        player.metadata["doc_free_bang"] = int(player.metadata.get("doc_free_bang", 0)) + 1
+        player.hand.append(BangCard())
+
+    def pat_brennan_draw(self, player: Player) -> bool:
+        """During draw phase, draw a card in play instead of from deck."""
+        if not isinstance(player.character, PatBrennan):
+            return False
+        for p in self.players:
+            for card in list(p.equipment.values()):
+                p.equipment.pop(card.card_name, None)
+                player.hand.append(card)
+                return True
+        return False
+
+    def uncle_will_ability(self, player: Player, card: Card) -> bool:
+        """Play any card as General Store once per turn."""
+        if not isinstance(player.character, UncleWill):
+            return False
+        if player.metadata.get("uncle_used"):
+            return False
+        player.metadata["uncle_used"] = True
+        GeneralStoreCard().play(player, player, game=self)
+        player.hand.remove(card)
+        self.discard_pile.append(card)
+        return True
+
+    def reset_turn_flags(self, player: Player) -> None:
+        player.metadata.pop("doc_used", None)
+        player.metadata.pop("doc_free_bang", None)
+        player.metadata.pop("uncle_used", None)
 
     def _get_player_by_index(self, idx: int) -> Optional[Player]:
         if 0 <= idx < len(self.players):
@@ -326,6 +475,9 @@ class GameManager:
                     p.heal(2)
                     if p.health > before:
                         self.on_player_healed(p)
+            for p in self.players:
+                if p is not player and isinstance(p.character, HerbHunter):
+                    self.draw_card(p, 2)
             for p in self.players:
                 if p is not player and isinstance(p.character, VultureSam):
                     p.hand.extend(player.hand)

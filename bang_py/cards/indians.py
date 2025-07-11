@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .card import Card
 from ..player import Player
+from ..characters import MollyStark
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,6 +27,8 @@ class IndiansCard(Card):
             if bang:
                 p.hand.remove(bang)
                 game.discard_pile.append(bang)
+                if isinstance(p.character, MollyStark):
+                    game.draw_card(p)
             else:
                 before = p.health
                 p.take_damage(1)
