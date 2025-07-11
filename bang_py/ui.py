@@ -168,24 +168,31 @@ class BangUI:
         win.title("Settings")
 
         ttk.Label(win, text="Audio").grid(row=0, column=0, sticky="w")
-        ttk.Checkbutton(win, text="Sound", variable=self.audio_sound).grid(row=0, column=1, sticky="w")
+        cb_sound = ttk.Checkbutton(win, text="Sound", variable=self.audio_sound)
+        cb_sound.grid(row=0, column=1, sticky="w")
 
         ttk.Label(win, text="Graphics").grid(row=1, column=0, sticky="w")
-        ttk.Checkbutton(win, text="High Quality", variable=self.graphics_quality).grid(row=1, column=1, sticky="w")
+        cb_quality = ttk.Checkbutton(win, text="High Quality", variable=self.graphics_quality)
+        cb_quality.grid(row=1, column=1, sticky="w")
 
         ttk.Label(win, text="Expansions").grid(row=2, column=0, sticky="w")
-        ttk.Checkbutton(win, text="Dodge City", variable=self.exp_dodge_city).grid(row=2, column=1, sticky="w")
-        ttk.Checkbutton(win, text="High Noon", variable=self.exp_high_noon).grid(row=3, column=1, sticky="w")
-        ttk.Checkbutton(win, text="Fistful of Cards", variable=self.exp_fistful).grid(row=4, column=1, sticky="w")
+        cb_dodge = ttk.Checkbutton(win, text="Dodge City", variable=self.exp_dodge_city)
+        cb_dodge.grid(row=2, column=1, sticky="w")
+        cb_noon = ttk.Checkbutton(win, text="High Noon", variable=self.exp_high_noon)
+        cb_noon.grid(row=3, column=1, sticky="w")
+        cb_fistful = ttk.Checkbutton(win, text="Fistful of Cards", variable=self.exp_fistful)
+        cb_fistful.grid(row=4, column=1, sticky="w")
         ttk.Label(win, text="End Turn Key").grid(row=5, column=0, sticky="w")
         self.end_turn_key_var = tk.StringVar(value=self.keybindings.get("end_turn", "e"))
-        ttk.Entry(win, textvariable=self.end_turn_key_var, width=5).grid(row=5, column=1, sticky="w")
+        entry_key = ttk.Entry(win, textvariable=self.end_turn_key_var, width=5)
+        entry_key.grid(row=5, column=1, sticky="w")
 
         def save_and_close() -> None:
             self.keybindings["end_turn"] = self.end_turn_key_var.get().strip() or "e"
             win.destroy()
 
-        ttk.Button(win, text="Save", command=save_and_close).grid(row=6, column=0, columnspan=2, pady=5)
+        btn_save = ttk.Button(win, text="Save", command=save_and_close)
+        btn_save.grid(row=6, column=0, columnspan=2, pady=5)
 
     def _host_menu(self) -> None:
         name = self.name_var.get().strip()
@@ -204,9 +211,12 @@ class BangUI:
         ttk.Entry(self.root, textvariable=self.max_players_var).grid(row=1, column=1)
 
         ttk.Label(self.root, text="Expansions:").grid(row=2, column=0, sticky="w")
-        ttk.Checkbutton(self.root, text="Dodge City", variable=self.exp_dodge_city).grid(row=2, column=1, sticky="w")
-        ttk.Checkbutton(self.root, text="High Noon", variable=self.exp_high_noon).grid(row=3, column=1, sticky="w")
-        ttk.Checkbutton(self.root, text="Fistful of Cards", variable=self.exp_fistful).grid(row=4, column=1, sticky="w")
+        cb_dodge = ttk.Checkbutton(self.root, text="Dodge City", variable=self.exp_dodge_city)
+        cb_dodge.grid(row=2, column=1, sticky="w")
+        cb_noon = ttk.Checkbutton(self.root, text="High Noon", variable=self.exp_high_noon)
+        cb_noon.grid(row=3, column=1, sticky="w")
+        cb_fistful = ttk.Checkbutton(self.root, text="Fistful of Cards", variable=self.exp_fistful)
+        cb_fistful.grid(row=4, column=1, sticky="w")
 
         start_btn = ttk.Button(self.root, text="Start", command=self._start_host)
         start_btn.grid(row=5, column=0, columnspan=2, pady=5)
@@ -386,7 +396,11 @@ class BangUI:
             widget.destroy()
         self.hand_names = cards
         for i, card in enumerate(cards):
-            btn = ttk.Button(self.hand_frame, text=card, command=lambda idx=i: self._play_card(idx))
+            btn = ttk.Button(
+                self.hand_frame,
+                text=card,
+                command=lambda idx=i: self._play_card(idx),
+            )
             btn.grid(row=0, column=i, padx=2)
         if self.current_character == "Sid Ketchum":
             ttk.Button(
@@ -488,7 +502,8 @@ class BangUI:
                     win.destroy(),
                 ),
             ).pack(fill="x")
-        ttk.Button(win, text="Skip", command=lambda: (self._use_ability("jesse_jones"), win.destroy())).pack(fill="x")
+        skip_cmd = lambda: (self._use_ability("jesse_jones"), win.destroy())
+        ttk.Button(win, text="Skip", command=skip_cmd).pack(fill="x")
 
     def _prompt_kit_carlson(self, cards: list[str]) -> None:
         win = tk.Toplevel(self.root)
@@ -532,7 +547,8 @@ class BangUI:
                     win.destroy(),
                 ),
             ).pack(fill="x")
-        ttk.Button(win, text="Skip", command=lambda: (self._use_ability("jose_delgado"), win.destroy())).pack(fill="x")
+        skip_cmd = lambda: (self._use_ability("jose_delgado"), win.destroy())
+        ttk.Button(win, text="Skip", command=skip_cmd).pack(fill="x")
 
     def _prompt_pat_brennan(self, targets: list[dict]) -> None:
         win = tk.Toplevel(self.root)
@@ -548,7 +564,8 @@ class BangUI:
                         win.destroy(),
                     ),
                 ).pack(fill="x")
-        ttk.Button(win, text="Skip", command=lambda: (self._use_ability("pat_brennan"), win.destroy())).pack(fill="x")
+        skip_cmd = lambda: (self._use_ability("pat_brennan"), win.destroy())
+        ttk.Button(win, text="Skip", command=skip_cmd).pack(fill="x")
 
     def _prompt_lucky_duke(self, cards: list[str]) -> None:
         if not cards:
