@@ -278,6 +278,18 @@ class BangUI:
                 self._prompt_vera(data.get("options", []))
             elif isinstance(data, dict) and data.get("prompt") == "general_store":
                 self._prompt_general_store(data.get("cards", []))
+            elif isinstance(data, dict) and data.get("prompt") == "jesse_jones":
+                self._prompt_jesse_jones(data.get("targets", []))
+            elif isinstance(data, dict) and data.get("prompt") == "kit_carlson":
+                self._prompt_kit_carlson(data.get("cards", []))
+            elif isinstance(data, dict) and data.get("prompt") == "pedro_ramirez":
+                self._prompt_pedro_ramirez()
+            elif isinstance(data, dict) and data.get("prompt") == "jose_delgado":
+                self._prompt_jose_delgado(data.get("equipment", []))
+            elif isinstance(data, dict) and data.get("prompt") == "pat_brennan":
+                self._prompt_pat_brennan(data.get("targets", []))
+            elif isinstance(data, dict) and data.get("prompt") == "lucky_duke":
+                self._prompt_lucky_duke(data.get("cards", []))
             else:
                 self._append_message(msg)
         if self.client and self.client.is_alive():
@@ -292,13 +304,29 @@ class BangUI:
             payload = json.dumps({"action": "play_card", "card_index": index})
             asyncio.run_coroutine_threadsafe(self.client.websocket.send(payload), self.client.loop)
 
-    def _use_ability(self, ability: str, target: int | None = None, card_index: int | None = None) -> None:
+    def _use_ability(
+        self,
+        ability: str,
+        target: int | None = None,
+        card_index: int | None = None,
+        card: str | None = None,
+    ) -> None:
         if self.client and self.client.websocket:
             payload = {"action": "use_ability", "ability": ability}
             if target is not None:
-                payload["target"] = target
+                if ability == "jose_delgado":
+                    payload["equipment"] = target
+                else:
+                    payload["target"] = target
             if card_index is not None:
-                payload["card_index"] = card_index
+                if ability == "kit_carlson":
+                    payload["discard"] = card_index
+                elif ability == "pedro_ramirez":
+                    payload["use_discard"] = bool(card_index)
+                else:
+                    payload["card_index"] = card_index
+            if card is not None:
+                payload["card"] = card
             asyncio.run_coroutine_threadsafe(
                 self.client.websocket.send(json.dumps(payload)), self.client.loop
             )
@@ -318,6 +346,7 @@ class BangUI:
             "Pedro Ramirez",
             "Jose Delgado",
             "Pat Brennan",
+            "Lucky Duke",
         }:
             ttk.Button(
                 self.hand_frame,
@@ -384,6 +413,97 @@ class BangUI:
                 ),
             )
             btn.pack(fill="x")
+
+    def _prompt_jesse_jones(self, targets: list[dict]) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("Jesse Jones")
+        ttk.Label(win, text="Draw first card from:").pack()
+        for t in targets:
+            ttk.Button(
+                win,
+                text=t.get("name", ""),
+                command=lambda idx=t.get("index"): (
+                    self._use_ability("jesse_jones", target=idx),
+                    win.destroy(),
+                ),
+            ).pack(fill="x")
+        ttk.Button(win, text="Skip", command=lambda: (self._use_ability("jesse_jones"), win.destroy())).pack(fill="x")
+
+    def _prompt_kit_carlson(self, cards: list[str]) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("Kit Carlson")
+        ttk.Label(win, text="Discard one card:").pack()
+        for i, card in enumerate(cards):
+            ttk.Button(
+                win,
+                text=card,
+                command=lambda idx=i: (
+                    self._use_ability("kit_carlson", target=None, card_index=idx),
+                    win.destroy(),
+                ),
+            ).pack(fill="x")
+
+    def _prompt_pedro_ramirez(self) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("Pedro Ramirez")
+        ttk.Label(win, text="Take top discard instead of draw?").pack()
+        ttk.Button(
+            win,
+            text="Yes",
+            command=lambda: (self._use_ability("pedro_ramirez", card_index=1), win.destroy()),
+        ).pack(fill="x")
+        ttk.Button(
+            win,
+            text="No",
+            command=lambda: (self._use_ability("pedro_ramirez", card_index=0), win.destroy()),
+        ).pack(fill="x")
+
+    def _prompt_jose_delgado(self, equipment: list[dict]) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("Jose Delgado")
+        ttk.Label(win, text="Discard equipment to draw two?").pack()
+        for eq in equipment:
+            ttk.Button(
+                win,
+                text=eq.get("name", ""),
+                command=lambda idx=eq.get("index"): (
+                    self._use_ability("jose_delgado", target=idx),
+                    win.destroy(),
+                ),
+            ).pack(fill="x")
+        ttk.Button(win, text="Skip", command=lambda: (self._use_ability("jose_delgado"), win.destroy())).pack(fill="x")
+
+    def _prompt_pat_brennan(self, targets: list[dict]) -> None:
+        win = tk.Toplevel(self.root)
+        win.title("Pat Brennan")
+        ttk.Label(win, text="Draw a card in play:").pack()
+        for t in targets:
+            for card in t.get("cards", []):
+                ttk.Button(
+                    win,
+                    text=f"{t.get('index')}: {card}",
+                    command=lambda idx=t.get("index"), c=card: (
+                        self._use_ability("pat_brennan", target=idx, card=c),
+                        win.destroy(),
+                    ),
+                ).pack(fill="x")
+        ttk.Button(win, text="Skip", command=lambda: (self._use_ability("pat_brennan"), win.destroy())).pack(fill="x")
+
+    def _prompt_lucky_duke(self, cards: list[str]) -> None:
+        if not cards:
+            return
+        win = tk.Toplevel(self.root)
+        win.title("Lucky Duke")
+        ttk.Label(win, text="Choose draw! result:").pack()
+        for i, card in enumerate(cards):
+            ttk.Button(
+                win,
+                text=card,
+                command=lambda idx=i: (
+                    self._use_ability("lucky_duke", card_index=idx),
+                    win.destroy(),
+                ),
+            ).pack(fill="x")
 
     def _pick_general_store(self, index: int) -> None:
         if self.client and self.client.websocket:

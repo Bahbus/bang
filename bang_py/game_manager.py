@@ -175,6 +175,22 @@ class GameManager:
                     self.current_turn = (self.current_turn + 1) % len(self.turn_order)
                     self._begin_turn()
                     return
+
+        ability_chars = (
+            JesseJones,
+            KitCarlson,
+            PedroRamirez,
+            JoseDelgado,
+            PatBrennan,
+            LuckyDuke,
+        )
+
+        if isinstance(player.character, ability_chars):
+            player.metadata["awaiting_draw"] = True
+            for cb in self.turn_started_listeners:
+                cb(player)
+            return
+
         self.draw_phase(player)
         player.metadata["bangs_played"] = 0
         for cb in self.turn_started_listeners:

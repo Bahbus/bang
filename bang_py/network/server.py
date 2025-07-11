@@ -162,7 +162,15 @@ class BangServer:
                         self.game.draw_phase(player, jesse_target=target)
                     elif ability == "kit_carlson":
                         discard = data.get("discard")
-                        self.game.draw_phase(player, kit_discard=discard)
+                        cards = player.metadata.pop("kit_cards", None)
+                        if isinstance(cards, list) and cards:
+                            for i, card in enumerate(cards):
+                                if i == discard:
+                                    self.game.discard_pile.append(card)
+                                else:
+                                    player.hand.append(card)
+                        else:
+                            self.game.draw_phase(player, kit_discard=discard)
                     elif ability == "pedro_ramirez":
                         use_discard = bool(data.get("use_discard", True))
                         self.game.draw_phase(player, pedro_use_discard=use_discard)
@@ -174,6 +182,18 @@ class BangServer:
                         card = data.get("card")
                         target = self.game._get_player_by_index(idx) if idx is not None else None
                         self.game.draw_phase(player, pat_target=target, pat_card=card)
+                    elif ability == "lucky_duke":
+                        idx = data.get("card_index", 0)
+                        cards = player.metadata.pop("lucky_cards", [])
+                        if cards:
+                            chosen = cards[idx] if idx < len(cards) else cards[0]
+                            player.hand.append(chosen)
+                            for i, c in enumerate(cards):
+                                if c is not chosen:
+                                    self.game.discard_pile.append(c)
+                            self.game.draw_card(player)
+                        else:
+                            self.game.draw_phase(player)
                     elif ability == "uncle_will":
                         cidx = data.get("card_index")
                         if cidx is not None and 0 <= cidx < len(player.hand):
@@ -207,16 +227,91 @@ class BangServer:
         return None
 
     def _on_turn_started(self, player: Player) -> None:
+        conn = self._find_connection(player)
+        if not conn:
+            return
         if isinstance(player.character, VeraCuster):
             options = [
                 {"index": i, "name": p.character.name}
                 for i, p in enumerate(self.game.players)
                 if p is not player and p.is_alive()
             ]
-            conn = self._find_connection(player)
-            if conn and options:
+            if options:
                 payload = json.dumps({"prompt": "vera", "options": options})
                 asyncio.create_task(conn.websocket.send(payload))
+            return
+
+        if player.metadata.pop("awaiting_draw", False):
+            if isinstance(player.character, JesseJones):
+                targets = [
+                    {"index": i, "name": p.name}
+                    for i, p in enumerate(self.game.players)
+                    if p is not player and p.hand
+                ]
+                if targets:
+                    payload = json.dumps({"prompt": "jesse_jones", "targets": targets})
+                    asyncio.create_task(conn.websocket.send(payload))
+                else:
+                    self.game.draw_phase(player)
+                    asyncio.create_task(self.broadcast_state())
+                return
+
+            if isinstance(player.character, KitCarlson):
+                cards = [self.game.deck.draw() for _ in range(3)]
+                player.metadata["kit_cards"] = [c for c in cards if c]
+                names = [c.card_name for c in player.metadata.get("kit_cards", [])]
+                payload = json.dumps({"prompt": "kit_carlson", "cards": names})
+                asyncio.create_task(conn.websocket.send(payload))
+                return
+
+            if isinstance(player.character, PedroRamirez):
+                if self.game.discard_pile:
+                    payload = json.dumps({"prompt": "pedro_ramirez"})
+                    asyncio.create_task(conn.websocket.send(payload))
+                else:
+                    self.game.draw_phase(player, pedro_use_discard=False)
+                    asyncio.create_task(self.broadcast_state())
+                return
+
+            if isinstance(player.character, JoseDelgado):
+                equips = [
+                    {"index": i, "name": c.card_name}
+                    for i, c in enumerate(player.hand)
+                    if hasattr(c, "slot")
+                ]
+                if equips:
+                    payload = json.dumps({"prompt": "jose_delgado", "equipment": equips})
+                    asyncio.create_task(conn.websocket.send(payload))
+                else:
+                    self.game.draw_phase(player)
+                    asyncio.create_task(self.broadcast_state())
+                return
+
+            if isinstance(player.character, PatBrennan):
+                targets = []
+                for i, p in enumerate(self.game.players):
+                    if p is player or not p.equipment:
+                        continue
+                    targets.append({"index": i, "cards": [c.card_name for c in p.equipment.values()]})
+                if targets:
+                    payload = json.dumps({"prompt": "pat_brennan", "targets": targets})
+                    asyncio.create_task(conn.websocket.send(payload))
+                else:
+                    self.game.draw_phase(player)
+                    asyncio.create_task(self.broadcast_state())
+                return
+
+            if isinstance(player.character, LuckyDuke):
+                cards = [self.game.deck.draw(), self.game.deck.draw()]
+                player.metadata["lucky_cards"] = [c for c in cards if c]
+                names = [c.card_name for c in player.metadata.get("lucky_cards", [])]
+                if names:
+                    payload = json.dumps({"prompt": "lucky_duke", "cards": names})
+                    asyncio.create_task(conn.websocket.send(payload))
+                else:
+                    self.game.draw_phase(player)
+                    asyncio.create_task(self.broadcast_state())
+                return
 
     def _on_player_damaged(self, player: Player) -> None:
         msg = (
