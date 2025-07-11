@@ -302,7 +302,16 @@ class BangUI:
         for i, card in enumerate(cards):
             btn = ttk.Button(self.hand_frame, text=card, command=lambda idx=i: self._play_card(idx))
             btn.grid(row=0, column=i, padx=2)
-        if self.current_character in {"Sid Ketchum", "Chuck Wengam", "Doc Holyday"}:
+        if self.current_character in {
+            "Sid Ketchum",
+            "Chuck Wengam",
+            "Doc Holyday",
+            "Jesse Jones",
+            "Kit Carlson",
+            "Pedro Ramirez",
+            "Jose Delgado",
+            "Pat Brennan",
+        }:
             ttk.Button(
                 self.hand_frame,
                 text="Use Ability",

@@ -191,7 +191,24 @@ class GameManager:
             if card:
                 player.hand.append(card)
 
-    def draw_phase(self, player: Player) -> None:
+    def draw_phase(
+        self,
+        player: Player,
+        *,
+        jesse_target: Player | None = None,
+        kit_discard: int | None = None,
+        pedro_use_discard: bool | None = None,
+        jose_equipment: int | None = None,
+        pat_target: Player | None = None,
+        pat_card: str | None = None,
+    ) -> None:
+        """Handle the draw phase for ``player`` with optional choices.
+
+        Parameters allow callers to specify selections for characters with
+        draw-phase abilities. If a parameter is ``None`` the default behavior of
+        the ability is used.
+        """
+
         custom_draw = self.event_flags.get("draw_count")
         if custom_draw is not None:
             self.draw_card(player, custom_draw)
@@ -200,7 +217,7 @@ class GameManager:
         if isinstance(char, JesseJones):
             opponents = [p for p in self.players if p is not player and p.hand]
             if opponents:
-                source = random.choice(opponents)
+                source = jesse_target if jesse_target in opponents else random.choice(opponents)
                 card = source.hand.pop()
                 player.hand.append(card)
                 self.draw_card(player)
@@ -217,22 +234,36 @@ class GameManager:
             return
         if isinstance(char, KitCarlson):
             cards = [self.deck.draw(), self.deck.draw(), self.deck.draw()]
-            keep = [c for c in cards if c][:2]
-            for c in keep:
+            keep_cards = []
+            for i, c in enumerate(cards):
+                if c is None:
+                    continue
+                if kit_discard is not None and i == kit_discard:
+                    self.discard_pile.append(c)
+                elif len(keep_cards) < 2:
+                    keep_cards.append(c)
+                else:
+                    self.discard_pile.append(c)
+            for c in keep_cards:
                 player.hand.append(c)
-            discard = next((c for c in cards if c and c not in keep), None)
-            if discard:
-                self.discard_pile.append(discard)
             return
         if isinstance(char, PedroRamirez) and self.discard_pile:
-            player.hand.append(self.discard_pile.pop())
-            self.draw_card(player)
+            if pedro_use_discard is False:
+                self.draw_card(player, 2)
+            else:
+                player.hand.append(self.discard_pile.pop())
+                self.draw_card(player)
             return
         if isinstance(char, PixiePete):
             self.draw_card(player, 3)
             return
         if isinstance(char, JoseDelgado):
-            equip = next((c for c in player.hand if hasattr(c, "slot")), None)
+            equips = [c for c in player.hand if hasattr(c, "slot")]
+            equip = None
+            if jose_equipment is not None and 0 <= jose_equipment < len(equips):
+                equip = equips[jose_equipment]
+            elif equips:
+                equip = equips[0]
             if equip:
                 player.hand.remove(equip)
                 self.discard_pile.append(equip)
@@ -244,7 +275,7 @@ class GameManager:
             self.draw_card(player, 1 + wounds)
             return
         if isinstance(char, PatBrennan):
-            if not self.pat_brennan_draw(player):
+            if not self.pat_brennan_draw(player, pat_target, pat_card):
                 self.draw_card(player)
             self.draw_card(player)
             return
@@ -396,14 +427,17 @@ class GameManager:
             if has_ability(player, SuzyLafayette) and not player.hand:
                 self.draw_card(player)
 
-    def sid_ketchum_ability(self, player: Player) -> None:
+    def sid_ketchum_ability(self, player: Player, indices: List[int] | None = None) -> None:
         if not has_ability(player, SidKetchum):
             return
         if len(player.hand) < 2 or player.health >= player.max_health:
             return
-        for _ in range(2):
-            card = player.hand.pop()
-            self.discard_pile.append(card)
+        discard_indices = indices or list(range(2))
+        discard_indices = sorted(discard_indices, reverse=True)[:2]
+        for idx in discard_indices:
+            if 0 <= idx < len(player.hand):
+                card = player.hand.pop(idx)
+                self.discard_pile.append(card)
         player.heal(1)
         self.on_player_healed(player)
 
@@ -444,7 +478,7 @@ class GameManager:
         self.on_player_damaged(player)
         self.draw_card(player, 2)
 
-    def doc_holyday_ability(self, player: Player) -> None:
+    def doc_holyday_ability(self, player: Player, indices: List[int] | None = None) -> None:
         """Discard two cards to gain a Bang! that doesn't count toward the limit."""
         if not has_ability(player, DocHolyday):
             return
@@ -452,18 +486,32 @@ class GameManager:
             return
         if len(player.hand) < 2:
             return
-        for _ in range(2):
-            card = player.hand.pop()
-            self.discard_pile.append(card)
+        discard_indices = indices or list(range(2))
+        discard_indices = sorted(discard_indices, reverse=True)[:2]
+        for idx in discard_indices:
+            if 0 <= idx < len(player.hand):
+                card = player.hand.pop(idx)
+                self.discard_pile.append(card)
         player.metadata["doc_used"] = True
         player.metadata["doc_free_bang"] = int(player.metadata.get("doc_free_bang", 0)) + 1
         player.hand.append(BangCard())
 
-    def pat_brennan_draw(self, player: Player) -> bool:
+    def pat_brennan_draw(
+        self,
+        player: Player,
+        target: Player | None = None,
+        card_name: str | None = None,
+    ) -> bool:
         """During draw phase, draw a card in play instead of from deck."""
         if not has_ability(player, PatBrennan):
             return False
-        for p in self.players:
+        targets = [t for t in self.players if t is not player]
+        if target in targets and card_name and card_name in target.equipment:
+            card = target.unequip(card_name)
+            if card:
+                player.hand.append(card)
+                return True
+        for p in targets:
             for card in list(p.equipment.values()):
                 p.unequip(card.card_name)
                 player.hand.append(card)

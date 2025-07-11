@@ -152,7 +152,7 @@ def test_doc_holyday_free_bang():
     gm.add_player(doc)
     gm.add_player(target)
     doc.hand.extend([PanicCard(), PanicCard()])
-    gm.doc_holyday_ability(doc)
+    gm.doc_holyday_ability(doc, [0, 1])
     bang = next(c for c in doc.hand if isinstance(c, BangCard))
     gm.play_card(doc, bang, target)
     assert doc.metadata.get("bangs_played", 0) == 0
@@ -190,8 +190,8 @@ def test_pat_brennan_draw_in_play():
     gm.add_player(pat)
     gm.add_player(other)
     BarrelCard().play(other)
-    gm.draw_phase(pat)
-    assert "Barrel" in pat.hand[0].card_name
+    gm.draw_phase(pat, pat_target=other, pat_card="Barrel")
+    assert any("Barrel" in c.card_name for c in pat.hand)
 
 
 def test_uncle_will_general_store():
