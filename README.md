@@ -97,3 +97,18 @@ from bang_py.characters import RoseDoolan
 player = Player("Rose", character=RoseDoolan())
 ```
 
+## Using Character Abilities
+
+When the server requires input for a character ability the GUI will show a
+popup prompt. The following abilities currently trigger prompts:
+
+- Jesse Jones – choose another player's hand to draw from or skip.
+- Kit Carlson – pick one of three drawn cards to discard.
+- Pedro Ramirez – decide whether to take the top discard instead of drawing.
+- Jose Delgado – optionally discard an equipment card for two cards.
+- Pat Brennan – select an equipment card in play to draw.
+- Lucky Duke – pick one of two cards when his ability activates.
+
+Simply click the desired option in the popup window. If no choice is made the
+default behaviour is used.
+
