@@ -38,14 +38,41 @@ class Player:
             self.max_health += int(bonus)
         self.health = self.max_health
 
+    def _apply_health_modifier(self, amount: int) -> None:
+        """Adjust max and current health by a modifier."""
+        self.max_health += amount
+        if amount > 0:
+            self.health += amount
+        else:
+            self.health = min(self.health, self.max_health)
+
     def equip(self, card: "EquipmentCard") -> None:
         """Add equipment to the player, respecting slot rules."""
+        existing = None
         if getattr(card, "slot", None) == "Gun":
-            self.equipment.pop("Gun", None)
+            existing = self.equipment.pop("Gun", None)
             self.equipment["Gun"] = card
         else:
-            # Replace any existing equipment with the same card name
+            existing = self.equipment.pop(card.card_name, None)
             self.equipment[card.card_name] = card
+
+        if existing:
+            self._apply_health_modifier(
+                -int(getattr(existing, "max_health_modifier", 0))
+            )
+
+        modifier = int(getattr(card, "max_health_modifier", 0))
+        if modifier:
+            self._apply_health_modifier(modifier)
+
+    def unequip(self, card_name: str) -> "EquipmentCard | None":
+        """Remove equipment by name and adjust health if needed."""
+        card = self.equipment.pop(card_name, None)
+        if card:
+            modifier = int(getattr(card, "max_health_modifier", 0))
+            if modifier:
+                self._apply_health_modifier(-modifier)
+        return card
 
     @property
     def gun_range(self) -> int:

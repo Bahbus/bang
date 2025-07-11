@@ -30,7 +30,7 @@ class DynamiteCard(EquipmentCard):
             card = c1 if not is_spade_between(c1, 2, 9) else c2
         else:
             card = deck.draw()
-        current.equipment.pop(self.card_name, None)
+        current.unequip(self.card_name)
         if is_spade_between(card, 2, 9):
             current.take_damage(3)
             return True
