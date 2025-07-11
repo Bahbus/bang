@@ -13,6 +13,7 @@ from bang_py.cards import (
     BeerCard,
     BarrelCard,
     BangCard,
+    CatBalouCard,
     PanicCard,
     IndiansCard,
 )
@@ -183,6 +184,30 @@ def test_molly_stark_draws_when_discarding():
     assert len(molly.hand) == 1
 
 
+def test_molly_stark_draws_when_cat_baloued():
+    gm = GameManager()
+    molly = Player("Molly", character=MollyStark())
+    attacker = Player("A")
+    gm.add_player(molly)
+    gm.add_player(attacker)
+    molly.hand.append(BangCard())
+    CatBalouCard().play(molly, game=gm)
+    assert len(molly.hand) == 1
+
+
+def test_molly_stark_draws_when_panicked():
+    gm = GameManager()
+    molly = Player("Molly", character=MollyStark())
+    attacker = Player("A")
+    gm.add_player(attacker)
+    gm.add_player(molly)
+    molly.hand.append(BeerCard())
+    panic = PanicCard()
+    attacker.hand.append(panic)
+    gm.play_card(attacker, panic, molly)
+    assert len(molly.hand) == 1
+
+
 def test_pat_brennan_draw_in_play():
     gm = GameManager()
     pat = Player("Pat", character=PatBrennan())
@@ -272,4 +297,3 @@ def test_high_noon_event_deck_draw():
     gm.add_player(outlaw)
     gm.start_game()
     assert gm.current_event is not None
-

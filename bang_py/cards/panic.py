@@ -4,6 +4,7 @@ import random
 from .card import Card
 from ..player import Player
 from typing import TYPE_CHECKING
+from ..helpers import handle_out_of_turn_discard
 
 if TYPE_CHECKING:
     from ..game_manager import GameManager
@@ -20,6 +21,7 @@ class PanicCard(Card):
         if target.hand:
             card = random.choice(target.hand)
             target.hand.remove(card)
+            handle_out_of_turn_discard(game, target, card)
             player.hand.append(card)
         elif target.equipment:
             card = random.choice(list(target.equipment.values()))

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from .card import Card
 from ..player import Player
-from ..characters import MollyStark
+from ..helpers import handle_out_of_turn_discard
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -27,8 +27,7 @@ class DuelCard(Card):
             if bang:
                 attacker.hand.remove(bang)
                 game.discard_pile.append(bang)
-                if isinstance(attacker.character, MollyStark):
-                    game.draw_card(attacker)
+                handle_out_of_turn_discard(game, attacker, bang)
                 attacker, defender = defender, attacker
             else:
                 before = attacker.health
