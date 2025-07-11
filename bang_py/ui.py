@@ -27,17 +27,33 @@ class ServerThread(threading.Thread):
         self.room_code = room_code
         self.expansions = expansions
         self.max_players = max_players
+        self.loop = asyncio.new_event_loop()
+        self.server_task: asyncio.Task | None = None
 
     def run(self) -> None:
-        asyncio.run(
-            BangServer(
-                self.host,
-                self.port,
-                self.room_code,
-                self.expansions,
-                self.max_players,
-            ).start()
+        asyncio.set_event_loop(self.loop)
+        server = BangServer(
+            self.host,
+            self.port,
+            self.room_code,
+            self.expansions,
+            self.max_players,
         )
+        self.server_task = self.loop.create_task(server.start())
+        try:
+            self.loop.run_until_complete(self.server_task)
+        except asyncio.CancelledError:
+            pass
+        finally:
+            self.loop.run_until_complete(self.loop.shutdown_asyncgens())
+            self.loop.close()
+
+    def stop(self) -> None:
+        """Request the server loop shut down."""
+        if self.server_task and not self.server_task.done():
+            self.loop.call_soon_threadsafe(self.server_task.cancel)
+        if self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
 
 
 class ClientThread(threading.Thread):
@@ -55,6 +71,17 @@ class ClientThread(threading.Thread):
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self._run())
         self.loop.close()
+
+    def stop(self) -> None:
+        """Close the websocket and stop the event loop."""
+        if self.websocket and not self.websocket.closed:
+            fut = asyncio.run_coroutine_threadsafe(self.websocket.close(), self.loop)
+            try:
+                fut.result(timeout=1)
+            except Exception:
+                pass
+        if self.loop.is_running():
+            self.loop.call_soon_threadsafe(self.loop.stop)
 
     async def _run(self) -> None:
         try:
@@ -104,6 +131,7 @@ class BangUI:
     def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("Bang!")
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self.msg_queue: queue.Queue[str] = queue.Queue()
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
@@ -587,6 +615,18 @@ class BangUI:
         key = self.keybindings.get("end_turn", "e")
         self.root.bind_all(f"<{key}>", lambda _e: self._end_turn())
         self._bound_key = key
+
+    def _on_close(self) -> None:
+        """Handle window close by shutting down threads."""
+        if self.client:
+            self.client.stop()
+            self.client.join(timeout=1)
+            self.client = None
+        if self.server_thread:
+            self.server_thread.stop()
+            self.server_thread.join(timeout=1)
+            self.server_thread = None
+        self.root.destroy()
 
     def run(self) -> None:
         self.root.mainloop()
