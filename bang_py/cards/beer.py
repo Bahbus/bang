@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from .card import Card
 from ..player import Player
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
+
+from ..helpers import has_ability
+from ..characters import TequilaJoe
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -11,18 +14,37 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 class BeerCard(Card):
     card_name = "Beer"
 
-    def play(self, target: Player) -> None:
+    def play(
+        self,
+        target: Player,
+        player: Player | None = None,
+        game: "GameManager" | None = None,
+    ) -> None:
+        """Heal the target if allowed by game state and abilities."""
         if not target:
             return
-        game: Optional["GameManager"] = target.metadata.get("game")
-        heal_amt = 1
+
+        game = game or (player.metadata.get("game") if player else None)
+        game = game or target.metadata.get("game")
+
         if game:
+            if game.event_flags.get("no_beer_play"):
+                return
             if game.event_flags.get("no_beer"):
                 return
-            heal_amt = int(game.event_flags.get("beer_heal", 1))
             alive = [p for p in game.players if p.is_alive()]
             if len(alive) <= 2:
                 return
+            heal_amt = int(game.event_flags.get("beer_heal", 1))
+        else:
+            heal_amt = 1
+
+        if player and has_ability(player, TequilaJoe):
+            heal_amt += 1
+
         if target.health < target.max_health:
+            before = target.health
             target.heal(heal_amt)
+            if game and target.health > before:
+                game.on_player_healed(target)
 

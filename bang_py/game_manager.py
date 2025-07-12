@@ -26,7 +26,6 @@ from .characters import (
     PixiePete,
     JoseDelgado,
     SeanMallory,
-    TequilaJoe,
     VeraCuster,
     ApacheKid,
     GregDigger,
@@ -389,19 +388,7 @@ class GameManager:
         elif isinstance(card, WhiskyCard):
             card.play(target or player, player, game=self)
         elif isinstance(card, BeerCard):
-            if self.event_flags.get("no_beer_play"):
-                self._pass_left_or_discard(player, card)
-                return
-            else:
-                before_hp = (target or player).health
-                card.play(target or player)
-                if (
-                    has_ability(player, TequilaJoe)
-                    and (target or player).health < (target or player).max_health
-                ):
-                    (target or player).heal(1)
-                if (target or player).health > before_hp:
-                    self.on_player_healed(target or player)
+            card.play(target or player, player, game=self)
         elif isinstance(card, PonyExpressCard):
             card.play(player, player, game=self)
         elif isinstance(card, TequilaCard):
