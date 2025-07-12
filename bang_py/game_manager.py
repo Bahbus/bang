@@ -120,7 +120,7 @@ class GameManager:
 
     def add_player(self, player: Player) -> None:
         """Add a player to the game and record the game reference."""
-        player.metadata["game"] = self
+        player.metadata.game = self
         self.players.append(player)
 
     def start_game(self) -> None:
@@ -151,8 +151,9 @@ class GameManager:
             if pre_ghost:
                 removed = False
                 for pl in self.players:
-                    if pl.metadata.pop("ghost_revived", False) and pl.is_alive():
+                    if pl.metadata.ghost_revived and pl.is_alive():
                         pl.health = 0
+                        pl.metadata.ghost_revived = False
                         removed = True
                 if removed:
                     self.turn_order = [
@@ -211,13 +212,13 @@ class GameManager:
         )
 
         if isinstance(player.character, ability_chars):
-            player.metadata["awaiting_draw"] = True
+            player.metadata.awaiting_draw = True
             for cb in self.turn_started_listeners:
                 cb(player)
             return
 
         self.draw_phase(player)
-        player.metadata["bangs_played"] = 0
+        player.metadata.bangs_played = 0
         for cb in self.turn_started_listeners:
             cb(player)
 
@@ -327,9 +328,9 @@ class GameManager:
     def _can_play_bang(self, player: Player) -> bool:
         if self.event_flags.get("no_bang"):
             return False
-        count = int(player.metadata.get("bangs_played", 0))
+        count = player.metadata.bangs_played
         gun = player.equipment.get("Gun")
-        extra = int(player.metadata.get("doc_free_bang", 0))
+        extra = player.metadata.doc_free_bang
         unlimited = (
             has_ability(player, WillyTheKid)
             or getattr(gun, "unlimited_bang", False)
@@ -360,7 +361,7 @@ class GameManager:
                     target.hand.remove(mcard)
                     self.discard_pile.append(mcard)
                     handle_out_of_turn_discard(self, target, mcard)
-                target.metadata["dodged"] = True
+                target.metadata.dodged = True
             else:
                 card.play(target, self.deck, ignore_equipment=ignore_eq)
         else:
@@ -422,13 +423,13 @@ class GameManager:
         if target and before is not None and target.health > before:
             self.on_player_healed(target)
         self._pass_left_or_discard(player, card)
-        player.metadata["last_card_played"] = card.__class__
-        player.metadata["last_card_target"] = target
+        player.metadata.last_card_played = card.__class__
+        player.metadata.last_card_target = target
         if is_bang:
-            if int(player.metadata.get("doc_free_bang", 0)) > 0:
-                player.metadata["doc_free_bang"] -= 1
+            if player.metadata.doc_free_bang > 0:
+                player.metadata.doc_free_bang -= 1
             else:
-                player.metadata["bangs_played"] = int(player.metadata.get("bangs_played", 0)) + 1
+                player.metadata.bangs_played += 1
         if has_ability(player, SuzyLafayette) and not player.hand:
             self.draw_card(player)
 
@@ -458,7 +459,7 @@ class GameManager:
     def _auto_miss(self, target: Player) -> bool:
         if self.event_flags.get("no_missed"):
             return False
-        if target.metadata.get("auto_miss", True) is False:
+        if target.metadata.auto_miss is False:
             return False
         miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
         if miss:
@@ -466,7 +467,7 @@ class GameManager:
             self._pass_left_or_discard(target, miss)
             if not self.event_flags.get("river"):
                 handle_out_of_turn_discard(self, target, miss)
-            target.metadata["dodged"] = True
+            target.metadata.dodged = True
             return True
         if has_ability(target, CalamityJanet):
             bang = next((c for c in target.hand if isinstance(c, BangCard)), None)
@@ -475,14 +476,14 @@ class GameManager:
                 self._pass_left_or_discard(target, bang)
                 if not self.event_flags.get("river"):
                     handle_out_of_turn_discard(self, target, bang)
-                target.metadata["dodged"] = True
+                target.metadata.dodged = True
                 return True
         if has_ability(target, ElenaFuente) and target.hand:
             card = target.hand.pop()
             self._pass_left_or_discard(target, card)
             if not self.event_flags.get("river"):
                 handle_out_of_turn_discard(self, target, card)
-            target.metadata["dodged"] = True
+            target.metadata.dodged = True
             return True
         return False
 
@@ -500,7 +501,7 @@ class GameManager:
         """Discard two cards to gain a Bang! that doesn't count toward the limit."""
         if not has_ability(player, DocHolyday):
             return
-        if player.metadata.get("doc_used"):
+        if player.metadata.doc_used:
             return
         if len(player.hand) < 2:
             return
@@ -510,8 +511,8 @@ class GameManager:
             if 0 <= idx < len(player.hand):
                 card = player.hand.pop(idx)
                 self._pass_left_or_discard(player, card)
-        player.metadata["doc_used"] = True
-        player.metadata["doc_free_bang"] = int(player.metadata.get("doc_free_bang", 0)) + 1
+        player.metadata.doc_used = True
+        player.metadata.doc_free_bang += 1
         player.hand.append(BangCard())
 
 
@@ -541,9 +542,9 @@ class GameManager:
         """Play any card as General Store once per turn."""
         if not has_ability(player, UncleWill):
             return False
-        if player.metadata.get("uncle_used"):
+        if player.metadata.uncle_used:
             return False
-        player.metadata["uncle_used"] = True
+        player.metadata.uncle_used = True
         GeneralStoreCard().play(player, player, game=self)
         player.hand.remove(card)
         self._pass_left_or_discard(player, card)
@@ -555,7 +556,7 @@ class GameManager:
             return
         if not target.is_alive() or target is player:
             return
-        player.metadata["vera_copy"] = target.character.__class__
+        player.metadata.vera_copy = target.character.__class__
 
     # General Store management
     def start_general_store(self, player: Player) -> List[str]:
@@ -608,12 +609,12 @@ class GameManager:
         return True
 
     def reset_turn_flags(self, player: Player) -> None:
-        player.metadata.pop("doc_used", None)
-        player.metadata.pop("doc_free_bang", None)
-        player.metadata.pop("uncle_used", None)
-        player.metadata.pop("lvk_used", None)
+        player.metadata.doc_used = False
+        player.metadata.doc_free_bang = 0
+        player.metadata.uncle_used = False
+        player.metadata.lvk_used = False
         if isinstance(player.character, VeraCuster):
-            player.metadata.pop("vera_copy", None)
+            player.metadata.vera_copy = None
 
     def _next_alive_player(self, player: Player) -> Optional[Player]:
         """Return the next living player to the left."""

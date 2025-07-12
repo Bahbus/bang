@@ -140,7 +140,7 @@ def auto_turn(gm: GameManager) -> None:
                     played = True
                     break
             if isinstance(card, BangCard):
-                bangs = int(player.metadata.get("bangs_played", 0))
+                bangs = player.metadata.bangs_played
                 unlimited = isinstance(player.character, WillyTheKid)
                 if bangs >= 1 and not unlimited:
                     continue

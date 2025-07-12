@@ -25,8 +25,8 @@ class BeerCard(Card):
         if not target:
             return
 
-        game = game or (player.metadata.get("game") if player else None)
-        game = game or target.metadata.get("game")
+        game = game or (player.metadata.game if player else None)
+        game = game or target.metadata.game
 
         if game:
             if game.event_flags.get("no_beer_play"):

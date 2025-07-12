@@ -168,7 +168,7 @@ def test_doc_holyday_free_bang():
     gm.doc_holyday_ability(doc, [0, 1])
     bang = next(c for c in doc.hand if isinstance(c, BangCard))
     gm.play_card(doc, bang, target)
-    assert doc.metadata.get("bangs_played", 0) == 0
+    assert doc.metadata.bangs_played == 0
 
 
 def test_elena_fuente_any_card_as_missed():

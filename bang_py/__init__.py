@@ -2,7 +2,7 @@
 
 from .game_manager import GameManager
 from .deck_factory import create_standard_deck
-from .player import Player, Role
+from .player import Player, Role, PlayerMetadata
 from .characters import (
     Character,
     BartCassidy,
@@ -27,6 +27,7 @@ __all__ = [
     "GameManager",
     "Player",
     "Role",
+    "PlayerMetadata",
     "Character",
     "BartCassidy",
     "BlackJack",

@@ -11,5 +11,5 @@ class MissedCard(Card):
     def play(self, target: Player) -> None:
         if not target:
             return
-        target.metadata["dodged"] = True
+        target.metadata.dodged = True
 

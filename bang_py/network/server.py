@@ -67,7 +67,7 @@ class BangServer:
             await websocket.send("Game full")
             return
         player = Player(name, role=Role.OUTLAW)
-        player.metadata["auto_miss"] = True
+        player.metadata.auto_miss = True
         self.game.add_player(player)
         self.connections[websocket] = Connection(websocket, player)
         await websocket.send("Joined game as {}".format(player.name))
@@ -163,7 +163,8 @@ class BangServer:
                         self.game.draw_phase(player, jesse_target=target)
                     elif ability == "kit_carlson":
                         discard = data.get("discard")
-                        cards = player.metadata.pop("kit_cards", None)
+                        cards = player.metadata.kit_cards
+                        player.metadata.kit_cards = None
                         if isinstance(cards, list) and cards:
                             for i, card in enumerate(cards):
                                 if i == discard:
@@ -185,7 +186,8 @@ class BangServer:
                         self.game.draw_phase(player, pat_target=target, pat_card=card)
                     elif ability == "lucky_duke":
                         idx = data.get("card_index", 0)
-                        cards = player.metadata.pop("lucky_cards", [])
+                        cards = player.metadata.lucky_cards or []
+                        player.metadata.lucky_cards = []
                         if cards:
                             chosen = cards[idx] if idx < len(cards) else cards[0]
                             player.hand.append(chosen)
@@ -205,7 +207,7 @@ class BangServer:
                     await self.broadcast_state()
                 elif isinstance(data, dict) and data.get("action") == "set_auto_miss":
                     enabled = bool(data.get("enabled", True))
-                    self.connections[websocket].player.metadata["auto_miss"] = enabled
+                    self.connections[websocket].player.metadata.auto_miss = enabled
                     await self.broadcast_state()
         finally:
             self.game.players.remove(player)
@@ -246,7 +248,8 @@ class BangServer:
                 asyncio.create_task(conn.websocket.send(payload))
             return
 
-        if player.metadata.pop("awaiting_draw", False):
+        if player.metadata.awaiting_draw:
+            player.metadata.awaiting_draw = False
             if isinstance(player.character, JesseJones):
                 targets = [
                     {"index": i, "name": p.name}
@@ -263,8 +266,8 @@ class BangServer:
 
             if isinstance(player.character, KitCarlson):
                 cards = [self.game.deck.draw() for _ in range(3)]
-                player.metadata["kit_cards"] = [c for c in cards if c]
-                names = [c.card_name for c in player.metadata.get("kit_cards", [])]
+                player.metadata.kit_cards = [c for c in cards if c]
+                names = [c.card_name for c in player.metadata.kit_cards or []]
                 payload = json.dumps({"prompt": "kit_carlson", "cards": names})
                 asyncio.create_task(conn.websocket.send(payload))
                 return
@@ -308,8 +311,8 @@ class BangServer:
 
             if isinstance(player.character, LuckyDuke):
                 cards = [self.game.deck.draw(), self.game.deck.draw()]
-                player.metadata["lucky_cards"] = [c for c in cards if c]
-                names = [c.card_name for c in player.metadata.get("lucky_cards", [])]
+                player.metadata.lucky_cards = [c for c in cards if c]
+                names = [c.card_name for c in player.metadata.lucky_cards or []]
                 if names:
                     payload = json.dumps({"prompt": "lucky_duke", "cards": names})
                     asyncio.create_task(conn.websocket.send(payload))

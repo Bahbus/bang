@@ -22,17 +22,17 @@ class BangCard(Card):
             barrel = target.equipment.get("Barrel")
             if barrel and getattr(barrel, "draw_check", None):
                 if barrel.draw_check(deck, target):
-                    target.metadata["dodged"] = True
+                    target.metadata.dodged = True
                     return
             if isinstance(target.character, Jourdonnais):
                 if BarrelCard().draw_check(deck, target):
-                    target.metadata["dodged"] = True
+                    target.metadata.dodged = True
                     return
             if isinstance(target.character, LuckyDuke):
                 card1 = deck.draw()
                 card2 = deck.draw()
                 if is_heart(card1) or is_heart(card2):
-                    target.metadata["dodged"] = True
+                    target.metadata.dodged = True
                     return
         target.take_damage(1)
 

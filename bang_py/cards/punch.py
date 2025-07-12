@@ -18,5 +18,5 @@ class PunchCard(Card):
             return
         before = target.health
         target.take_damage(1)
-        if target.health < before and target.metadata.get("game"):
-            target.metadata["game"].on_player_damaged(target, player)
+        if target.health < before and target.metadata.game:
+            target.metadata.game.on_player_damaged(target, player)
