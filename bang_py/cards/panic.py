@@ -27,6 +27,3 @@ class PanicCard(Card):
             card = random.choice(list(target.equipment.values()))
             target.unequip(card.card_name)
             player.hand.append(card)
-        if game:
-            # No discard since card is stolen
-            pass
