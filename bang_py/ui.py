@@ -5,6 +5,7 @@ import threading
 import queue
 import tkinter as tk
 from tkinter import ttk, messagebox
+from typing import Callable
 import websockets
 
 from .network.server import BangServer
@@ -538,34 +539,57 @@ class BangUI:
         win = tk.Toplevel(self.root)
         win.title("Jose Delgado")
         ttk.Label(win, text="Discard equipment to draw two?").pack()
+        def _discard_equipment(idx: int) -> None:
+            """Discard the selected equipment and close the prompt."""
+            self._use_ability("jose_delgado", target=idx)
+            win.destroy()
+
+        def _skip() -> None:
+            """Skip discarding equipment and close the prompt."""
+            self._use_ability("jose_delgado")
+            win.destroy()
+
+        def _make_eq_handler(idx: int) -> Callable[[], None]:
+            def _handler() -> None:
+                _discard_equipment(idx)
+            return _handler
+
         for eq in equipment:
             ttk.Button(
                 win,
                 text=eq.get("name", ""),
-                command=lambda idx=eq.get("index"): (
-                    self._use_ability("jose_delgado", target=idx),
-                    win.destroy(),
-                ),
+                command=_make_eq_handler(eq.get("index")),
             ).pack(fill="x")
-        skip_cmd = lambda: (self._use_ability("jose_delgado"), win.destroy())
-        ttk.Button(win, text="Skip", command=skip_cmd).pack(fill="x")
+
+        ttk.Button(win, text="Skip", command=_skip).pack(fill="x")
 
     def _prompt_pat_brennan(self, targets: list[dict]) -> None:
         win = tk.Toplevel(self.root)
         win.title("Pat Brennan")
         ttk.Label(win, text="Draw a card in play:").pack()
+
+        def _take_card(idx: int, card: str) -> None:
+            self._use_ability("pat_brennan", target=idx, card=card)
+            win.destroy()
+
+        def _skip() -> None:
+            self._use_ability("pat_brennan")
+            win.destroy()
+
+        def _make_handler(idx: int, card: str) -> Callable[[], None]:
+            def _handler() -> None:
+                _take_card(idx, card)
+            return _handler
+
         for t in targets:
             for card in t.get("cards", []):
                 ttk.Button(
                     win,
                     text=f"{t.get('index')}: {card}",
-                    command=lambda idx=t.get("index"), c=card: (
-                        self._use_ability("pat_brennan", target=idx, card=c),
-                        win.destroy(),
-                    ),
+                    command=_make_handler(t.get("index"), card),
                 ).pack(fill="x")
-        skip_cmd = lambda: (self._use_ability("pat_brennan"), win.destroy())
-        ttk.Button(win, text="Skip", command=skip_cmd).pack(fill="x")
+
+        ttk.Button(win, text="Skip", command=_skip).pack(fill="x")
 
     def _prompt_lucky_duke(self, cards: list[str]) -> None:
         if not cards:
@@ -573,14 +597,21 @@ class BangUI:
         win = tk.Toplevel(self.root)
         win.title("Lucky Duke")
         ttk.Label(win, text="Choose draw! result:").pack()
+
+        def _pick(idx: int) -> None:
+            self._use_ability("lucky_duke", card_index=idx)
+            win.destroy()
+
+        def _make_handler(idx: int) -> Callable[[], None]:
+            def _handler() -> None:
+                _pick(idx)
+            return _handler
+
         for i, card in enumerate(cards):
             ttk.Button(
                 win,
                 text=card,
-                command=lambda idx=i: (
-                    self._use_ability("lucky_duke", card_index=idx),
-                    win.destroy(),
-                ),
+                command=_make_handler(i),
             ).pack(fill="x")
 
     def _prompt_sid_ketchum(self) -> None:
