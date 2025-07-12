@@ -16,6 +16,7 @@ class HowitzerCard(Card):
 
     card_name = "Howitzer"
     description = "Bang all opponents ignoring distance."
+    green_border = True
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None,

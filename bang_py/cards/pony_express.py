@@ -13,6 +13,7 @@ class PonyExpressCard(Card):
 
     card_name = "Pony Express"
     description = "Draw three cards."
+    green_border = True
 
     def play(
         self, target: Player | None = None, player: Player | None = None, game: GameManager | None = None
