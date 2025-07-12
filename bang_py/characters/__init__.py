@@ -304,7 +304,8 @@ class ChuckWengam(Character):
 class DocHolyday(Character):
     name = "Doc Holyday"
     description = (
-        "Once during your turn, discard any two cards for a Bang! that doesn't count toward your limit."
+        "Once during your turn, discard any two cards for a Bang! "
+        "that doesn't count toward your limit."
     )
     starting_health = 4
 
@@ -372,7 +373,8 @@ class JohnnyKisch(Character):
 class ClausTheSaint(Character):
     name = "Claus the Saint"
     description = (
-        "During your draw phase, draw one more card than the number of players, keep two, then give one to each other player."
+        "During your draw phase, draw one more card than the number of players, "
+        "keep two, then give one to each other player."
     )
     starting_health = 3
 
