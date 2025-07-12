@@ -116,6 +116,7 @@ class GameManager:
             self.event_deck = create_fistful_deck()
         if self.event_deck:
             random.shuffle(self.event_deck)
+        self._register_card_handlers()
 
     def add_player(self, player: Player) -> None:
         """Add a player to the game and record the game reference."""
@@ -298,107 +299,117 @@ class GameManager:
             card = player.hand.pop()
             self._pass_left_or_discard(player, card)
 
-    def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
+    def _pre_card_checks(
+        self, player: Player, card: Card, target: Optional[Player]
+    ) -> bool:
         if card not in player.hand:
-            return
+            return False
         if target and has_ability(target, ApacheKid):
             if getattr(card, "suit", None) == "Diamonds":
                 player.hand.remove(card)
                 self._pass_left_or_discard(player, card)
-                return
-        if isinstance(card, BangCard) and target:
-            if player.distance_to(target) > player.attack_range:
-                return
-        if isinstance(card, PanicCard) and target:
-            if player.distance_to(target) > 1:
-                return
+                return False
+        if isinstance(card, BangCard) and target and player.distance_to(target) > player.attack_range:
+            return False
+        if isinstance(card, PanicCard) and target and player.distance_to(target) > 1:
+            return False
         if isinstance(card, JailCard) and target and target.role == Role.SHERIFF:
-            return
+            return False
         if self.event_flags.get("no_jail") and isinstance(card, JailCard):
-            return
-        # Determine if this card counts as a Bang!
-        is_bang = isinstance(card, BangCard) or (
+            return False
+        return True
+
+    def _is_bang(self, player: Player, card: Card, target: Optional[Player]) -> bool:
+        return isinstance(card, BangCard) or (
             has_ability(player, CalamityJanet) and isinstance(card, MissedCard) and target
         )
-        if is_bang:
-            if self.event_flags.get("no_bang"):
-                return
-            count = int(player.metadata.get("bangs_played", 0))
-            gun = player.equipment.get("Gun")
-            extra = int(player.metadata.get("doc_free_bang", 0))
-            unlimited = (
-                has_ability(player, WillyTheKid)
-                or getattr(gun, "unlimited_bang", False)
-                or extra > 0
-            )
-            limit = self.event_flags.get("bang_limit", 1)
-            if count >= limit and not unlimited:
-                # Cannot play more Bang! cards this turn
-                return
-        player.hand.remove(card)
-        before = target.health if target else None
+
+    def _can_play_bang(self, player: Player) -> bool:
+        if self.event_flags.get("no_bang"):
+            return False
+        count = int(player.metadata.get("bangs_played", 0))
+        gun = player.equipment.get("Gun")
+        extra = int(player.metadata.get("doc_free_bang", 0))
+        unlimited = (
+            has_ability(player, WillyTheKid)
+            or getattr(gun, "unlimited_bang", False)
+            or extra > 0
+        )
+        limit = self.event_flags.get("bang_limit", 1)
+        return count < limit or unlimited
+
+    def _dispatch_play(self, player: Player, card: Card, target: Optional[Player]) -> None:
         if has_ability(player, CalamityJanet) and isinstance(card, MissedCard) and target:
-            BangCard().play(target, self.deck)
-        elif isinstance(card, BangCard):
-            ignore_eq = has_ability(player, BelleStar)
-            if target and has_ability(player, SlabTheKiller):
-                misses = [c for c in target.hand if isinstance(c, MissedCard)]
-                if len(misses) >= 2:
-                    for _ in range(2):
-                        mcard = misses.pop()
-                        target.hand.remove(mcard)
-                        self.discard_pile.append(mcard)
-                        handle_out_of_turn_discard(self, target, mcard)
-                    target.metadata["dodged"] = True
-                else:
-                    card.play(target, self.deck, ignore_equipment=ignore_eq)
-            else:
-                if not (target and self._auto_miss(target)):
-                    card.play(target, self.deck, ignore_equipment=ignore_eq)
-            if self.event_flags.get("ricochet") and target:
-                extra = self._next_alive_player(target)
-                if extra and extra not in (target, player):
-                    before_x = extra.health
-                    if not self._auto_miss(extra):
-                        BangCard().play(extra, self.deck, ignore_equipment=ignore_eq)
-                    if extra.health < before_x:
-                        self.on_player_damaged(extra, player)
-                    if extra.health > before_x:
-                        self.on_player_healed(extra)
-        elif isinstance(card, StagecoachCard):
-            card.play(player, game=self)
-        elif isinstance(card, WellsFargoCard):
-            card.play(player, game=self)
-        elif isinstance(card, CatBalouCard) and target:
-            card.play(target, game=self)
-        elif isinstance(card, PanicCard) and target:
-            card.play(target, player, game=self)
-        elif isinstance(card, IndiansCard):
-            card.play(player, player, game=self)
-        elif isinstance(card, DuelCard) and target:
-            card.play(target, player, game=self)
-        elif isinstance(card, GeneralStoreCard):
-            card.play(player, player, game=self)
-        elif isinstance(card, SaloonCard):
-            card.play(player, player, game=self)
-        elif isinstance(card, GatlingCard):
-            card.play(player, player, game=self)
-        elif isinstance(card, HowitzerCard):
-            card.play(player, player, game=self)
-        elif isinstance(card, WhiskyCard):
-            card.play(target or player, player, game=self)
-        elif isinstance(card, BeerCard):
-            card.play(target or player, player, game=self)
-        elif isinstance(card, PonyExpressCard):
-            card.play(player, player, game=self)
-        elif isinstance(card, TequilaCard):
-            card.play(target or player, player, game=self)
-        elif isinstance(card, HighNoonCard):
-            card.play(player, player, game=self)
-        elif isinstance(card, PunchCard) and target:
-            card.play(target, player)
+            handler = self._card_handlers.get(BangCard)
+            if handler:
+                handler(player, BangCard(), target)
+            return
+        handler = self._card_handlers.get(type(card))
+        if handler:
+            handler(player, card, target)
         else:
             card.play(target)
+
+    def _play_bang_card(self, player: Player, card: BangCard, target: Optional[Player]) -> None:
+        ignore_eq = has_ability(player, BelleStar)
+        if target and has_ability(player, SlabTheKiller):
+            misses = [c for c in target.hand if isinstance(c, MissedCard)]
+            if len(misses) >= 2:
+                for _ in range(2):
+                    mcard = misses.pop()
+                    target.hand.remove(mcard)
+                    self.discard_pile.append(mcard)
+                    handle_out_of_turn_discard(self, target, mcard)
+                target.metadata["dodged"] = True
+            else:
+                card.play(target, self.deck, ignore_equipment=ignore_eq)
+        else:
+            if not (target and self._auto_miss(target)):
+                card.play(target, self.deck, ignore_equipment=ignore_eq)
+        if self.event_flags.get("ricochet") and target:
+            extra = self._next_alive_player(target)
+            if extra and extra not in (target, player):
+                before_x = extra.health
+                if not self._auto_miss(extra):
+                    BangCard().play(extra, self.deck, ignore_equipment=ignore_eq)
+                if extra.health < before_x:
+                    self.on_player_damaged(extra, player)
+                if extra.health > before_x:
+                    self.on_player_healed(extra)
+
+    def _register_card_handlers(self) -> None:
+        self._card_handlers = {
+            BangCard: self._play_bang_card,
+            StagecoachCard: lambda p, c, t: c.play(p, game=self),
+            WellsFargoCard: lambda p, c, t: c.play(p, game=self),
+            CatBalouCard: lambda p, c, t: c.play(t, game=self) if t else None,
+            PanicCard: lambda p, c, t: c.play(t, p, game=self) if t else None,
+            IndiansCard: lambda p, c, t: c.play(p, p, game=self),
+            DuelCard: lambda p, c, t: c.play(t, p, game=self) if t else None,
+            GeneralStoreCard: lambda p, c, t: c.play(p, p, game=self),
+            SaloonCard: lambda p, c, t: c.play(p, p, game=self),
+            GatlingCard: lambda p, c, t: c.play(p, p, game=self),
+            HowitzerCard: lambda p, c, t: c.play(p, p, game=self),
+            WhiskyCard: lambda p, c, t: c.play(t or p, p, game=self),
+            BeerCard: lambda p, c, t: c.play(t or p, p, game=self),
+            PonyExpressCard: lambda p, c, t: c.play(p, p, game=self),
+            TequilaCard: lambda p, c, t: c.play(t or p, p, game=self),
+            HighNoonCard: lambda p, c, t: c.play(p, p, game=self),
+            PunchCard: lambda p, c, t: c.play(t, p) if t else None,
+        }
+
+    def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
+        if not self._pre_card_checks(player, card, target):
+            return
+
+        is_bang = self._is_bang(player, card, target)
+        if is_bang and not self._can_play_bang(player):
+            return
+
+        player.hand.remove(card)
+        before = target.health if target else None
+        self._dispatch_play(player, card, target)
+
         if has_ability(player, JohnnyKisch) and hasattr(card, "card_name"):
             for p in self.players:
                 if p is player:
