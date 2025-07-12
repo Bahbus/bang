@@ -12,6 +12,7 @@ class TequilaCard(Card):
     """Heal one health point."""
 
     card_name = "Tequila"
+    description = "Heal 1 health."
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None

@@ -12,6 +12,7 @@ class PonyExpressCard(Card):
     """Draw three cards."""
 
     card_name = "Pony Express"
+    description = "Draw three cards."
 
     def play(
         self, target: Player | None = None, player: Player | None = None, game: GameManager | None = None

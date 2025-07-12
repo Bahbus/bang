@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class WellsFargoCard(Card):
     card_name = "Wells Fargo"
+    description = "Draw three cards."
 
     def play(
         self, target: Player, game: GameManager | None = None, deck: Deck | None = None

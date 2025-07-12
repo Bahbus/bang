@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class CatBalouCard(Card):
     card_name = "Cat Balou"
+    description = "Force a player to discard a random card or equipment."
 
     def play(self, target: Player, game: GameManager | None = None) -> None:
         if not target:

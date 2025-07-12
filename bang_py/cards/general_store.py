@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class GeneralStoreCard(Card):
     card_name = "General Store"
+    description = "Reveal cards for all players to choose one in turn order."
 
     def play(
         self,

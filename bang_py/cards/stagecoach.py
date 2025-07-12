@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class StagecoachCard(Card):
     card_name = "Stagecoach"
+    description = "Draw two cards."
 
     def play(
         self, target: Player, game: GameManager | None = None, deck: Deck | None = None
