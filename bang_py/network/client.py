@@ -20,10 +20,8 @@ async def main(
     Workflow
     --------
     The client connects to ``uri`` and exchanges the room code and player name.
-    It then defines helper coroutines ``send_play``, ``send_draw`` and
-    ``send_discard`` for sending common actions. Incoming messages are parsed
-    as JSON when possible and printed to the console along with the list of
-    players.
+    Incoming messages are parsed as JSON when possible and printed to the
+    console along with the list of players.
     """
     async with websockets.connect(uri) as websocket:
         prompt = await websocket.recv()
@@ -39,18 +37,6 @@ async def main(
         await websocket.send(name)
         join_msg = await websocket.recv()
         print(join_msg)
-
-        async def send_play(idx: int, target: int | None = None) -> None:
-            payload = {"action": "play_card", "card_index": idx}
-            if target is not None:
-                payload["target"] = target
-            await websocket.send(json.dumps(payload))
-
-        async def send_draw(num: int = 1) -> None:
-            await websocket.send(json.dumps({"action": "draw", "num": num}))
-
-        async def send_discard(idx: int) -> None:
-            await websocket.send(json.dumps({"action": "discard", "card_index": idx}))
 
         async for message in websocket:
             try:
