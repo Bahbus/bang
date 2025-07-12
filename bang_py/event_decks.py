@@ -6,11 +6,6 @@ from dataclasses import dataclass
 from typing import Callable, List
 
 
-def _noop(game: "GameManager") -> None:
-    """Default no-op event effect."""
-    return
-
-
 def _peyote(game: "GameManager") -> None:
     """Each draw gives one extra card."""
     game.event_flags["peyote_bonus"] = 1
