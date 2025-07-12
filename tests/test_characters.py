@@ -20,7 +20,6 @@ from bang_py.characters import (
     WillyTheKid,
 )
 from bang_py.game_manager import GameManager
-from bang_py.deck import Deck
 from bang_py.deck_factory import create_standard_deck
 from bang_py.cards.bang import BangCard
 from bang_py.cards.beer import BeerCard

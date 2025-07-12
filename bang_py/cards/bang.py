@@ -3,7 +3,7 @@ from __future__ import annotations
 from .card import Card
 from ..player import Player
 from typing import TYPE_CHECKING
-from ..helpers import is_heart, is_spade_between
+from ..helpers import is_heart
 from ..characters import Jourdonnais, LuckyDuke
 from .barrel import BarrelCard
 

@@ -8,7 +8,6 @@ from bang_py.cards.scope import ScopeCard
 from bang_py.cards.mustang import MustangCard
 from bang_py.cards.jail import JailCard
 from bang_py.cards.dynamite import DynamiteCard
-from bang_py.deck import Deck
 from bang_py.deck_factory import create_standard_deck
 from bang_py.player import Player
 

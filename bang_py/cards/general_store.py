@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from .card import Card
 from ..player import Player
-import random
 from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:

@@ -1,5 +1,4 @@
 from bang_py.game_manager import GameManager
-from bang_py.deck import Deck
 from bang_py.deck_factory import create_standard_deck
 from bang_py.player import Player
 from bang_py.cards.bang import BangCard
