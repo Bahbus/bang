@@ -8,6 +8,7 @@ when making changes.
 - Use Python 3.10+.
 - After modifying code, run `pytest` from the repository root to ensure tests
   pass.
+- Keep tests deterministic. If randomness is needed, seed the RNG inside the tests or offer hooks to bypass shuffling.
 
 ## Style
 - Follow standard PEP8 conventions and keep lines under 100 characters.
