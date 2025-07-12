@@ -101,7 +101,6 @@ class GameManager:
         """Draw and apply the next event card."""
         if not self.event_deck:
             return
-        random.shuffle(self.event_deck)
         self.current_event = self.event_deck.pop(0)
         self.event_flags.clear()
         self.current_event.apply(self)
@@ -116,6 +115,8 @@ class GameManager:
             self.event_deck = create_high_noon_deck()
         elif "fistful_of_cards" in self.expansions:
             self.event_deck = create_fistful_deck()
+        if self.event_deck:
+            random.shuffle(self.event_deck)
 
     def add_player(self, player: Player) -> None:
         """Add a player to the game and record the game reference."""
