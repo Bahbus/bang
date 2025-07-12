@@ -108,6 +108,8 @@ class GameManager:
 
     def __post_init__(self) -> None:
         if self.deck is None:
+            if not self.expansions:
+                self.expansions.append("dodge_city")
             self.deck = create_standard_deck(self.expansions)
         self.event_flags = {}
         if "high_noon" in self.expansions:

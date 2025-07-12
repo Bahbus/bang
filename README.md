@@ -37,6 +37,11 @@ server and shows a room code to share with friends. The host screen now lets you
 set the maximum number of players and which expansions to enable. Joining requires
 the host address, port, and the room code.
 
+Available expansions are `dodge_city`, `high_noon`, and `fistful_of_cards`.
+`dodge_city` adds extra playing cards and is enabled automatically when no
+expansions are specified. The other two names activate their respective event
+decks.
+
 Once connected you will see:
 
 1. A list of players with their current health and any equipped items.
