@@ -48,4 +48,3 @@ class BeerCard(Card):
             target.heal(heal_amt)
             if game and target.health > before:
                 game.on_player_healed(target)
-

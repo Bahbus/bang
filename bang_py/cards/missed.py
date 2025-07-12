@@ -12,4 +12,3 @@ class MissedCard(Card):
         if not target:
             return
         target.metadata.dodged = True
-
