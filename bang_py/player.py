@@ -30,12 +30,13 @@ class Player:
     hand: List["Card"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        """Initialize max health from role and character modifiers."""
-        base = 5 if self.role == Role.SHERIFF else 4
-        self.max_health = base
+        """Initialize max health from role and character."""
+        base = 4
         if self.character is not None:
-            bonus = getattr(self.character, "max_health_modifier", 0)
-            self.max_health += int(bonus)
+            base = getattr(self.character, "starting_health", 4)
+        if self.role == Role.SHERIFF:
+            base += 1
+        self.max_health = base
         self.health = self.max_health
 
     def _apply_health_modifier(self, amount: int) -> None:

@@ -96,6 +96,7 @@ class GameManager:
     turn_started_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
 
+
     def draw_event_card(self) -> None:
         """Draw and apply the next event card."""
         if not self.event_deck:
@@ -240,89 +241,22 @@ class GameManager:
         if custom_draw is not None:
             self.draw_card(player, custom_draw)
             return
+
         char = player.character
-        if isinstance(char, JesseJones):
-            opponents = [p for p in self.players if p is not player and p.hand]
-            if opponents:
-                source = jesse_target if jesse_target in opponents else random.choice(opponents)
-                card = source.hand.pop()
-                player.hand.append(card)
-                self.draw_card(player)
+        if char and getattr(char, "draw_phase", None):
+            handled = char.draw_phase(
+                self,
+                player,
+                jesse_target=jesse_target,
+                kit_discard=kit_discard,
+                pedro_use_discard=pedro_use_discard,
+                jose_equipment=jose_equipment,
+                pat_target=pat_target,
+                pat_card=pat_card,
+            )
+            if handled:
                 return
-        if isinstance(char, BlackJack):
-            first = self.deck.draw()
-            if first:
-                player.hand.append(first)
-            second = self.deck.draw()
-            if second:
-                player.hand.append(second)
-                if getattr(second, "suit", None) in ("Hearts", "Diamonds"):
-                    self.draw_card(player)
-            return
-        if isinstance(char, KitCarlson):
-            cards = [self.deck.draw(), self.deck.draw(), self.deck.draw()]
-            keep_cards = []
-            for i, c in enumerate(cards):
-                if c is None:
-                    continue
-                if kit_discard is not None and i == kit_discard:
-                    self.discard_pile.append(c)
-                elif len(keep_cards) < 2:
-                    keep_cards.append(c)
-                else:
-                    self.discard_pile.append(c)
-            for c in keep_cards:
-                player.hand.append(c)
-            return
-        if isinstance(char, PedroRamirez) and self.discard_pile:
-            if pedro_use_discard is False:
-                self.draw_card(player, 2)
-            else:
-                player.hand.append(self.discard_pile.pop())
-                self.draw_card(player)
-            return
-        if isinstance(char, PixiePete):
-            self.draw_card(player, 3)
-            return
-        if isinstance(char, JoseDelgado):
-            equips = [c for c in player.hand if hasattr(c, "slot")]
-            equip = None
-            if jose_equipment is not None and 0 <= jose_equipment < len(equips):
-                equip = equips[jose_equipment]
-            elif equips:
-                equip = equips[0]
-            if equip:
-                player.hand.remove(equip)
-                self.discard_pile.append(equip)
-                self.draw_card(player, 2)
-            self.draw_card(player)
-            return
-        if isinstance(char, BillNoface):
-            wounds = player.max_health - player.health
-            self.draw_card(player, 1 + wounds)
-            return
-        if isinstance(char, PatBrennan):
-            if not self.pat_brennan_draw(player, pat_target, pat_card):
-                self.draw_card(player)
-            self.draw_card(player)
-            return
-        if isinstance(char, ClausTheSaint):
-            alive = [p for p in self.players if p.is_alive()]
-            cards = []
-            for _ in range(len(alive) + 1):
-                card = self.deck.draw()
-                if card:
-                    cards.append(card)
-            keep = cards[:2]
-            for c in keep:
-                player.hand.append(c)
-            others = [p for p in alive if p is not player]
-            idx = 2
-            for p in others:
-                if idx < len(cards):
-                    p.hand.append(cards[idx])
-                    idx += 1
-            return
+
         self.draw_card(player, 2)
 
     def discard_phase(self, player: Player) -> None:
@@ -538,6 +472,7 @@ class GameManager:
         player.metadata["doc_used"] = True
         player.metadata["doc_free_bang"] = int(player.metadata.get("doc_free_bang", 0)) + 1
         player.hand.append(BangCard())
+
 
     def pat_brennan_draw(
         self,
