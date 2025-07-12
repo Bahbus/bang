@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class PanicCard(Card):
     card_name = "Panic!"
+    description = "Steal a random card or equipment from another player."
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None

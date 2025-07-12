@@ -15,6 +15,7 @@ class HowitzerCard(Card):
     """Attack all opponents regardless of distance."""
 
     card_name = "Howitzer"
+    description = "Bang all opponents ignoring distance."
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None,

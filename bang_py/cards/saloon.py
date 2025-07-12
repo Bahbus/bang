@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 class SaloonCard(Card):
     card_name = "Saloon"
+    description = "All players heal 1 health."
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None

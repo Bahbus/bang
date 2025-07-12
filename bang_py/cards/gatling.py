@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class GatlingCard(Card):
     card_name = "Gatling"
+    description = "Bang every other player once."
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None,

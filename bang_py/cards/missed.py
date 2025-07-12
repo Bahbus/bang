@@ -6,6 +6,7 @@ from ..player import Player
 
 class MissedCard(Card):
     card_name = "Missed!"
+    description = "Negates one Bang! targeting you."
 
     def play(self, target: Player) -> None:
         if not target:

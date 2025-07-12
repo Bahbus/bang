@@ -13,6 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 
 class BeerCard(Card):
     card_name = "Beer"
+    description = "Heals 1 health if allowed by the game rules."
 
     def play(
         self,

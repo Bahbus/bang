@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class IndiansCard(Card):
     card_name = "Indians!"
+    description = "Others discard Bang! or suffer 1 damage."
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None

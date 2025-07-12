@@ -13,6 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 
 class BangCard(Card):
     card_name = "Bang!"
+    description = "Basic attack that deals 1 damage unless dodged."
 
     def play(self, target: Player, deck: Deck | None = None, *, ignore_equipment: bool = False) -> None:
         if not target:

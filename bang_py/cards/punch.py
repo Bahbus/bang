@@ -8,6 +8,7 @@ class PunchCard(Card):
     """Simple attack card from the Dodge City expansion."""
 
     card_name = "Punch"
+    description = "Deal 1 damage if the target is within distance 1."
 
     def play(self, target: Player, player: Player | None = None) -> None:
         """Deal one damage if the target is within distance 1."""
