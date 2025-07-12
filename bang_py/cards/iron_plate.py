@@ -8,3 +8,4 @@ class IronPlateCard(EquipmentCard):
 
     card_name = "Iron Plate"
     max_health_modifier = 1
+    green_border = True

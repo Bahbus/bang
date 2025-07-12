@@ -9,3 +9,4 @@ class BinocularsCard(EquipmentCard):
     card_name = "Binoculars"
     range_modifier = 1
     description = "Increases attack range by 1."
+    green_border = True

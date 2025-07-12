@@ -10,3 +10,4 @@ class BuffaloRifleCard(EquipmentCard):
     slot = "Gun"
     range = 5
     description = "Gun with range 5."
+    green_border = True

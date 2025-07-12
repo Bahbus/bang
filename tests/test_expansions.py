@@ -313,10 +313,38 @@ def test_high_noon_event_deck_draw():
     assert gm.current_event is not None
 
 
-def test_pepperbox_sets_range_three():
-    player = Player("Shooter")
-    PepperboxCard().play(player)
-    assert player.attack_range == 3
+def test_pepperbox_activates_after_turn():
+    gm = GameManager()
+    p1 = Player("Shooter")
+    p2 = Player("Other")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.start_game()
+    card = PepperboxCard()
+    p1.hand.append(card)
+    gm.play_card(p1, card, p1)
+    assert p1.attack_range == 1
+    gm.end_turn()
+    assert p1.attack_range == 3
+
+
+def test_binoculars_and_hideout_activate_after_turn():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.start_game()
+    b = BinocularsCard()
+    h = HideoutCard()
+    p1.hand.extend([b, h])
+    gm.play_card(p1, b, p1)
+    gm.play_card(p1, h, p1)
+    assert p1.attack_range == 1
+    assert p2.distance_to(p1) == 1
+    gm.end_turn()
+    assert p1.attack_range == 2
+    assert p2.distance_to(p1) == 2
 
 
 def test_howitzer_hits_all_opponents():
