@@ -351,9 +351,7 @@ class GameManager:
                 else:
                     card.play(target, self.deck, ignore_equipment=ignore_eq)
             else:
-                if target and self._auto_miss(target):
-                    pass
-                else:
+                if not (target and self._auto_miss(target)):
                     card.play(target, self.deck, ignore_equipment=ignore_eq)
             if self.event_flags.get("ricochet") and target:
                 extra = self._next_alive_player(target)
