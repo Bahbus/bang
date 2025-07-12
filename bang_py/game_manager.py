@@ -697,7 +697,7 @@ class GameManager:
                 if p is not player and has_ability(p, VultureSam):
                     p.hand.extend(player.hand)
                     player.hand.clear()
-            result = self._check_win_conditions()
+            self._check_win_conditions()
 
     def on_player_healed(self, player: Player) -> None:
         for cb in self.player_healed_listeners:
