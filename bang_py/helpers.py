@@ -27,7 +27,7 @@ def has_ability(player: Player, char_cls: Type[Character]) -> bool:
     if isinstance(player.character, char_cls):
         return True
     if isinstance(player.character, VeraCuster):
-        copied = player.metadata.get("vera_copy")
+        copied = player.metadata.vera_copy
         return bool(copied and issubclass(copied, char_cls))
     return False
 

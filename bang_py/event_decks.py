@@ -38,7 +38,7 @@ def _ghost_town(game: "GameManager") -> None:
     for p in game.players:
         if not p.is_alive():
             p.health = 1
-            p.metadata["ghost_revived"] = True
+            p.metadata.ghost_revived = True
             revived.append(p)
     if revived:
         game.turn_order = [i for i, pl in enumerate(game.players) if pl.is_alive()]

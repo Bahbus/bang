@@ -9,6 +9,28 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from .cards.equipment import EquipmentCard
     from .characters import Character
     from .cards.card import Card
+    from .game_manager import GameManager
+
+
+@dataclass
+class PlayerMetadata:
+    """State information associated with a player."""
+
+    game: "GameManager | None" = None
+    auto_miss: bool = True
+    awaiting_draw: bool = False
+    bangs_played: int = 0
+    doc_free_bang: int = 0
+    doc_used: bool = False
+    dodged: bool = False
+    ghost_revived: bool = False
+    kit_cards: list["Card"] | None = None
+    lucky_cards: list["Card"] | None = None
+    last_card_played: type["Card"] | None = None
+    last_card_target: "Player | None" = None
+    uncle_used: bool = False
+    vera_copy: type["Character"] | None = None
+    lvk_used: bool = False
 
 
 class Role(Enum):
@@ -25,7 +47,7 @@ class Player:
     character: "Character | None" = None
     max_health: int = 4
     health: int = field(init=False)
-    metadata: dict = field(default_factory=dict)
+    metadata: PlayerMetadata = field(default_factory=PlayerMetadata)
     equipment: Dict[str, "EquipmentCard"] = field(default_factory=dict)
     hand: List["Card"] = field(default_factory=list)
 
@@ -109,7 +131,7 @@ class Player:
     @property
     def attack_range(self) -> int:
         """Maximum range this player can target based on gun and equipment."""
-        game = self.metadata.get("game")
+        game = self.metadata.game
         if getattr(game, "event_flags", {}).get("range_unlimited"):
             return 99
         rng = self.gun_range + self.range_bonus
@@ -122,7 +144,7 @@ class Player:
 
     def distance_to(self, other: "Player") -> int:
         """Return distance to another player considering equipment and abilities."""
-        game = self.metadata.get("game")
+        game = self.metadata.game
         players = getattr(game, "players", None)
 
         base = 1

@@ -31,7 +31,7 @@ def test_beer_card_heals_target():
 def test_missed_card_sets_dodged_metadata():
     target = Player("Target")
     MissedCard().play(target)
-    assert target.metadata.get("dodged") is True
+    assert target.metadata.dodged is True
 
 
 def test_equipment_replaces_same_name():
@@ -77,7 +77,7 @@ def test_barrel_dodges_bang_on_heart():
     deck.cards.append(BeerCard(suit="Hearts"))
     BangCard().play(target, deck)
     assert target.health == target.max_health
-    assert target.metadata.get("dodged") is True
+    assert target.metadata.dodged is True
 
 
 def test_barrel_fails_on_non_heart():
