@@ -12,7 +12,15 @@ except ModuleNotFoundError:  # pragma: no cover - handled in start()
 
 from ..game_manager import GameManager
 from ..player import Player, Role
-from ..characters import VeraCuster
+from ..characters import (
+    VeraCuster,
+    JesseJones,
+    KitCarlson,
+    PedroRamirez,
+    JoseDelgado,
+    PatBrennan,
+    LuckyDuke,
+)
 from ..cards.general_store import GeneralStoreCard
 
 @dataclass
