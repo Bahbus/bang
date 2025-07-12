@@ -123,6 +123,43 @@ class GameManager:
         player.metadata.game = self
         self.players.append(player)
 
+    def remove_player(self, player: Player) -> None:
+        """Remove ``player`` from the game and update turn order."""
+        if player not in self.players:
+            return
+
+        # Track the current player object to preserve turn position when
+        # possible.
+        current_obj: Player | None = None
+        if self.turn_order:
+            current_obj = self.players[self.turn_order[self.current_turn]]
+
+        idx = self.players.index(player)
+        self.players.pop(idx)
+        player.metadata.game = None
+
+        new_order: List[int] = []
+        for order_idx in self.turn_order:
+            if order_idx == idx:
+                continue
+            if order_idx > idx:
+                new_order.append(order_idx - 1)
+            else:
+                new_order.append(order_idx)
+        self.turn_order = new_order
+
+        if not self.turn_order:
+            self.current_turn = 0
+            return
+
+        if current_obj and current_obj in self.players:
+            cur_idx = self.players.index(current_obj)
+            if cur_idx in self.turn_order:
+                self.current_turn = self.turn_order.index(cur_idx)
+                return
+
+        self.current_turn %= len(self.turn_order)
+
     def start_game(self) -> None:
         self.turn_order = list(range(len(self.players)))
         self.current_turn = 0
