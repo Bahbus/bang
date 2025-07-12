@@ -10,11 +10,9 @@ from .cards.card import Card
 from .helpers import has_ability, handle_out_of_turn_discard
 from .characters import (
     BartCassidy,
-    BlackJack,
     CalamityJanet,
     ElGringo,
     JesseJones,
-    Jourdonnais,
     KitCarlson,
     LuckyDuke,
     PedroRamirez,
@@ -23,23 +21,19 @@ from .characters import (
     SuzyLafayette,
     VultureSam,
     WillyTheKid,
-    PixiePete,
     JoseDelgado,
     SeanMallory,
     VeraCuster,
     ApacheKid,
     GregDigger,
     BelleStar,
-    BillNoface,
     ChuckWengam,
     DocHolyday,
     ElenaFuente,
     HerbHunter,
     PatBrennan,
     UncleWill,
-    MollyStark,
     JohnnyKisch,
-    ClausTheSaint,
 )
 from .cards.bang import BangCard
 from .cards.missed import MissedCard

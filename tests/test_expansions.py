@@ -19,8 +19,6 @@ from bang_py.cards import (
     CatBalouCard,
     PanicCard,
     IndiansCard,
-    StagecoachCard,
-    MissedCard,
 )
 from bang_py.characters import (
     PixiePete,

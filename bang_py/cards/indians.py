@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..game_manager import GameManager
-    from .bang import BangCard
 
 
 class IndiansCard(Card):
