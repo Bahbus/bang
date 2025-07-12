@@ -220,7 +220,8 @@ class GameManager:
         self._begin_turn()
 
     def draw_card(self, player: Player, num: int = 1) -> None:
-        for _ in range(num):
+        bonus = int(self.event_flags.get("peyote_bonus", 0))
+        for _ in range(num + bonus):
             card = self.deck.draw()
             if card is None:
                 if self.discard_pile:
@@ -279,7 +280,7 @@ class GameManager:
             limit = 99
         while len(player.hand) > limit:
             card = player.hand.pop()
-            self.discard_pile.append(card)
+            self._pass_left_or_discard(player, card)
 
     def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
         if card not in player.hand:
@@ -287,7 +288,7 @@ class GameManager:
         if target and has_ability(target, ApacheKid):
             if getattr(card, "suit", None) == "Diamonds":
                 player.hand.remove(card)
-                self.discard_pile.append(card)
+                self._pass_left_or_discard(player, card)
                 return
         if isinstance(card, BangCard) and target:
             if player.distance_to(target) > player.attack_range:
@@ -340,6 +341,16 @@ class GameManager:
                     pass
                 else:
                     card.play(target, self.deck, ignore_equipment=ignore_eq)
+            if self.event_flags.get("ricochet") and target:
+                extra = self._next_alive_player(target)
+                if extra and extra not in (target, player):
+                    before_x = extra.health
+                    if not self._auto_miss(extra):
+                        BangCard().play(extra, self.deck, ignore_equipment=ignore_eq)
+                    if extra.health < before_x:
+                        self.on_player_damaged(extra, player)
+                    if extra.health > before_x:
+                        self.on_player_healed(extra)
         elif isinstance(card, StagecoachCard):
             self.draw_card(player, 2)
         elif isinstance(card, WellsFargoCard):
@@ -364,7 +375,7 @@ class GameManager:
             card.play(target or player, player, game=self)
         elif isinstance(card, BeerCard):
             if self.event_flags.get("no_beer_play"):
-                self.discard_pile.append(card)
+                self._pass_left_or_discard(player, card)
                 return
             else:
                 before_hp = (target or player).health
@@ -392,12 +403,12 @@ class GameManager:
                     continue
                 other = p.unequip(card.card_name)
                 if other:
-                    self.discard_pile.append(other)
+                    self._pass_left_or_discard(p, other)
         if target and before is not None and target.health < before:
             self.on_player_damaged(target, player)
         if target and before is not None and target.health > before:
             self.on_player_healed(target)
-        self.discard_pile.append(card)
+        self._pass_left_or_discard(player, card)
         player.metadata["last_card_played"] = card.__class__
         player.metadata["last_card_target"] = target
         if is_bang:
@@ -411,8 +422,9 @@ class GameManager:
     def discard_card(self, player: Player, card: Card) -> None:
         if card in player.hand:
             player.hand.remove(card)
-            self.discard_pile.append(card)
-            handle_out_of_turn_discard(self, player, card)
+            self._pass_left_or_discard(player, card)
+            if not self.event_flags.get("river"):
+                handle_out_of_turn_discard(self, player, card)
             if has_ability(player, SuzyLafayette) and not player.hand:
                 self.draw_card(player)
 
@@ -426,7 +438,7 @@ class GameManager:
         for idx in discard_indices:
             if 0 <= idx < len(player.hand):
                 card = player.hand.pop(idx)
-                self.discard_pile.append(card)
+                self._pass_left_or_discard(player, card)
         player.heal(1)
         self.on_player_healed(player)
 
@@ -438,22 +450,25 @@ class GameManager:
         miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
         if miss:
             target.hand.remove(miss)
-            self.discard_pile.append(miss)
-            handle_out_of_turn_discard(self, target, miss)
+            self._pass_left_or_discard(target, miss)
+            if not self.event_flags.get("river"):
+                handle_out_of_turn_discard(self, target, miss)
             target.metadata["dodged"] = True
             return True
         if has_ability(target, CalamityJanet):
             bang = next((c for c in target.hand if isinstance(c, BangCard)), None)
             if bang:
                 target.hand.remove(bang)
-                self.discard_pile.append(bang)
-                handle_out_of_turn_discard(self, target, bang)
+                self._pass_left_or_discard(target, bang)
+                if not self.event_flags.get("river"):
+                    handle_out_of_turn_discard(self, target, bang)
                 target.metadata["dodged"] = True
                 return True
         if has_ability(target, ElenaFuente) and target.hand:
             card = target.hand.pop()
-            self.discard_pile.append(card)
-            handle_out_of_turn_discard(self, target, card)
+            self._pass_left_or_discard(target, card)
+            if not self.event_flags.get("river"):
+                handle_out_of_turn_discard(self, target, card)
             target.metadata["dodged"] = True
             return True
         return False
@@ -481,7 +496,7 @@ class GameManager:
         for idx in discard_indices:
             if 0 <= idx < len(player.hand):
                 card = player.hand.pop(idx)
-                self.discard_pile.append(card)
+                self._pass_left_or_discard(player, card)
         player.metadata["doc_used"] = True
         player.metadata["doc_free_bang"] = int(player.metadata.get("doc_free_bang", 0)) + 1
         player.hand.append(BangCard())
@@ -518,7 +533,7 @@ class GameManager:
         player.metadata["uncle_used"] = True
         GeneralStoreCard().play(player, player, game=self)
         player.hand.remove(card)
-        self.discard_pile.append(card)
+        self._pass_left_or_discard(player, card)
         return True
 
     def vera_custer_copy(self, player: Player, target: Player) -> None:
@@ -586,6 +601,26 @@ class GameManager:
         player.metadata.pop("lvk_used", None)
         if isinstance(player.character, VeraCuster):
             player.metadata.pop("vera_copy", None)
+
+    def _next_alive_player(self, player: Player) -> Optional[Player]:
+        """Return the next living player to the left."""
+        if player not in self.players:
+            return None
+        idx = self.players.index(player)
+        for i in range(1, len(self.players)):
+            nxt = self.players[(idx + i) % len(self.players)]
+            if nxt.is_alive():
+                return nxt
+        return None
+
+    def _pass_left_or_discard(self, source: Player, card: Card) -> None:
+        """Pass card left if The River is active, else discard."""
+        if self.event_flags.get("river"):
+            target = self._next_alive_player(source)
+            if target and target is not source:
+                target.hand.append(card)
+                return
+        self.discard_pile.append(card)
 
     def _get_player_by_index(self, idx: int) -> Optional[Player]:
         if 0 <= idx < len(self.players):

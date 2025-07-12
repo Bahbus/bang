@@ -4,6 +4,9 @@ from bang_py.event_decks import (
     _fistful,
     _judge,
     _ghost_town,
+    _peyote,
+    _ricochet,
+    _river,
     _bounty,
     _vendetta,
 )
@@ -110,3 +113,46 @@ def test_vendetta_outlaw_range_bonus():
     gm.event_deck = [EventCard("Vendetta", _vendetta, "")]
     gm.draw_event_card()
     assert outlaw.attack_range == 2
+
+
+def test_ricochet_hits_next_player():
+    gm = GameManager()
+    p1 = Player("P1")
+    p2 = Player("P2")
+    p3 = Player("P3")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.add_player(p3)
+    gm.event_deck = [EventCard("Ricochet", _ricochet, "")]
+    gm.draw_event_card()
+    p1.hand.append(BangCard())
+    gm.play_card(p1, p1.hand[0], p2)
+    assert p2.health == p2.max_health - 1
+    assert p3.health == p3.max_health - 1
+
+
+def test_river_passes_discard_left():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    p3 = Player("C")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.add_player(p3)
+    gm.event_deck = [EventCard("The River", _river, "")]
+    gm.draw_event_card()
+    card = BangCard()
+    p1.hand.append(card)
+    gm.discard_card(p1, card)
+    assert card in p2.hand
+    assert card not in gm.discard_pile
+
+
+def test_peyote_extra_draw():
+    gm = GameManager()
+    p = Player("Sheriff", role=Role.SHERIFF)
+    gm.add_player(p)
+    gm.event_deck = [EventCard("Peyote", _peyote, "")]
+    gm.draw_event_card()
+    gm.draw_card(p)
+    assert len(p.hand) == 2
