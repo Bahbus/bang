@@ -210,7 +210,7 @@ class BangServer:
                     self.connections[websocket].player.metadata.auto_miss = enabled
                     await self.broadcast_state()
         finally:
-            self.game.players.remove(player)
+            self.game.remove_player(player)
             self.connections.pop(websocket, None)
             await self.broadcast_state()
 
