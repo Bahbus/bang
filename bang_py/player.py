@@ -58,9 +58,9 @@ class Player:
             self.equipment[card.card_name] = card
 
         if existing:
-            self._apply_health_modifier(
-                -int(getattr(existing, "max_health_modifier", 0))
-            )
+            modifier = int(getattr(existing, "max_health_modifier", 0))
+            if modifier and getattr(existing, "active", True):
+                self._apply_health_modifier(-modifier)
 
         card.active = active
         if active:
