@@ -3,35 +3,38 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, List
+from typing import Callable, List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .game_manager import GameManager
 
 
-def _peyote(game: "GameManager") -> None:
+def _peyote(game: GameManager) -> None:
     """Each draw gives one extra card."""
     game.event_flags["peyote_bonus"] = 1
 
 
-def _ricochet(game: "GameManager") -> None:
+def _ricochet(game: GameManager) -> None:
     """Bang! cards also hit the next player."""
     game.event_flags["ricochet"] = True
 
 
-def _river(game: "GameManager") -> None:
+def _river(game: GameManager) -> None:
     """Discarded cards pass to the left player."""
     game.event_flags["river"] = True
 
 
-def _fistful_ghost_town(game: "GameManager") -> None:
+def _fistful_ghost_town(game: GameManager) -> None:
     """Alias of Ghost Town for the Fistful deck."""
     _ghost_town(game)
 
 
-def _judge(game: "GameManager") -> None:
+def _judge(game: GameManager) -> None:
     """Beer cards cannot be played."""
     game.event_flags["no_beer_play"] = True
 
 
-def _ghost_town(game: "GameManager") -> None:
+def _ghost_town(game: GameManager) -> None:
     """Revive eliminated players with 1 health until the next event card."""
     game.event_flags["ghost_town"] = True
     revived = []
@@ -44,29 +47,29 @@ def _ghost_town(game: "GameManager") -> None:
         game.turn_order = [i for i, pl in enumerate(game.players) if pl.is_alive()]
 
 
-def _bounty(game: "GameManager") -> None:
+def _bounty(game: GameManager) -> None:
     """Reward eliminations with two cards."""
     game.event_flags["bounty"] = True
 
 
-def _vendetta(game: "GameManager") -> None:
+def _vendetta(game: GameManager) -> None:
     """Outlaws gain +1 attack range."""
     game.event_flags["vendetta"] = True
 
 
-def _thirst(game: "GameManager") -> None:
+def _thirst(game: GameManager) -> None:
     game.event_flags["draw_count"] = 1
 
 
-def _shootout(game: "GameManager") -> None:
+def _shootout(game: GameManager) -> None:
     game.event_flags["bang_limit"] = 2
 
 
-def _high_noon(game: "GameManager") -> None:
+def _high_noon(game: GameManager) -> None:
     game.event_flags["start_damage"] = 1
 
 
-def _fistful(game: "GameManager") -> None:
+def _fistful(game: GameManager) -> None:
     game.event_flags["damage_by_hand"] = True
 
 
@@ -75,10 +78,10 @@ class EventCard:
     """Card used in event deck expansions."""
 
     name: str
-    effect: Callable[["GameManager"], None]
+    effect: Callable[[GameManager], None]
     description: str = ""
 
-    def apply(self, game: "GameManager") -> None:
+    def apply(self, game: GameManager) -> None:
         """Execute this event's effect."""
         self.effect(game)
 
