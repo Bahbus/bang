@@ -37,13 +37,14 @@ def _judge(game: "GameManager") -> None:
 
 
 def _ghost_town(game: "GameManager") -> None:
-    """Revive eliminated players with 1 health."""
+    """Revive eliminated players with 1 health until the next event card."""
     game.event_flags["ghost_town"] = True
     revived = []
-    for i, p in enumerate(game.players):
+    for p in game.players:
         if not p.is_alive():
             p.health = 1
-            revived.append(i)
+            p.metadata["ghost_revived"] = True
+            revived.append(p)
     if revived:
         game.turn_order = [
             i for i, pl in enumerate(game.players) if pl.is_alive()
