@@ -2,7 +2,7 @@ from bang_py.player import Player, Role
 from bang_py.characters import Character
 
 class BonusLife(Character):
-    max_health_modifier = 1
+    starting_health = 5
 
 
 def test_bonus_life_character_increases_max_health():
