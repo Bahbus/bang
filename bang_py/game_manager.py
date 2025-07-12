@@ -367,9 +367,9 @@ class GameManager:
                     if extra.health > before_x:
                         self.on_player_healed(extra)
         elif isinstance(card, StagecoachCard):
-            self.draw_card(player, 2)
+            card.play(player, game=self)
         elif isinstance(card, WellsFargoCard):
-            self.draw_card(player, 3)
+            card.play(player, game=self)
         elif isinstance(card, CatBalouCard) and target:
             card.play(target, game=self)
         elif isinstance(card, PanicCard) and target:
