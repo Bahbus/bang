@@ -16,7 +16,10 @@ class PonyExpressCard(Card):
     green_border = True
 
     def play(
-        self, target: Player | None = None, player: Player | None = None, game: GameManager | None = None
+        self,
+        target: Player | None = None,
+        player: Player | None = None,
+        game: GameManager | None = None,
     ) -> None:
         if player and game:
             game.draw_card(player, 3)
