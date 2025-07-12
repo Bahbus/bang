@@ -47,7 +47,7 @@ class Player:
         else:
             self.health = min(self.health, self.max_health)
 
-    def equip(self, card: "EquipmentCard") -> None:
+    def equip(self, card: "EquipmentCard", *, active: bool = True) -> None:
         """Add equipment to the player, respecting slot rules."""
         existing = None
         if getattr(card, "slot", None) == "Gun":
@@ -62,23 +62,25 @@ class Player:
                 -int(getattr(existing, "max_health_modifier", 0))
             )
 
-        modifier = int(getattr(card, "max_health_modifier", 0))
-        if modifier:
-            self._apply_health_modifier(modifier)
+        card.active = active
+        if active:
+            modifier = int(getattr(card, "max_health_modifier", 0))
+            if modifier:
+                self._apply_health_modifier(modifier)
 
     def unequip(self, card_name: str) -> "EquipmentCard | None":
         """Remove equipment by name and adjust health if needed."""
         card = self.equipment.pop(card_name, None)
         if card:
             modifier = int(getattr(card, "max_health_modifier", 0))
-            if modifier:
+            if modifier and getattr(card, "active", True):
                 self._apply_health_modifier(-modifier)
         return card
 
     @property
     def gun_range(self) -> int:
         gun = self.equipment.get("Gun")
-        if gun and hasattr(gun, "range"):
+        if gun and hasattr(gun, "range") and getattr(gun, "active", True):
             return int(getattr(gun, "range"))
         return 1
 
@@ -87,7 +89,8 @@ class Player:
         """Bonus range from equipment such as Scope."""
         bonus = 0
         for eq in self.equipment.values():
-            bonus += getattr(eq, "range_modifier", 0)
+            if getattr(eq, "active", True):
+                bonus += getattr(eq, "range_modifier", 0)
         if self.character is not None:
             bonus += getattr(self.character, "range_modifier", 0)
         return bonus
@@ -97,7 +100,8 @@ class Player:
         """Distance penalty applied to opponents due to equipment such as Mustang."""
         bonus = 0
         for eq in self.equipment.values():
-            bonus += getattr(eq, "distance_modifier", 0)
+            if getattr(eq, "active", True):
+                bonus += getattr(eq, "distance_modifier", 0)
         if self.character is not None:
             bonus += getattr(self.character, "distance_modifier", 0)
         return bonus

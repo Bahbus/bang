@@ -10,3 +10,4 @@ class PepperboxCard(EquipmentCard):
     slot = "Gun"
     range = 3
     description = "Gun with range 3."
+    green_border = True

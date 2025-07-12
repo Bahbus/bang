@@ -135,6 +135,12 @@ class GameManager:
         self.current_turn %= len(self.turn_order)
         idx = self.turn_order[self.current_turn]
         player = self.players[idx]
+        for eq in list(player.equipment.values()):
+            if getattr(eq, "green_border", False) and not getattr(eq, "active", True):
+                eq.active = True
+                modifier = int(getattr(eq, "max_health_modifier", 0))
+                if modifier:
+                    player._apply_health_modifier(modifier)
         self.reset_turn_flags(player)
         if self.event_deck and player.role == Role.SHERIFF:
             self.draw_event_card()
@@ -202,7 +208,14 @@ class GameManager:
         if not self.turn_order:
             return
         idx = self.turn_order[self.current_turn]
-        self.discard_phase(self.players[idx])
+        player = self.players[idx]
+        self.discard_phase(player)
+        for eq in list(player.equipment.values()):
+            if getattr(eq, "green_border", False) and not getattr(eq, "active", True):
+                eq.active = True
+                modifier = int(getattr(eq, "max_health_modifier", 0))
+                if modifier:
+                    player._apply_health_modifier(modifier)
         self.current_turn = (self.current_turn + 1) % len(self.turn_order)
         self._begin_turn()
 

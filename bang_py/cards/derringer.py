@@ -10,3 +10,4 @@ class DerringerCard(EquipmentCard):
     slot = "Gun"
     range = 1
     description = "Gun with range 1."
+    green_border = True

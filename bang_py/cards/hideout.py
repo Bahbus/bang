@@ -9,3 +9,4 @@ class HideoutCard(EquipmentCard):
     card_name = "Hideout"
     distance_modifier = 1
     description = "Opponents see you at +1 distance."
+    green_border = True

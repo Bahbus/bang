@@ -15,8 +15,16 @@ class EquipmentCard(Card):
     distance_modifier: int = 0
     # Optional description of the card's effect for UI purposes
     description: str | None = None
+    # Green bordered cards activate on the owner's next turn
+    green_border: bool = False
+
+    def __init__(self, suit: str | None = None, rank: int | None = None) -> None:
+        super().__init__(suit, rank)
+        self.active = True
 
     def play(self, target: Player) -> None:
         if not target:
             return
-        target.equip(self)
+        if self.green_border:
+            self.active = False
+        target.equip(self, active=self.active)

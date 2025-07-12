@@ -50,19 +50,36 @@ def test_sid_ketchum_discard_two_to_heal():
     assert len(sid.hand) == 0
 
 
-def test_iron_plate_increases_max_health():
-    player = Player("Platey")
-    IronPlateCard().play(player)
-    assert player.max_health == 5
-    assert player.health == 5
+def test_iron_plate_activates_after_turn():
+    gm = GameManager(deck=Deck([]))
+    p1 = Player("Platey")
+    p2 = Player("Other")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.start_game()
+    card = IronPlateCard()
+    p1.hand.append(card)
+    gm.play_card(p1, card, p1)
+    assert p1.max_health == 4
+    gm.end_turn()
+    assert p1.max_health == 5
+    assert p1.health == 5
 
 
 def test_iron_plate_removed_restores_max_health():
     gm = GameManager(deck=Deck([]))
-    player = Player("Platey")
-    gm.add_player(player)
-    IronPlateCard().play(player)
-    assert player.max_health == 5
-    CatBalouCard().play(player, game=gm)
-    assert player.max_health == 4
-    assert player.health == 4
+    p1 = Player("Platey")
+    p2 = Player("Other")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.start_game()
+    card = IronPlateCard()
+    p1.hand.append(card)
+    gm.play_card(p1, card, p1)
+    gm.end_turn()
+    assert p1.max_health == 5
+    cat = CatBalouCard()
+    p2.hand.append(cat)
+    gm.play_card(p2, cat, p1)
+    assert p1.max_health == 4
+    assert p1.health == 4
