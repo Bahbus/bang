@@ -46,9 +46,7 @@ def _ghost_town(game: "GameManager") -> None:
             p.metadata["ghost_revived"] = True
             revived.append(p)
     if revived:
-        game.turn_order = [
-            i for i, pl in enumerate(game.players) if pl.is_alive()
-        ]
+        game.turn_order = [i for i, pl in enumerate(game.players) if pl.is_alive()]
 
 
 def _bounty(game: "GameManager") -> None:
@@ -76,6 +74,7 @@ def _high_noon(game: "GameManager") -> None:
 def _fistful(game: "GameManager") -> None:
     game.event_flags["damage_by_hand"] = True
 
+
 @dataclass
 class EventCard:
     """Card used in event deck expansions."""
@@ -94,16 +93,40 @@ def create_high_noon_deck() -> List[EventCard]:
     return [
         EventCard("Thirst", _thirst, "Players draw only one card"),
         EventCard("Shootout", _shootout, "Play two Bang!s per turn"),
-        EventCard("Blessing", lambda g: [p.heal(1) for p in g.players], "All players heal"),
-        EventCard("Gold Rush", lambda g: g.event_flags.update(draw_count=3), "Draw three cards"),
+        EventCard(
+            "Blessing", lambda g: [p.heal(1) for p in g.players], "All players heal"
+        ),
+        EventCard(
+            "Gold Rush",
+            lambda g: g.event_flags.update(draw_count=3),
+            "Draw three cards",
+        ),
         EventCard("The Judge", _judge, "Beer cards cannot be played"),
         EventCard("Ghost Town", _ghost_town, "Eliminated players return"),
-        EventCard("Law of the West", lambda g: g.event_flags.update(range_unlimited=True), "Unlimited range"),
-        EventCard("Siesta", lambda g: g.event_flags.update(draw_count=3), "Draw three cards"),
-        EventCard("Cattle Drive", lambda g: [p.hand.pop() for p in g.players if p.hand], "Discard a card"),
-        EventCard("The Sermon", lambda g: g.event_flags.update(no_bang=True), "Bang! cannot be played"),
+        EventCard(
+            "Law of the West",
+            lambda g: g.event_flags.update(range_unlimited=True),
+            "Unlimited range",
+        ),
+        EventCard(
+            "Siesta", lambda g: g.event_flags.update(draw_count=3), "Draw three cards"
+        ),
+        EventCard(
+            "Cattle Drive",
+            lambda g: [p.hand.pop() for p in g.players if p.hand],
+            "Discard a card",
+        ),
+        EventCard(
+            "The Sermon",
+            lambda g: g.event_flags.update(no_bang=True),
+            "Bang! cannot be played",
+        ),
         EventCard("Peyote", _peyote, "Lucky draws"),
-        EventCard("Hangover", lambda g: g.event_flags.update(no_beer=True), "Beer gives no health"),
+        EventCard(
+            "Hangover",
+            lambda g: g.event_flags.update(no_beer=True),
+            "Beer gives no health",
+        ),
         EventCard("High Noon", _high_noon, "Lose 1 life at start of turn"),
     ]
 
@@ -111,18 +134,35 @@ def create_high_noon_deck() -> List[EventCard]:
 def create_fistful_deck() -> List[EventCard]:
     """Return a simple Fistful of Cards event deck."""
     return [
-        EventCard("Abandoned Mine", lambda g: [g.draw_card(p) for p in g.players], "Everyone draws"),
-        EventCard("Ambush", lambda g: g.event_flags.update(no_missed=True), "Missed! has no effect"),
+        EventCard(
+            "Abandoned Mine",
+            lambda g: [g.draw_card(p) for p in g.players],
+            "Everyone draws",
+        ),
+        EventCard(
+            "Ambush",
+            lambda g: g.event_flags.update(no_missed=True),
+            "Missed! has no effect",
+        ),
         EventCard("Ricochet", _ricochet, "Bang! hits an extra player"),
         EventCard("Ranch", lambda g: [p.heal(1) for p in g.players], "All heal"),
-        EventCard("Gold Rush", lambda g: g.event_flags.update(draw_count=3), "Draw extra"),
-        EventCard("Hard Liquor", lambda g: g.event_flags.update(beer_heal=2), "Beer heals 2"),
+        EventCard(
+            "Gold Rush", lambda g: g.event_flags.update(draw_count=3), "Draw extra"
+        ),
+        EventCard(
+            "Hard Liquor", lambda g: g.event_flags.update(beer_heal=2), "Beer heals 2"
+        ),
         EventCard("The River", _river, "Discards pass left"),
         EventCard("Bounty", _bounty, "Rewards for eliminations"),
         EventCard("Vendetta", _vendetta, "Outlaws have +1 range"),
-        EventCard("Prison Break", lambda g: g.event_flags.update(no_jail=True), "Jail discarded"),
-        EventCard("High Stakes", lambda g: g.event_flags.update(bang_limit=2), "Two Bang!s"),
+        EventCard(
+            "Prison Break",
+            lambda g: g.event_flags.update(no_jail=True),
+            "Jail discarded",
+        ),
+        EventCard(
+            "High Stakes", lambda g: g.event_flags.update(bang_limit=2), "Two Bang!s"
+        ),
         EventCard("Ghost Town", _fistful_ghost_town, "Eliminated return"),
         EventCard("A Fistful of Cards", _fistful, "Damage equal to cards in hand"),
     ]
-
