@@ -339,7 +339,8 @@ class BangServer:
     def _on_game_over(self, result: str) -> None:
         asyncio.create_task(self.broadcast_state(result))
 
-    async def start(self):
+    async def start(self) -> None:
+        """Start the websocket server and run until cancelled."""
         if serve is None:
             raise RuntimeError(
                 "websockets package is required to run the server"

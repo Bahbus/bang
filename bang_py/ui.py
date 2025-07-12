@@ -459,6 +459,7 @@ class BangUI:
         self.text.configure(state="disabled")
 
     def _prompt_vera(self, options: list[dict]) -> None:
+        """Ask Vera Custer which ability to copy."""
         win = tk.Toplevel(self.root)
         win.title("Vera Custer")
         ttk.Label(win, text="Choose ability to copy:").pack()
@@ -475,6 +476,7 @@ class BangUI:
             btn.pack(fill="x")
 
     def _prompt_general_store(self, cards: list[str]) -> None:
+        """Prompt players to pick a card from the general store."""
         win = tk.Toplevel(self.root)
         win.title("General Store")
         ttk.Label(win, text="Choose a card:").pack()
@@ -491,6 +493,7 @@ class BangUI:
             btn.pack(fill="x")
 
     def _prompt_jesse_jones(self, targets: list[dict]) -> None:
+        """Prompt Jesse Jones to steal a card from another player."""
         win = tk.Toplevel(self.root)
         win.title("Jesse Jones")
         ttk.Label(win, text="Draw first card from:").pack()
@@ -507,6 +510,7 @@ class BangUI:
         ttk.Button(win, text="Skip", command=skip_cmd).pack(fill="x")
 
     def _prompt_kit_carlson(self, cards: list[str]) -> None:
+        """Prompt Kit Carlson to discard one of three drawn cards."""
         win = tk.Toplevel(self.root)
         win.title("Kit Carlson")
         ttk.Label(win, text="Discard one card:").pack()
@@ -521,6 +525,7 @@ class BangUI:
             ).pack(fill="x")
 
     def _prompt_pedro_ramirez(self) -> None:
+        """Ask Pedro Ramirez whether to draw from the discard pile."""
         win = tk.Toplevel(self.root)
         win.title("Pedro Ramirez")
         ttk.Label(win, text="Take top discard instead of draw?").pack()
@@ -536,6 +541,7 @@ class BangUI:
         ).pack(fill="x")
 
     def _prompt_jose_delgado(self, equipment: list[dict]) -> None:
+        """Prompt Jose Delgado to discard equipment for two cards."""
         win = tk.Toplevel(self.root)
         win.title("Jose Delgado")
         ttk.Label(win, text="Discard equipment to draw two?").pack()
@@ -564,6 +570,7 @@ class BangUI:
         ttk.Button(win, text="Skip", command=_skip).pack(fill="x")
 
     def _prompt_pat_brennan(self, targets: list[dict]) -> None:
+        """Prompt Pat Brennan to take a card in play."""
         win = tk.Toplevel(self.root)
         win.title("Pat Brennan")
         ttk.Label(win, text="Draw a card in play:").pack()
@@ -592,6 +599,7 @@ class BangUI:
         ttk.Button(win, text="Skip", command=_skip).pack(fill="x")
 
     def _prompt_lucky_duke(self, cards: list[str]) -> None:
+        """Prompt Lucky Duke to choose a draw! result."""
         if not cards:
             return
         win = tk.Toplevel(self.root)
@@ -615,6 +623,7 @@ class BangUI:
             ).pack(fill="x")
 
     def _prompt_sid_ketchum(self) -> None:
+        """Allow Sid Ketchum to discard cards for health."""
         if not self.hand_names:
             return
         win = tk.Toplevel(self.root)
@@ -633,6 +642,7 @@ class BangUI:
         ).pack(fill="x")
 
     def _prompt_doc_holyday(self) -> None:
+        """Allow Doc Holyday to discard cards for a draw."""
         if not self.hand_names:
             return
         win = tk.Toplevel(self.root)
