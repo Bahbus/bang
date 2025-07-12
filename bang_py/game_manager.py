@@ -142,8 +142,22 @@ class GameManager:
                 if modifier:
                     player._apply_health_modifier(modifier)
         self.reset_turn_flags(player)
+        pre_ghost = self.event_flags.get("ghost_town")
         if self.event_deck and player.role == Role.SHERIFF:
             self.draw_event_card()
+            if pre_ghost:
+                removed = False
+                for pl in self.players:
+                    if pl.metadata.pop("ghost_revived", False) and pl.is_alive():
+                        pl.health = 0
+                        removed = True
+                if removed:
+                    self.turn_order = [
+                        i for i, pl in enumerate(self.players) if pl.is_alive()
+                    ]
+                    self.current_turn = self.turn_order.index(self.players.index(player))
+                    idx = self.turn_order[self.current_turn]
+                    player = self.players[idx]
         dmg = self.event_flags.get("start_damage", 0)
         if dmg:
             player.take_damage(dmg)

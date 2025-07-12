@@ -89,6 +89,26 @@ def test_ghost_town_revives_players():
     assert outlaw.health == 1
 
 
+def test_ghost_town_players_disappear_next_event():
+    gm = GameManager()
+    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    outlaw = Player("Outlaw")
+    gm.add_player(sheriff)
+    gm.add_player(outlaw)
+    outlaw.take_damage(outlaw.health)
+    gm.event_deck = [
+        EventCard("Ghost Town", _ghost_town, ""),
+        EventCard("Thirst", _thirst, ""),
+    ]
+    gm.draw_event_card()
+    assert outlaw.is_alive()
+    gm.turn_order = [0, 1]
+    gm.current_turn = 0
+    gm._begin_turn()
+    assert not outlaw.is_alive()
+    assert len(gm.turn_order) == 1
+
+
 def test_bounty_rewards_elimination():
     deck = Deck([BangCard(), BangCard(), BangCard()])
     gm = GameManager(deck=deck)
