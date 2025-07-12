@@ -409,25 +409,60 @@ class GameManager:
                 if extra.health > before_x:
                     self.on_player_healed(extra)
 
+    def _handler_self_game(self, player: Player, card: Card, target: Optional[Player]) -> None:
+        """Play the card on the acting player with game context."""
+        card.play(player, game=self)
+
+    def _handler_target_game(self, player: Player, card: Card, target: Optional[Player]) -> None:
+        """Play the card on ``target`` if provided using the game context."""
+        if target:
+            card.play(target, game=self)
+
+    def _handler_target_player_game(
+        self, player: Player, card: Card, target: Optional[Player]
+    ) -> None:
+        """Play the card on ``target`` with ``player`` and game context."""
+        if target:
+            card.play(target, player, game=self)
+
+    def _handler_self_player_game(
+        self, player: Player, card: Card, target: Optional[Player]
+    ) -> None:
+        """Play the card on the acting player with themselves as the target."""
+        card.play(player, player, game=self)
+
+    def _handler_target_or_self_player_game(
+        self, player: Player, card: Card, target: Optional[Player]
+    ) -> None:
+        """Play on ``target`` if provided otherwise on ``player`` with game context."""
+        card.play(target or player, player, game=self)
+
+    def _handler_target_player(
+        self, player: Player, card: Card, target: Optional[Player]
+    ) -> None:
+        """Play on ``target`` with ``player`` as context but without game."""
+        if target:
+            card.play(target, player)
+
     def _register_card_handlers(self) -> None:
         self._card_handlers = {
             BangCard: self._play_bang_card,
-            StagecoachCard: lambda p, c, t: c.play(p, game=self),
-            WellsFargoCard: lambda p, c, t: c.play(p, game=self),
-            CatBalouCard: lambda p, c, t: c.play(t, game=self) if t else None,
-            PanicCard: lambda p, c, t: c.play(t, p, game=self) if t else None,
-            IndiansCard: lambda p, c, t: c.play(p, p, game=self),
-            DuelCard: lambda p, c, t: c.play(t, p, game=self) if t else None,
-            GeneralStoreCard: lambda p, c, t: c.play(p, p, game=self),
-            SaloonCard: lambda p, c, t: c.play(p, p, game=self),
-            GatlingCard: lambda p, c, t: c.play(p, p, game=self),
-            HowitzerCard: lambda p, c, t: c.play(p, p, game=self),
-            WhiskyCard: lambda p, c, t: c.play(t or p, p, game=self),
-            BeerCard: lambda p, c, t: c.play(t or p, p, game=self),
-            PonyExpressCard: lambda p, c, t: c.play(p, p, game=self),
-            TequilaCard: lambda p, c, t: c.play(t or p, p, game=self),
-            HighNoonCard: lambda p, c, t: c.play(p, p, game=self),
-            PunchCard: lambda p, c, t: c.play(t, p) if t else None,
+            StagecoachCard: self._handler_self_game,
+            WellsFargoCard: self._handler_self_game,
+            CatBalouCard: self._handler_target_game,
+            PanicCard: self._handler_target_player_game,
+            IndiansCard: self._handler_self_player_game,
+            DuelCard: self._handler_target_player_game,
+            GeneralStoreCard: self._handler_self_player_game,
+            SaloonCard: self._handler_self_player_game,
+            GatlingCard: self._handler_self_player_game,
+            HowitzerCard: self._handler_self_player_game,
+            WhiskyCard: self._handler_target_or_self_player_game,
+            BeerCard: self._handler_target_or_self_player_game,
+            PonyExpressCard: self._handler_self_player_game,
+            TequilaCard: self._handler_target_or_self_player_game,
+            HighNoonCard: self._handler_self_player_game,
+            PunchCard: self._handler_target_player,
         }
 
     def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
