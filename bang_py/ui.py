@@ -497,31 +497,50 @@ class BangUI:
         win = tk.Toplevel(self.root)
         win.title("Jesse Jones")
         ttk.Label(win, text="Draw first card from:").pack()
+        def _pick(idx: int) -> None:
+            """Use Jesse Jones on the selected target."""
+            self._use_ability("jesse_jones", target=idx)
+            win.destroy()
+
+        def _skip() -> None:
+            """Skip using Jesse Jones's ability."""
+            self._use_ability("jesse_jones")
+            win.destroy()
+
+        def _make_handler(idx: int) -> Callable[[], None]:
+            def _handler() -> None:
+                _pick(idx)
+            return _handler
+
         for t in targets:
             ttk.Button(
                 win,
                 text=t.get("name", ""),
-                command=lambda idx=t.get("index"): (
-                    self._use_ability("jesse_jones", target=idx),
-                    win.destroy(),
-                ),
+                command=_make_handler(t.get("index")),
             ).pack(fill="x")
-        skip_cmd = lambda: (self._use_ability("jesse_jones"), win.destroy())
-        ttk.Button(win, text="Skip", command=skip_cmd).pack(fill="x")
+
+        ttk.Button(win, text="Skip", command=_skip).pack(fill="x")
 
     def _prompt_kit_carlson(self, cards: list[str]) -> None:
         """Prompt Kit Carlson to discard one of three drawn cards."""
         win = tk.Toplevel(self.root)
         win.title("Kit Carlson")
         ttk.Label(win, text="Discard one card:").pack()
+        def _discard(idx: int) -> None:
+            """Discard the chosen card."""
+            self._use_ability("kit_carlson", target=None, card_index=idx)
+            win.destroy()
+
+        def _make_handler(idx: int) -> Callable[[], None]:
+            def _handler() -> None:
+                _discard(idx)
+            return _handler
+
         for i, card in enumerate(cards):
             ttk.Button(
                 win,
                 text=card,
-                command=lambda idx=i: (
-                    self._use_ability("kit_carlson", target=None, card_index=idx),
-                    win.destroy(),
-                ),
+                command=_make_handler(i),
             ).pack(fill="x")
 
     def _prompt_pedro_ramirez(self) -> None:
@@ -529,16 +548,19 @@ class BangUI:
         win = tk.Toplevel(self.root)
         win.title("Pedro Ramirez")
         ttk.Label(win, text="Take top discard instead of draw?").pack()
-        ttk.Button(
-            win,
-            text="Yes",
-            command=lambda: (self._use_ability("pedro_ramirez", card_index=1), win.destroy()),
-        ).pack(fill="x")
-        ttk.Button(
-            win,
-            text="No",
-            command=lambda: (self._use_ability("pedro_ramirez", card_index=0), win.destroy()),
-        ).pack(fill="x")
+        def _choose(use_discard: bool) -> None:
+            idx = 1 if use_discard else 0
+            self._use_ability("pedro_ramirez", card_index=idx)
+            win.destroy()
+
+        def _take_discard() -> None:
+            _choose(True)
+
+        def _draw_deck() -> None:
+            _choose(False)
+
+        ttk.Button(win, text="Yes", command=_take_discard).pack(fill="x")
+        ttk.Button(win, text="No", command=_draw_deck).pack(fill="x")
 
     def _prompt_jose_delgado(self, equipment: list[dict]) -> None:
         """Prompt Jose Delgado to discard equipment for two cards."""
@@ -632,14 +654,11 @@ class BangUI:
         for card in self.hand_names:
             lb.insert(tk.END, card)
         lb.pack()
-        ttk.Button(
-            win,
-            text="Discard",
-            command=lambda: (
-                self._use_ability("sid_ketchum", indices=list(lb.curselection())),
-                win.destroy(),
-            ),
-        ).pack(fill="x")
+        def _discard() -> None:
+            self._use_ability("sid_ketchum", indices=list(lb.curselection()))
+            win.destroy()
+
+        ttk.Button(win, text="Discard", command=_discard).pack(fill="x")
 
     def _prompt_doc_holyday(self) -> None:
         """Allow Doc Holyday to discard cards for a draw."""
@@ -651,14 +670,11 @@ class BangUI:
         for card in self.hand_names:
             lb.insert(tk.END, card)
         lb.pack()
-        ttk.Button(
-            win,
-            text="Discard",
-            command=lambda: (
-                self._use_ability("doc_holyday", indices=list(lb.curselection())),
-                win.destroy(),
-            ),
-        ).pack(fill="x")
+        def _discard() -> None:
+            self._use_ability("doc_holyday", indices=list(lb.curselection()))
+            win.destroy()
+
+        ttk.Button(win, text="Discard", command=_discard).pack(fill="x")
 
     def _pick_general_store(self, index: int) -> None:
         if self.client and self.client.websocket:
