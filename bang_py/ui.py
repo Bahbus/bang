@@ -396,11 +396,16 @@ class BangUI:
         for widget in self.hand_frame.winfo_children():
             widget.destroy()
         self.hand_names = cards
+        def _make_play_handler(idx: int) -> Callable[[], None]:
+            def _handler() -> None:
+                self._play_card(idx)
+            return _handler
+
         for i, card in enumerate(cards):
             btn = ttk.Button(
                 self.hand_frame,
                 text=card,
-                command=lambda idx=i: self._play_card(idx),
+                command=_make_play_handler(i),
             )
             btn.grid(row=0, column=i, padx=2)
         if self.current_character == "Sid Ketchum":
@@ -424,19 +429,25 @@ class BangUI:
             "Pat Brennan",
             "Lucky Duke",
         }:
+            def _use_current_ability() -> None:
+                self._use_ability(self.current_character.lower().replace(" ", "_"))
+
             ttk.Button(
                 self.hand_frame,
                 text="Use Ability",
-                command=lambda: self._use_ability(
-                    self.current_character.lower().replace(" ", "_")
-                ),
+                command=_use_current_ability,
             ).grid(row=1, column=0, columnspan=len(cards), pady=2)
         elif self.current_character == "Uncle Will":
+            def _make_store_handler(idx: int) -> Callable[[], None]:
+                def _handler() -> None:
+                    self._use_ability("uncle_will", card_index=idx)
+                return _handler
+
             for i, _ in enumerate(cards):
                 ttk.Button(
                     self.hand_frame,
                     text="Store",
-                    command=lambda idx=i: self._use_ability("uncle_will", card_index=idx),
+                    command=_make_store_handler(i),
                 ).grid(row=1, column=i, padx=2)
 
     def _update_players(self, players: list[dict]) -> None:
@@ -464,14 +475,18 @@ class BangUI:
         win.title("Vera Custer")
         ttk.Label(win, text="Choose ability to copy:").pack()
 
+        def _make_handler(idx: int) -> Callable[[], None]:
+            def _handler() -> None:
+                self._use_ability("vera_custer", target=idx)
+                win.destroy()
+
+            return _handler
+
         for opt in options:
             btn = ttk.Button(
                 win,
                 text=opt.get("name", ""),
-                command=lambda idx=opt.get("index"): (
-                    self._use_ability("vera_custer", target=idx),
-                    win.destroy(),
-                ),
+                command=_make_handler(opt.get("index")),
             )
             btn.pack(fill="x")
 
@@ -481,14 +496,18 @@ class BangUI:
         win.title("General Store")
         ttk.Label(win, text="Choose a card:").pack()
 
+        def _make_handler(idx: int) -> Callable[[], None]:
+            def _handler() -> None:
+                self._pick_general_store(idx)
+                win.destroy()
+
+            return _handler
+
         for i, card in enumerate(cards):
             btn = ttk.Button(
                 win,
                 text=card,
-                command=lambda idx=i: (
-                    self._pick_general_store(idx),
-                    win.destroy(),
-                ),
+                command=_make_handler(i),
             )
             btn.pack(fill="x")
 
@@ -687,7 +706,11 @@ class BangUI:
         if self._bound_key:
             self.root.unbind_all(f"<{self._bound_key}>")
         key = self.keybindings.get("end_turn", "e")
-        self.root.bind_all(f"<{key}>", lambda _e: self._end_turn())
+
+        def _handle_end(_e: tk.Event) -> None:
+            self._end_turn()
+
+        self.root.bind_all(f"<{key}>", _handle_end)
         self._bound_key = key
 
     def _on_close(self) -> None:
