@@ -211,21 +211,24 @@ class BangServer:
                     await self.broadcast_state()
         finally:
             self.game.players.remove(player)
-            del self.connections[websocket]
+            self.connections.pop(websocket, None)
             await self.broadcast_state()
 
     async def broadcast_state(self, message: str | None = None) -> None:
         """Send updated game state to all connected clients."""
-        for conn in list(self.connections.values()):
+        for websocket, conn in list(self.connections.items()):
             payload = {
                 "players": _serialize_players(self.game.players),
                 "hand": [c.card_name for c in conn.player.hand],
                 "character": getattr(conn.player.character, "name", ""),
-                "event": getattr(self.game.current_event, "name", "")
+                "event": getattr(self.game.current_event, "name", ""),
             }
             if message:
                 payload["message"] = message
-            await conn.websocket.send(json.dumps(payload))
+            try:
+                await conn.websocket.send(json.dumps(payload))
+            except Exception:
+                self.connections.pop(websocket, None)
 
     def _find_connection(self, player: Player) -> Connection | None:
         for conn in self.connections.values():
