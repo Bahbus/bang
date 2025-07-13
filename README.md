@@ -104,21 +104,31 @@ player = Player("Rose", character=RoseDoolan())
 
 ## Using Character Abilities
 
-When the server requires input for a character ability the GUI will show a
-popup prompt. The following abilities currently trigger prompts:
+When the server requires input for a character ability the GUI shows a popup
+prompt. These prompts appear automatically for:
 
-- Jesse Jones – choose another player's hand to draw from or skip.
-- Kit Carlson – pick one of three drawn cards to discard.
-- Pedro Ramirez – decide whether to take the top discard instead of drawing.
-- Jose Delgado – optionally discard an equipment card for two cards.
-- Pat Brennan – select an equipment card in play to draw.
-- Lucky Duke – pick one of two cards when his ability activates.
-- Sid Ketchum – choose two cards from your hand to discard and heal.
-- Doc Holyday – pick two cards to discard for a free Bang!.
+- Vera Custer – choose another player's ability to copy.
+- Jesse Jones – draw the first card from an opponent or skip.
+- Kit Carlson – discard one of three cards drawn.
+- Pedro Ramirez – decide whether to take the top discard card.
+- Jose Delgado – optionally discard equipment for two cards.
+- Pat Brennan – select equipment in play to draw.
+- Lucky Duke – pick one of two cards when performing a draw!.
 
-Simply click the desired option in the popup window. If no choice is made the
-default behaviour is used.
+Characters with abilities you can trigger manually display a **Use Ability**
+button below your hand. Clicking it activates:
 
-The game screen also includes an **Auto Miss** checkbox to control whether
+- Sid Ketchum – discard two cards to heal one life point.
+- Doc Holyday – discard two cards for a free Bang!.
+- Chuck Wengam – lose one life point to draw two cards.
+- Jesse Jones, Kit Carlson, Pedro Ramirez, Jose Delgado, Pat Brennan and
+  Lucky Duke if you dismiss the initial prompt.
+For Uncle Will, each card shows a **Store** button to play it as a General
+Store once per turn.
+
+Simply click the provided option or button. If a prompt is closed without a
+choice the default behaviour is used.
+
+The game screen also includes an **Auto Miss** checkbox controlling whether
 available Missed! cards are played automatically when you are attacked.
 
