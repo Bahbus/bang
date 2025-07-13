@@ -31,6 +31,9 @@ from .cards import (
     HideoutCard,
     BinocularsCard,
     BuffaloRifleCard,
+    KnifeCard,
+    BrawlCard,
+    SpringfieldCard,
     WhiskyCard,
     HighNoonCard,
     SombreroCard,
@@ -38,6 +41,7 @@ from .cards import (
     TequilaCard,
     PonyExpressCard,
     DerringerCard,
+    RagTimeCard,
     PepperboxCard,
     HowitzerCard,
 )
@@ -77,6 +81,9 @@ DODGE_CITY_COUNTS: List[Tuple[Type[Card], int]] = [
     (BuffaloRifleCard, 1),
     (PepperboxCard, 1),
     (HowitzerCard, 1),
+    (KnifeCard, 2),
+    (BrawlCard, 2),
+    (SpringfieldCard, 1),
     (SombreroCard, 1),
     (IronPlateCard, 1),
     (DerringerCard, 2),
@@ -86,6 +93,7 @@ FISTFUL_COUNTS: List[Tuple[Type[Card], int]] = [
     (WhiskyCard, 2),
     (TequilaCard, 3),
     (PonyExpressCard, 2),
+    (RagTimeCard, 2),
 ]
 
 HIGH_NOON_COUNTS: List[Tuple[Type[Card], int]] = [

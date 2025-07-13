@@ -27,6 +27,9 @@ from .binoculars import BinocularsCard
 from .buffalo_rifle import BuffaloRifleCard
 from .pepperbox import PepperboxCard
 from .howitzer import HowitzerCard
+from .knife import KnifeCard
+from .brawl import BrawlCard
+from .springfield import SpringfieldCard
 from .whisky import WhiskyCard
 from .high_noon_card import HighNoonCard
 from .sombrero import SombreroCard
@@ -34,6 +37,7 @@ from .iron_plate import IronPlateCard
 from .tequila import TequilaCard
 from .pony_express import PonyExpressCard
 from .derringer import DerringerCard
+from .rag_time import RagTimeCard
 
 __all__ = [
     "BangCard",
@@ -65,6 +69,9 @@ __all__ = [
     "BuffaloRifleCard",
     "PepperboxCard",
     "HowitzerCard",
+    "KnifeCard",
+    "BrawlCard",
+    "SpringfieldCard",
     "WhiskyCard",
     "HighNoonCard",
     "SombreroCard",
@@ -72,4 +79,5 @@ __all__ = [
     "TequilaCard",
     "PonyExpressCard",
     "DerringerCard",
+    "RagTimeCard",
 ]
