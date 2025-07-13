@@ -165,7 +165,11 @@ def simulate_game(num_players: int) -> str:
         player = Player(f"P{i}", role=roles[i], character=chars[i]())
         gm.add_player(player)
     result: List[str] = []
-    gm.game_over_listeners.append(lambda res: result.append(res))
+
+    def _record_result(res: str) -> None:
+        result.append(res)
+
+    gm.game_over_listeners.append(_record_result)
     gm.start_game()
     steps = 0
     while not result and steps < 2000:

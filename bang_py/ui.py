@@ -6,6 +6,7 @@ import queue
 import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Callable
+import logging
 import websockets
 
 from .network.server import BangServer
@@ -44,7 +45,7 @@ class ServerThread(threading.Thread):
         try:
             self.loop.run_until_complete(self.server_task)
         except asyncio.CancelledError:
-            pass
+            logging.info("Server thread cancelled")
         finally:
             self.loop.run_until_complete(self.loop.shutdown_asyncgens())
             self.loop.close()
@@ -80,7 +81,7 @@ class ClientThread(threading.Thread):
             try:
                 fut.result(timeout=1)
             except Exception:
-                pass
+                logging.exception("Failed to close websocket")
         if self.loop.is_running():
             self.loop.call_soon_threadsafe(self.loop.stop)
 
