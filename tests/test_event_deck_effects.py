@@ -9,6 +9,11 @@ from bang_py.event_decks import (
     _river,
     _bounty,
     _vendetta,
+    _abandoned_mine,
+    _hard_liquor,
+    _law_of_the_west,
+    _cattle_drive,
+    _shootout,
 )
 from bang_py.game_manager import GameManager
 from bang_py.player import Player, Role
@@ -184,3 +189,92 @@ def test_peyote_extra_draw():
     gm.draw_event_card()
     gm.draw_card(p)
     assert len(p.hand) == 2
+
+
+def test_abandoned_mine_all_draw():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.event_deck = [EventCard("Abandoned Mine", _abandoned_mine, "")]
+    gm.draw_event_card()
+    assert len(p1.hand) == 1
+    assert len(p2.hand) == 1
+
+
+def test_hard_liquor_beer_heals_two():
+    gm = GameManager()
+    p = Player("Sheriff", role=Role.SHERIFF)
+    gm.add_player(p)
+    gm.add_player(Player("Other"))
+    gm.add_player(Player("Third"))
+    gm.event_deck = [EventCard("Hard Liquor", _hard_liquor, "")]
+    gm.draw_event_card()
+    p.health -= 2
+    p.hand.append(BeerCard())
+    gm.play_card(p, p.hand[0])
+    assert p.health == p.max_health
+
+
+def test_law_of_west_unlimited_range():
+    gm = GameManager()
+    p = Player("Sheriff", role=Role.SHERIFF)
+    gm.add_player(p)
+    gm.event_deck = [EventCard("Law of the West", _law_of_the_west, "")]
+    gm.draw_event_card()
+    assert p.attack_range == 99
+
+
+def test_cattle_drive_discards_one_each():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    p1.hand.append(BangCard())
+    gm.event_deck = [EventCard("Cattle Drive", _cattle_drive, "")]
+    gm.draw_event_card()
+    assert not p1.hand
+    assert not p2.hand
+
+
+def test_shootout_allows_multiple_bangs():
+    gm = GameManager()
+    p1 = Player("Sheriff", role=Role.SHERIFF)
+    p2 = Player("Outlaw")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.event_deck = [EventCard("Shootout", _shootout, "")]
+    gm.draw_event_card()
+    p1.hand.extend([BangCard(), BangCard()])
+    gm.play_card(p1, p1.hand[0], p2)
+    gm.play_card(p1, p1.hand[0], p2)
+    assert p2.health == p2.max_health - 2
+
+
+def test_event_deck_order_high_noon():
+    gm = GameManager(expansions=["high_noon"])
+    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    outlaw = Player("Outlaw")
+    gm.add_player(sheriff)
+    gm.add_player(outlaw)
+    gm.start_game()
+    assert gm.current_event is not None
+    assert gm.event_deck[-1].name == "High Noon"
+
+
+def test_event_sequence_progresses_each_sheriff_turn():
+    e1 = EventCard("E1", lambda g: g.event_flags.update(test=1))
+    e2 = EventCard("E2", lambda g: g.event_flags.update(test=2))
+    gm = GameManager()
+    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    outlaw = Player("Outlaw")
+    gm.add_player(sheriff)
+    gm.add_player(outlaw)
+    gm.event_deck = [e1, e2]
+    gm.start_game()
+    assert gm.current_event.name == "E1"
+    gm.end_turn()  # sheriff end -> outlaw turn
+    gm.end_turn()  # outlaw end -> sheriff turn, draw next
+    assert gm.current_event.name == "E2"
