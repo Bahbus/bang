@@ -18,6 +18,11 @@ from bang_py.cards import (
     PonyExpressCard,
     TequilaCard,
     RagTimeCard,
+    BibleCard,
+    CanteenCard,
+    ConestogaCard,
+    CanCanCard,
+    TenGallonHatCard,
     BeerCard,
     BarrelCard,
     BangCard,
@@ -453,4 +458,60 @@ def test_green_bordered_cards():
         if getattr(obj, "green_border", False)
     }
     assert green <= allowed
+
+
+def test_bible_card_dodges_and_draws():
+    gm = GameManager()
+    p = Player("P")
+    gm.add_player(p)
+    card = BibleCard()
+    p.hand.append(card)
+    gm.play_card(p, card, p)
+    assert p.metadata.dodged is True
+    assert len(p.hand) == 1
+
+
+def test_canteen_card_heals():
+    gm = GameManager()
+    p = Player("P")
+    gm.add_player(p)
+    p.health -= 1
+    card = CanteenCard()
+    p.hand.append(card)
+    gm.play_card(p, card, p)
+    assert p.health == p.max_health
+
+
+def test_conestoga_steals_card():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    stolen = BangCard()
+    p2.hand.append(stolen)
+    card = ConestogaCard()
+    p1.hand.append(card)
+    gm.play_card(p1, card, p2)
+    assert stolen in p1.hand
+    assert not p2.hand
+
+
+def test_can_can_discards_card():
+    gm = GameManager()
+    attacker = Player("A")
+    target = Player("B")
+    gm.add_player(attacker)
+    gm.add_player(target)
+    target.hand.append(BangCard())
+    card = CanCanCard()
+    attacker.hand.append(card)
+    gm.play_card(attacker, card, target)
+    assert not target.hand
+
+
+def test_ten_gallon_hat_is_missed():
+    target = Player("T")
+    TenGallonHatCard().play(target)
+    assert target.metadata.dodged is True
 

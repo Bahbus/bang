@@ -38,6 +38,11 @@ from .tequila import TequilaCard
 from .pony_express import PonyExpressCard
 from .derringer import DerringerCard
 from .rag_time import RagTimeCard
+from .bible import BibleCard
+from .canteen import CanteenCard
+from .conestoga import ConestogaCard
+from .can_can import CanCanCard
+from .ten_gallon_hat import TenGallonHatCard
 
 __all__ = [
     "BangCard",
@@ -80,4 +85,9 @@ __all__ = [
     "PonyExpressCard",
     "DerringerCard",
     "RagTimeCard",
+    "BibleCard",
+    "CanteenCard",
+    "ConestogaCard",
+    "CanCanCard",
+    "TenGallonHatCard",
 ]
