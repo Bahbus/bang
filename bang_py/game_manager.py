@@ -49,11 +49,15 @@ from .cards.saloon import SaloonCard
 from .cards.gatling import GatlingCard
 from .cards.howitzer import HowitzerCard
 from .cards.punch import PunchCard
+from .cards.knife import KnifeCard
+from .cards.brawl import BrawlCard
+from .cards.springfield import SpringfieldCard
 from .cards.whisky import WhiskyCard
 from .cards.beer import BeerCard
 from .cards.high_noon_card import HighNoonCard
 from .cards.pony_express import PonyExpressCard
 from .cards.tequila import TequilaCard
+from .cards.rag_time import RagTimeCard
 
 from .player import Player, Role
 from .event_decks import (
@@ -469,6 +473,10 @@ class GameManager:
             TequilaCard: self._handler_target_or_self_player_game,
             HighNoonCard: self._handler_self_player_game,
             PunchCard: self._handler_target_player,
+            KnifeCard: self._handler_target_player_game,
+            BrawlCard: self._handler_self_player_game,
+            SpringfieldCard: self._handler_target_player_game,
+            RagTimeCard: self._handler_target_player_game,
         }
 
     def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:

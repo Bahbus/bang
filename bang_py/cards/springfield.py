@@ -3,17 +3,20 @@ from __future__ import annotations
 from .card import Card
 from ..player import Player
 from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - for type hints only
+    from ..game_manager import GameManager
+    from ..deck import Deck
+
+from .bang import BangCard
 from ..helpers import handle_out_of_turn_discard
 
-if TYPE_CHECKING:
-    from ..game_manager import GameManager
 
+class SpringfieldCard(Card):
+    """Discard a card to Bang! any player."""
 
-class WhiskyCard(Card):
-    """Heal two health by discarding another card."""
-
-    card_name = "Whisky"
-    description = "Discard another card with Whisky to heal 2 health."
+    card_name = "Springfield"
+    description = "Discard another card to Bang! any player."
 
     def play(
         self,
@@ -31,8 +34,9 @@ class WhiskyCard(Card):
             discard = player.hand.pop(0)
         game.discard_pile.append(discard)
         handle_out_of_turn_discard(game, player, discard)
-        before = target.health
-        target.heal(2)
-        if target.health > before:
-            game.on_player_healed(target)
+        if not game._auto_miss(target):
+            BangCard().play(target, game.deck)
+            if target.health < target.max_health:
+                game.on_player_damaged(target, player)
+
 

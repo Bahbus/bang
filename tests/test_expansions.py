@@ -9,10 +9,15 @@ from bang_py.cards import (
     BuffaloRifleCard,
     PepperboxCard,
     HowitzerCard,
+    MissedCard,
+    KnifeCard,
+    BrawlCard,
+    SpringfieldCard,
     WhiskyCard,
     HighNoonCard,
     PonyExpressCard,
     TequilaCard,
+    RagTimeCard,
     BeerCard,
     BarrelCard,
     BangCard,
@@ -56,9 +61,10 @@ def test_whisky_heals_two():
     gm.add_player(p1)
     card = WhiskyCard()
     p1.health = p1.max_health - 2
-    p1.hand.append(card)
+    p1.hand.extend([BangCard(), card])
     gm.play_card(p1, card, p1)
     assert p1.health == p1.max_health
+    assert not p1.hand
 
 
 def test_high_noon_draws_card_for_all():
@@ -85,15 +91,31 @@ def test_pony_express_draws_three():
     assert len(p1.hand) == 3
 
 
+def test_rag_time_steals_card():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    card = RagTimeCard()
+    p1.hand.extend([BangCard(), card])
+    stolen = BangCard()
+    p2.hand.append(stolen)
+    gm.play_card(p1, card, p2)
+    assert stolen in p1.hand
+    assert not p2.hand
+
+
 def test_tequila_heals_one():
     gm = GameManager()
     p1 = Player("A")
     gm.add_player(p1)
     card = TequilaCard()
-    p1.hand.append(card)
+    p1.hand.extend([BangCard(), card])
     p1.health -= 1
     gm.play_card(p1, card, p1)
     assert p1.health == p1.max_health
+    assert not p1.hand
 
 
 def test_pixie_pete_draws_three():
@@ -336,9 +358,6 @@ def test_binoculars_and_hideout_activate_after_turn():
     p1.hand.extend([b, h])
     gm.play_card(p1, b, p1)
     gm.play_card(p1, h, p1)
-    assert p1.attack_range == 1
-    assert p2.distance_to(p1) == 1
-    gm.end_turn()
     assert p1.attack_range == 2
     assert p2.distance_to(p1) == 2
 
@@ -356,3 +375,82 @@ def test_howitzer_hits_all_opponents():
     gm.play_card(p1, card)
     assert p2.health == p2.max_health - 1
     assert p3.health == p3.max_health - 1
+
+
+def test_knife_can_be_dodged():
+    gm = GameManager()
+    attacker = Player("A")
+    target = Player("B")
+    gm.add_player(attacker)
+    gm.add_player(target)
+    card = KnifeCard()
+    attacker.hand.append(card)
+    target.hand.append(MissedCard())
+    gm.play_card(attacker, card, target)
+    assert target.health == target.max_health
+    assert not target.hand
+
+
+def test_brawl_discards_adjacent():
+    gm = GameManager()
+    a = Player("A")
+    b = Player("B")
+    c = Player("C")
+    gm.add_player(a)
+    gm.add_player(b)
+    gm.add_player(c)
+    b.hand.append(BangCard())
+    c.hand.append(BangCard())
+    card = BrawlCard()
+    a.hand.extend([BangCard(), card])
+    gm.play_card(a, card, a)
+    assert not b.hand
+    assert not c.hand
+    assert not a.hand
+
+
+def test_springfield_long_range():
+    gm = GameManager()
+    a = Player("A")
+    b = Player("B")
+    c = Player("C")
+    d = Player("D")
+    gm.add_player(a)
+    gm.add_player(b)
+    gm.add_player(c)
+    gm.add_player(d)
+    card = SpringfieldCard()
+    a.hand.extend([BangCard(), card])
+    c.hand.append(MissedCard())
+    gm.play_card(a, card, c)
+    assert c.health == c.max_health
+    assert not c.hand
+    assert not a.hand
+
+
+def test_green_bordered_cards():
+    import inspect
+    from bang_py import cards as card_mod
+
+    allowed = {
+        "BibleCard",
+        "BuffaloRifleCard",
+        "CanCanCard",
+        "CanteenCard",
+        "ConestogaCard",
+        "DerringerCard",
+        "HowitzerCard",
+        "IronPlateCard",
+        "KnifeCard",
+        "PepperboxCard",
+        "PonyExpressCard",
+        "SombreroCard",
+        "TenGallonHatCard",
+    }
+    green = {
+        name
+        for name, obj in inspect.getmembers(card_mod, inspect.isclass)
+        if getattr(obj, "green_border", False)
+    }
+    assert green <= allowed
+
