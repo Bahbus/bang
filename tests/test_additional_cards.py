@@ -154,3 +154,57 @@ def test_gatling_hits_all_opponents():
     GatlingCard().play(p1, p1, game=gm)
     assert p2.health == p2.max_health - 1
     assert p3.health == p3.max_health - 1
+
+
+def test_cat_balou_allows_choice_from_hand():
+    gm = GameManager(deck=Deck([]))
+    attacker = Player("A")
+    target = Player("B")
+    gm.add_player(attacker)
+    gm.add_player(target)
+    c1, c2 = BangCard(), BeerCard()
+    target.hand.extend([c1, c2])
+    CatBalouCard().play(target, game=gm, hand_idx=1)
+    assert gm.discard_pile[-1] is c2
+    assert target.hand == [c1]
+
+
+def test_cat_balou_allows_choice_from_equipment():
+    from bang_py.cards.barrel import BarrelCard
+
+    gm = GameManager(deck=Deck([]))
+    attacker = Player("A")
+    target = Player("B")
+    gm.add_player(attacker)
+    gm.add_player(target)
+    BarrelCard().play(target)
+    CatBalouCard().play(target, game=gm, equip_name="Barrel")
+    assert "Barrel" not in target.equipment
+    assert isinstance(gm.discard_pile[-1], BarrelCard)
+
+
+def test_panic_allows_choice_from_hand():
+    gm = GameManager(deck=Deck([]))
+    attacker = Player("A")
+    target = Player("B")
+    gm.add_player(attacker)
+    gm.add_player(target)
+    c1, c2 = BangCard(), BeerCard()
+    target.hand.extend([c1, c2])
+    PanicCard().play(target, attacker, game=gm, hand_idx=0)
+    assert attacker.hand[-1] is c1
+    assert target.hand == [c2]
+
+
+def test_panic_allows_choice_from_equipment():
+    from bang_py.cards.scope import ScopeCard
+
+    gm = GameManager(deck=Deck([]))
+    attacker = Player("A")
+    target = Player("B")
+    gm.add_player(attacker)
+    gm.add_player(target)
+    ScopeCard().play(target)
+    PanicCard().play(target, attacker, game=gm, equip_name="Scope")
+    assert "Scope" not in target.equipment
+    assert any(isinstance(c, ScopeCard) for c in attacker.hand)

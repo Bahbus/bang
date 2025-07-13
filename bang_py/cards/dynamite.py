@@ -12,7 +12,10 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 
 class DynamiteCard(EquipmentCard):
     card_name = "Dynamite"
-    description = "Passes around; may explode for 3 damage."
+    description = (
+        "Passes around; at the start of your turn draw a card, and if it is a "
+        "spade between 2 and 9, Dynamite explodes for 3 damage."
+    )
 
     def play(self, target: Player, deck: Deck | None = None) -> None:
         super().play(target)
