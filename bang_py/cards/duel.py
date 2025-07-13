@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 class DuelCard(Card):
     card_name = "Duel"
-    description = "Players alternate playing Bang!; loser takes 1 damage."
+    description = "Players alternate discarding Bang! cards; loser takes 1 damage."
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None
