@@ -57,4 +57,3 @@ def test_outlaws_win_when_sheriff_dies():
     outlaw.hand.append(BangCard())
     gm.play_card(outlaw, outlaw.hand[0], sheriff)
     assert results == ["Outlaws win!"]
-

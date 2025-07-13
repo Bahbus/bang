@@ -396,7 +396,9 @@ class BangUI:
         for widget in self.hand_frame.winfo_children():
             widget.destroy()
         self.hand_names = cards
+
         def _make_play_handler(idx: int) -> Callable[[], None]:
+
             def _handler() -> None:
                 self._play_card(idx)
             return _handler
@@ -516,6 +518,7 @@ class BangUI:
         win = tk.Toplevel(self.root)
         win.title("Jesse Jones")
         ttk.Label(win, text="Draw first card from:").pack()
+
         def _pick(idx: int) -> None:
             """Use Jesse Jones on the selected target."""
             self._use_ability("jesse_jones", target=idx)
@@ -545,6 +548,7 @@ class BangUI:
         win = tk.Toplevel(self.root)
         win.title("Kit Carlson")
         ttk.Label(win, text="Discard one card:").pack()
+
         def _discard(idx: int) -> None:
             """Discard the chosen card."""
             self._use_ability("kit_carlson", target=None, card_index=idx)
@@ -564,9 +568,11 @@ class BangUI:
 
     def _prompt_pedro_ramirez(self) -> None:
         """Ask Pedro Ramirez whether to draw from the discard pile."""
+
         win = tk.Toplevel(self.root)
         win.title("Pedro Ramirez")
         ttk.Label(win, text="Take top discard instead of draw?").pack()
+
         def _choose(use_discard: bool) -> None:
             idx = 1 if use_discard else 0
             self._use_ability("pedro_ramirez", card_index=idx)
@@ -582,21 +588,25 @@ class BangUI:
         ttk.Button(win, text="No", command=_draw_deck).pack(fill="x")
 
     def _prompt_jose_delgado(self, equipment: list[dict]) -> None:
+
         """Prompt Jose Delgado to discard equipment for two cards."""
         win = tk.Toplevel(self.root)
         win.title("Jose Delgado")
         ttk.Label(win, text="Discard equipment to draw two?").pack()
+
         def _discard_equipment(idx: int) -> None:
             """Discard the selected equipment and close the prompt."""
             self._use_ability("jose_delgado", target=idx)
             win.destroy()
 
         def _skip() -> None:
+
             """Skip discarding equipment and close the prompt."""
             self._use_ability("jose_delgado")
             win.destroy()
 
         def _make_eq_handler(idx: int) -> Callable[[], None]:
+
             def _handler() -> None:
                 _discard_equipment(idx)
             return _handler
@@ -667,12 +677,14 @@ class BangUI:
         """Allow Sid Ketchum to discard cards for health."""
         if not self.hand_names:
             return
+
         win = tk.Toplevel(self.root)
         win.title("Sid Ketchum")
         lb = tk.Listbox(win, selectmode="multiple")
         for card in self.hand_names:
             lb.insert(tk.END, card)
         lb.pack()
+
         def _discard() -> None:
             self._use_ability("sid_ketchum", indices=list(lb.curselection()))
             win.destroy()
@@ -682,6 +694,7 @@ class BangUI:
     def _prompt_doc_holyday(self) -> None:
         """Allow Doc Holyday to discard cards for a draw."""
         if not self.hand_names:
+
             return
         win = tk.Toplevel(self.root)
         win.title("Doc Holyday")
@@ -689,6 +702,7 @@ class BangUI:
         for card in self.hand_names:
             lb.insert(tk.END, card)
         lb.pack()
+
         def _discard() -> None:
             self._use_ability("doc_holyday", indices=list(lb.curselection()))
             win.destroy()
@@ -736,4 +750,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

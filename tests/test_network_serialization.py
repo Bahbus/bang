@@ -38,4 +38,3 @@ def test_serialize_players_with_health_changes():
             "equipment": [],
         }
     ]
-
