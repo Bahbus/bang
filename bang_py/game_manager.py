@@ -678,7 +678,6 @@ class GameManager:
         player.metadata.doc_used = False
         player.metadata.doc_free_bang = 0
         player.metadata.uncle_used = False
-        player.metadata.lvk_used = False
         if isinstance(player.character, VeraCuster):
             player.metadata.vera_copy = None
 
