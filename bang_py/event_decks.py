@@ -73,6 +73,76 @@ def _fistful(game: GameManager) -> None:
     game.event_flags["damage_by_hand"] = True
 
 
+def _blessing(game: GameManager) -> None:
+    """Heal all players by one."""
+    for player in game.players:
+        player.heal(1)
+
+
+def _gold_rush(game: GameManager) -> None:
+    """Players draw three cards each draw phase."""
+    game.event_flags["draw_count"] = 3
+
+
+def _law_of_the_west(game: GameManager) -> None:
+    """All players have unlimited range."""
+    game.event_flags["range_unlimited"] = True
+
+
+def _siesta(game: GameManager) -> None:
+    """Players draw three cards each draw phase."""
+    game.event_flags["draw_count"] = 3
+
+
+def _cattle_drive(game: GameManager) -> None:
+    """Each player discards one card if possible."""
+    for player in game.players:
+        if player.hand:
+            player.hand.pop()
+
+
+def _sermon(game: GameManager) -> None:
+    """Bang! cards cannot be played."""
+    game.event_flags["no_bang"] = True
+
+
+def _hangover(game: GameManager) -> None:
+    """Beer cards give no health."""
+    game.event_flags["no_beer"] = True
+
+
+def _abandoned_mine(game: GameManager) -> None:
+    """All players draw a card."""
+    for player in game.players:
+        game.draw_card(player)
+
+
+def _ambush_event(game: GameManager) -> None:
+    """Missed! cards have no effect."""
+    game.event_flags["no_missed"] = True
+
+
+def _ranch(game: GameManager) -> None:
+    """Heal all players by one."""
+    for player in game.players:
+        player.heal(1)
+
+
+def _hard_liquor(game: GameManager) -> None:
+    """Beer heals two health."""
+    game.event_flags["beer_heal"] = 2
+
+
+def _prison_break(game: GameManager) -> None:
+    """Jail cards are discarded."""
+    game.event_flags["no_jail"] = True
+
+
+def _high_stakes(game: GameManager) -> None:
+    """Players may play two Bang! cards."""
+    game.event_flags["bang_limit"] = 2
+
+
 @dataclass
 class EventCard:
     """Card used in event deck expansions."""
@@ -91,40 +161,16 @@ def create_high_noon_deck() -> List[EventCard]:
     return [
         EventCard("Thirst", _thirst, "Players draw only one card"),
         EventCard("Shootout", _shootout, "Play two Bang!s per turn"),
-        EventCard(
-            "Blessing", lambda g: [p.heal(1) for p in g.players], "All players heal"
-        ),
-        EventCard(
-            "Gold Rush",
-            lambda g: g.event_flags.update(draw_count=3),
-            "Draw three cards",
-        ),
+        EventCard("Blessing", _blessing, "All players heal"),
+        EventCard("Gold Rush", _gold_rush, "Draw three cards"),
         EventCard("The Judge", _judge, "Beer cards cannot be played"),
         EventCard("Ghost Town", _ghost_town, "Eliminated players return"),
-        EventCard(
-            "Law of the West",
-            lambda g: g.event_flags.update(range_unlimited=True),
-            "Unlimited range",
-        ),
-        EventCard(
-            "Siesta", lambda g: g.event_flags.update(draw_count=3), "Draw three cards"
-        ),
-        EventCard(
-            "Cattle Drive",
-            lambda g: [p.hand.pop() for p in g.players if p.hand],
-            "Discard a card",
-        ),
-        EventCard(
-            "The Sermon",
-            lambda g: g.event_flags.update(no_bang=True),
-            "Bang! cannot be played",
-        ),
+        EventCard("Law of the West", _law_of_the_west, "Unlimited range"),
+        EventCard("Siesta", _siesta, "Draw three cards"),
+        EventCard("Cattle Drive", _cattle_drive, "Discard a card"),
+        EventCard("The Sermon", _sermon, "Bang! cannot be played"),
         EventCard("Peyote", _peyote, "Lucky draws"),
-        EventCard(
-            "Hangover",
-            lambda g: g.event_flags.update(no_beer=True),
-            "Beer gives no health",
-        ),
+        EventCard("Hangover", _hangover, "Beer gives no health"),
         EventCard("High Noon", _high_noon, "Lose 1 life at start of turn"),
     ]
 
@@ -132,35 +178,17 @@ def create_high_noon_deck() -> List[EventCard]:
 def create_fistful_deck() -> List[EventCard]:
     """Return a simple Fistful of Cards event deck."""
     return [
-        EventCard(
-            "Abandoned Mine",
-            lambda g: [g.draw_card(p) for p in g.players],
-            "Everyone draws",
-        ),
-        EventCard(
-            "Ambush",
-            lambda g: g.event_flags.update(no_missed=True),
-            "Missed! has no effect",
-        ),
+        EventCard("Abandoned Mine", _abandoned_mine, "Everyone draws"),
+        EventCard("Ambush", _ambush_event, "Missed! has no effect"),
         EventCard("Ricochet", _ricochet, "Bang! hits an extra player"),
-        EventCard("Ranch", lambda g: [p.heal(1) for p in g.players], "All heal"),
-        EventCard(
-            "Gold Rush", lambda g: g.event_flags.update(draw_count=3), "Draw extra"
-        ),
-        EventCard(
-            "Hard Liquor", lambda g: g.event_flags.update(beer_heal=2), "Beer heals 2"
-        ),
+        EventCard("Ranch", _ranch, "All heal"),
+        EventCard("Gold Rush", _gold_rush, "Draw extra"),
+        EventCard("Hard Liquor", _hard_liquor, "Beer heals 2"),
         EventCard("The River", _river, "Discards pass left"),
         EventCard("Bounty", _bounty, "Rewards for eliminations"),
         EventCard("Vendetta", _vendetta, "Outlaws have +1 range"),
-        EventCard(
-            "Prison Break",
-            lambda g: g.event_flags.update(no_jail=True),
-            "Jail discarded",
-        ),
-        EventCard(
-            "High Stakes", lambda g: g.event_flags.update(bang_limit=2), "Two Bang!s"
-        ),
+        EventCard("Prison Break", _prison_break, "Jail discarded"),
+        EventCard("High Stakes", _high_stakes, "Two Bang!s"),
         EventCard("Ghost Town", _fistful_ghost_town, "Eliminated return"),
         EventCard("A Fistful of Cards", _fistful, "Damage equal to cards in hand"),
     ]
