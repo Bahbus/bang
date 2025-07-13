@@ -177,4 +177,3 @@ class Player:
 
     def is_alive(self) -> bool:
         return self.health > 0
-

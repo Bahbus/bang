@@ -1,6 +1,7 @@
 from bang_py.player import Player, Role
 from bang_py.characters import Character
 
+
 class BonusLife(Character):
     starting_health = 5
 
@@ -12,4 +13,3 @@ def test_bonus_life_character_increases_max_health():
     sheriff = Player("Sheriff", role=Role.SHERIFF, character=BonusLife())
     assert sheriff.max_health == 6
     assert sheriff.health == 6
-

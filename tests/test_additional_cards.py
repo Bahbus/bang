@@ -154,4 +154,3 @@ def test_gatling_hits_all_opponents():
     GatlingCard().play(p1, p1, game=gm)
     assert p2.health == p2.max_health - 1
     assert p3.health == p3.max_health - 1
-

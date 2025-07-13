@@ -2,6 +2,7 @@ import asyncio
 import json
 import websockets
 
+
 async def main(
     uri: str = "ws://localhost:8765", room_code: str = "", name: str | None = None
 ) -> None:

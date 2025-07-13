@@ -397,7 +397,6 @@ class ClausTheSaint(Character):
         return True
 
 
-
 __all__ = [
     "Character",
     "BartCassidy",

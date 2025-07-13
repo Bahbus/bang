@@ -89,7 +89,6 @@ class GameManager:
     turn_started_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
 
-
     def draw_event_card(self) -> None:
         """Draw and apply the next event card."""
         if not self.event_deck:
@@ -341,7 +340,11 @@ class GameManager:
                 player.hand.remove(card)
                 self._pass_left_or_discard(player, card)
                 return False
-        if isinstance(card, BangCard) and target and player.distance_to(target) > player.attack_range:
+        if (
+            isinstance(card, BangCard)
+            and target
+            and player.distance_to(target) > player.attack_range
+        ):
             return False
         if isinstance(card, PanicCard) and target and player.distance_to(target) > 1:
             return False
@@ -580,7 +583,6 @@ class GameManager:
         player.metadata.doc_used = True
         player.metadata.doc_free_bang += 1
         player.hand.append(BangCard())
-
 
     def pat_brennan_draw(
         self,

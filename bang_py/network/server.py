@@ -23,10 +23,12 @@ from ..characters import (
 )
 from ..cards.general_store import GeneralStoreCard
 
+
 @dataclass
 class Connection:
     websocket: WebSocketServerProtocol
     player: Player
+
 
 def _serialize_players(players: List[Player]) -> List[dict]:
     """Return minimal player info for the UI."""
@@ -39,6 +41,7 @@ def _serialize_players(players: List[Player]) -> List[dict]:
         }
         for p in players
     ]
+
 
 class BangServer:
     """Run a websocket server for a single Bang game and manage clients."""
@@ -142,10 +145,15 @@ class BangServer:
                                 nxt = self.game.general_store_order[self.game.general_store_index]
                                 conn = self._find_connection(nxt)
                                 if conn:
-                                    payload = json.dumps({
-                                        "prompt": "general_store",
-                                        "cards": [c.card_name for c in self.game.general_store_cards],
-                                    })
+                                    payload = json.dumps(
+                                        {
+                                            "prompt": "general_store",
+                                            "cards": [
+                                                c.card_name
+                                                for c in self.game.general_store_cards
+                                            ],
+                                        }
+                                    )
                                     asyncio.create_task(conn.websocket.send(payload))
                 elif isinstance(data, dict) and data.get("action") == "use_ability":
                     ability = data.get("ability")
@@ -314,7 +322,12 @@ class BangServer:
                 for i, p in enumerate(self.game.players):
                     if p is player or not p.equipment:
                         continue
-                    targets.append({"index": i, "cards": [c.card_name for c in p.equipment.values()]})
+                    targets.append(
+                        {
+                            "index": i,
+                            "cards": [c.card_name for c in p.equipment.values()],
+                        }
+                    )
                 if targets:
                     payload = json.dumps({"prompt": "pat_brennan", "targets": targets})
                     asyncio.create_task(conn.websocket.send(payload))
@@ -361,6 +374,7 @@ class BangServer:
                 f"Server started on {self.host}:{self.port} (code: {self.room_code})"
             )
             await asyncio.Future()  # run forever
+
 
 def main() -> None:
     """Entry point for the ``bang-server`` console script."""

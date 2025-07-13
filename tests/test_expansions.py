@@ -299,8 +299,6 @@ def test_bullet_characters_instantiable():
     assert len(instances) == len(chars)
 
 
-
-
 def test_high_noon_event_deck_draw():
     gm = GameManager(expansions=["high_noon"])
     sheriff = Player("Sheriff", role=Role.SHERIFF)
