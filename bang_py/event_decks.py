@@ -62,7 +62,8 @@ def _thirst(game: GameManager) -> None:
 
 
 def _shootout(game: GameManager) -> None:
-    game.event_flags["bang_limit"] = 2
+    """Allow unlimited Bang! cards this turn."""
+    game.event_flags["bang_limit"] = 99
 
 
 def _high_noon(game: GameManager) -> None:
@@ -139,8 +140,8 @@ def _prison_break(game: GameManager) -> None:
 
 
 def _high_stakes(game: GameManager) -> None:
-    """Players may play two Bang! cards."""
-    game.event_flags["bang_limit"] = 2
+    """Players may play any number of Bang! cards."""
+    game.event_flags["bang_limit"] = 99
 
 
 @dataclass
@@ -160,7 +161,7 @@ def create_high_noon_deck() -> List[EventCard]:
     """Return a simple High Noon event deck."""
     return [
         EventCard("Thirst", _thirst, "Players draw only one card"),
-        EventCard("Shootout", _shootout, "Play two Bang!s per turn"),
+        EventCard("Shootout", _shootout, "Unlimited Bang!s per turn"),
         EventCard("Blessing", _blessing, "All players heal"),
         EventCard("Gold Rush", _gold_rush, "Draw three cards"),
         EventCard("The Judge", _judge, "Beer cards cannot be played"),
@@ -188,7 +189,7 @@ def create_fistful_deck() -> List[EventCard]:
         EventCard("Bounty", _bounty, "Rewards for eliminations"),
         EventCard("Vendetta", _vendetta, "Outlaws have +1 range"),
         EventCard("Prison Break", _prison_break, "Jail discarded"),
-        EventCard("High Stakes", _high_stakes, "Two Bang!s"),
+        EventCard("High Stakes", _high_stakes, "Unlimited Bang!s"),
         EventCard("Ghost Town", _fistful_ghost_town, "Eliminated return"),
         EventCard("A Fistful of Cards", _fistful, "Damage equal to cards in hand"),
     ]

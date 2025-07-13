@@ -109,9 +109,21 @@ class GameManager:
         self.event_flags = {}
         if "high_noon" in self.expansions:
             self.event_deck = create_high_noon_deck()
+            if self.event_deck:
+                final = next((c for c in self.event_deck if c.name == "High Noon"), None)
+                if final:
+                    self.event_deck.remove(final)
+                    random.shuffle(self.event_deck)
+                    self.event_deck.append(final)
         elif "fistful_of_cards" in self.expansions:
             self.event_deck = create_fistful_deck()
-        if self.event_deck:
+            if self.event_deck:
+                final = next((c for c in self.event_deck if c.name == "A Fistful of Cards"), None)
+                if final:
+                    self.event_deck.remove(final)
+                    random.shuffle(self.event_deck)
+                    self.event_deck.append(final)
+        elif self.event_deck:
             random.shuffle(self.event_deck)
         self._register_card_handlers()
 
