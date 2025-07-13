@@ -267,17 +267,20 @@ class GameManager:
         self.current_turn = (self.current_turn + 1) % len(self.turn_order)
         self._begin_turn()
 
+    def _draw_from_deck(self) -> Card | None:
+        """Draw a card reshuffling the discard pile if the deck is empty."""
+        card = self.deck.draw()
+        if card is None and self.discard_pile:
+            self.deck.cards.extend(self.discard_pile)
+            self.discard_pile.clear()
+            random.shuffle(self.deck.cards)
+            card = self.deck.draw()
+        return card
+
     def draw_card(self, player: Player, num: int = 1) -> None:
         bonus = int(self.event_flags.get("peyote_bonus", 0))
         for _ in range(num + bonus):
-            card = self.deck.draw()
-            if card is None:
-                if self.discard_pile:
-                    # reshuffle discard into deck
-                    self.deck.cards.extend(self.discard_pile)
-                    self.discard_pile.clear()
-                    random.shuffle(self.deck.cards)
-                    card = self.deck.draw()
+            card = self._draw_from_deck()
             if card:
                 player.hand.append(card)
 
@@ -634,13 +637,7 @@ class GameManager:
         alive = [p for p in self.players if p.is_alive()]
         cards: List[Card] = []
         for _ in range(len(alive)):
-            card = self.deck.draw()
-            if card is None:
-                if self.discard_pile:
-                    self.deck.cards.extend(self.discard_pile)
-                    self.discard_pile.clear()
-                    random.shuffle(self.deck.cards)
-                    card = self.deck.draw()
+            card = self._draw_from_deck()
             if card:
                 cards.append(card)
         self.general_store_cards = cards

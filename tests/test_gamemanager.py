@@ -9,7 +9,11 @@ def test_start_game_initializes_turn_order_and_calls_listener():
     gm.add_player(p1)
     gm.add_player(p2)
     started_players = []
-    gm.turn_started_listeners.append(lambda player: started_players.append(player))
+
+    def _record_start(player: Player) -> None:
+        started_players.append(player)
+
+    gm.turn_started_listeners.append(_record_start)
 
     gm.start_game()
 

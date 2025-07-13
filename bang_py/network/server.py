@@ -246,6 +246,10 @@ class BangServer:
             except Exception:
                 # Remove the player from the game if their websocket is no
                 # longer reachable before dropping the connection entirely.
+                try:
+                    await conn.websocket.close()
+                except Exception:
+                    pass
                 self.game.remove_player(conn.player)
                 self.connections.pop(websocket, None)
 

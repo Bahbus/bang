@@ -52,7 +52,11 @@ def test_outlaws_win_when_sheriff_dies():
     gm.add_player(sheriff)
     gm.add_player(outlaw)
     results: list[str] = []
-    gm.game_over_listeners.append(lambda r: results.append(r))
+
+    def _record_result(r: str) -> None:
+        results.append(r)
+
+    gm.game_over_listeners.append(_record_result)
     sheriff.health = 1
     outlaw.hand.append(BangCard())
     gm.play_card(outlaw, outlaw.hand[0], sheriff)

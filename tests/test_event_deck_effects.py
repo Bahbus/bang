@@ -38,13 +38,17 @@ def test_fistful_event_damage_by_hand():
     assert p.health == p.max_health - 2
 
 
+def _enable_no_bang(game: GameManager) -> None:
+    game.event_flags.update(no_bang=True)
+
+
 def test_sermon_event_blocks_bang():
     gm = GameManager()
     sheriff = Player("Sheriff", role=Role.SHERIFF)
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
-    gm.event_deck = [EventCard("The Sermon", lambda g: g.event_flags.update(no_bang=True), "")]
+    gm.event_deck = [EventCard("The Sermon", _enable_no_bang, "")]
     gm.draw_event_card()
     sheriff.hand.append(BangCard())
     gm.play_card(sheriff, sheriff.hand[0], outlaw)
@@ -52,11 +56,15 @@ def test_sermon_event_blocks_bang():
     assert outlaw.health == outlaw.max_health
 
 
+def _enable_no_beer(game: GameManager) -> None:
+    game.event_flags.update(no_beer=True)
+
+
 def test_hangover_event_disables_beer():
     gm = GameManager()
     sheriff = Player("Sheriff", role=Role.SHERIFF)
     gm.add_player(sheriff)
-    gm.event_deck = [EventCard("Hangover", lambda g: g.event_flags.update(no_beer=True), "")]
+    gm.event_deck = [EventCard("Hangover", _enable_no_beer, "")]
     gm.draw_event_card()
     sheriff.health -= 1
     sheriff.hand.append(BeerCard())
