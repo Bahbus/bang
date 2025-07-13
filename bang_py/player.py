@@ -30,7 +30,6 @@ class PlayerMetadata:
     last_card_target: "Player | None" = None
     uncle_used: bool = False
     vera_copy: type["Character"] | None = None
-    lvk_used: bool = False
 
 
 class Role(Enum):
