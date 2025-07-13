@@ -236,6 +236,9 @@ class BangServer:
             try:
                 await conn.websocket.send(json.dumps(payload))
             except Exception:
+                # Remove the player from the game if their websocket is no
+                # longer reachable before dropping the connection entirely.
+                self.game.remove_player(conn.player)
                 self.connections.pop(websocket, None)
 
     def _find_connection(self, player: Player) -> Connection | None:
