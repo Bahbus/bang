@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from .equipment import EquipmentCard
+from .missed import MissedCard
+from ..player import Player
 
 
-class IronPlateCard(EquipmentCard):
-    """Equipment that increases your maximum health by 1."""
+class IronPlateCard(MissedCard):
+    """Green bordered Missed!"""
 
     card_name = "Iron Plate"
-    description = "Equipment: +1 maximum health."
-    max_health_modifier = 1
-    green_border = True
+    card_type = "green"
+    card_set = "dodge_city"
+    description = "Counts as a Missed!"
+
+    def play(self, target: Player) -> None:  # type: ignore[override]
+        super().play(target)

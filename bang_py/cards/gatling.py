@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
@@ -9,8 +9,10 @@ if TYPE_CHECKING:
     from ..deck import Deck
 
 
-class GatlingCard(Card):
+class GatlingCard(BaseCard):
     card_name = "Gatling"
+    card_type = "action"
+    card_set = "base"
     description = "Bang every other player once."
 
     def play(

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 from ..helpers import handle_out_of_turn_discard
@@ -9,10 +9,12 @@ if TYPE_CHECKING:
     from ..game_manager import GameManager
 
 
-class TequilaCard(Card):
+class TequilaCard(BaseCard):
     """Heal one health by discarding another card."""
 
     card_name = "Tequila"
+    card_type = "action"
+    card_set = "fistful_of_cards"
     description = "Discard another card with Tequila to heal 1 health."
 
     def play(

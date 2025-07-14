@@ -1,10 +1,21 @@
 from __future__ import annotations
 
-from .equipment import EquipmentCard
+from .card import BaseCard
+from ..player import Player
 
 
-class RemingtonCard(EquipmentCard):
+class RemingtonCard(BaseCard):
     card_name = "Remington"
+    card_type = "equipment"
     slot = "Gun"
     range = 3
     description = "Gun with range 3."
+
+    def __init__(self, suit: str | None = None, rank: int | None = None) -> None:
+        super().__init__(suit, rank)
+        self.active = True
+
+    def play(self, target: Player) -> None:
+        if not target:
+            return
+        target.equip(self, active=self.active)

@@ -6,9 +6,8 @@ from typing import Dict, List, TYPE_CHECKING
 from .characters import BelleStar
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from .cards.equipment import EquipmentCard
     from .characters import Character
-    from .cards.card import Card
+    from .cards.card import BaseCard
     from .game_manager import GameManager
 
 
@@ -24,9 +23,9 @@ class PlayerMetadata:
     doc_used: bool = False
     dodged: bool = False
     ghost_revived: bool = False
-    kit_cards: list["Card"] | None = None
-    lucky_cards: list["Card"] | None = None
-    last_card_played: type["Card"] | None = None
+    kit_cards: list["BaseCard"] | None = None
+    lucky_cards: list["BaseCard"] | None = None
+    last_card_played: type["BaseCard"] | None = None
     last_card_target: "Player | None" = None
     uncle_used: bool = False
     vera_copy: type["Character"] | None = None
@@ -47,8 +46,8 @@ class Player:
     max_health: int = 4
     health: int = field(init=False)
     metadata: PlayerMetadata = field(default_factory=PlayerMetadata)
-    equipment: Dict[str, "EquipmentCard"] = field(default_factory=dict)
-    hand: List["Card"] = field(default_factory=list)
+    equipment: Dict[str, "BaseCard"] = field(default_factory=dict)
+    hand: List["BaseCard"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Initialize max health from role and character."""
@@ -68,7 +67,7 @@ class Player:
         else:
             self.health = min(self.health, self.max_health)
 
-    def equip(self, card: "EquipmentCard", *, active: bool = True) -> None:
+    def equip(self, card: "BaseCard", *, active: bool = True) -> None:
         """Add equipment to the player, respecting slot rules."""
         existing = None
         if getattr(card, "slot", None) == "Gun":
@@ -89,7 +88,7 @@ class Player:
             if modifier:
                 self._apply_health_modifier(modifier)
 
-    def unequip(self, card_name: str) -> "EquipmentCard | None":
+    def unequip(self, card_name: str) -> "BaseCard | None":
         """Remove equipment by name and adjust health if needed."""
         card = self.equipment.pop(card_name, None)
         if card:

@@ -6,7 +6,7 @@ import random
 
 from .deck import Deck
 from .deck_factory import create_standard_deck
-from .cards.card import Card
+from .cards.card import BaseCard
 from .helpers import has_ability, handle_out_of_turn_discard
 from .characters import (
     BartCassidy,
@@ -64,6 +64,9 @@ from .cards.conestoga import ConestogaCard
 from .cards.can_can import CanCanCard
 from .cards.ten_gallon_hat import TenGallonHatCard
 from .cards.rev_carabine import RevCarabineCard
+from .cards.buffalo_rifle import BuffaloRifleCard
+from .cards.pepperbox import PepperboxCard
+from .cards.derringer import DerringerCard
 
 from .player import Player, Role
 from .event_decks import (
@@ -81,7 +84,7 @@ class GameManager:
     players: List[Player] = field(default_factory=list)
     deck: Deck | None = None
     expansions: List[str] = field(default_factory=list)
-    discard_pile: List[Card] = field(default_factory=list)
+    discard_pile: List[BaseCard] = field(default_factory=list)
     current_turn: int = 0
     turn_order: List[int] = field(default_factory=list)
     event_deck: List[EventCard] | None = None
@@ -89,7 +92,7 @@ class GameManager:
     event_flags: dict = field(default_factory=dict)
 
     # General Store state
-    general_store_cards: List[Card] | None = None
+    general_store_cards: List[BaseCard] | None = None
     general_store_order: List[Player] | None = None
     general_store_index: int = 0
 
@@ -191,7 +194,7 @@ class GameManager:
         idx = self.turn_order[self.current_turn]
         player = self.players[idx]
         for eq in list(player.equipment.values()):
-            if getattr(eq, "green_border", False) and not getattr(eq, "active", True):
+            if eq.card_type == "green" and not getattr(eq, "active", True):
                 eq.active = True
                 modifier = int(getattr(eq, "max_health_modifier", 0))
                 if modifier:
@@ -287,7 +290,7 @@ class GameManager:
         player = self.players[idx]
         self.discard_phase(player)
         for eq in list(player.equipment.values()):
-            if getattr(eq, "green_border", False) and not getattr(eq, "active", True):
+            if eq.card_type == "green" and not getattr(eq, "active", True):
                 eq.active = True
                 modifier = int(getattr(eq, "max_health_modifier", 0))
                 if modifier:
@@ -295,7 +298,7 @@ class GameManager:
         self.current_turn = (self.current_turn + 1) % len(self.turn_order)
         self._begin_turn()
 
-    def _draw_from_deck(self) -> Card | None:
+    def _draw_from_deck(self) -> BaseCard | None:
         """Draw a card reshuffling the discard pile if the deck is empty."""
         card = self.deck.draw()
         if card is None and self.discard_pile:
@@ -391,7 +394,7 @@ class GameManager:
             return False
         return True
 
-    def _is_bang(self, player: Player, card: Card, target: Optional[Player]) -> bool:
+    def _is_bang(self, player: Player, card: BaseCard, target: Optional[Player]) -> bool:
         return isinstance(card, BangCard) or (
             has_ability(player, CalamityJanet) and isinstance(card, MissedCard) and target
         )
@@ -410,7 +413,7 @@ class GameManager:
         limit = self.event_flags.get("bang_limit", 1)
         return count < limit or unlimited
 
-    def _dispatch_play(self, player: Player, card: Card, target: Optional[Player]) -> None:
+    def _dispatch_play(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
         if has_ability(player, CalamityJanet) and isinstance(card, MissedCard) and target:
             handler = self._card_handlers.get(BangCard)
             if handler:
@@ -449,36 +452,36 @@ class GameManager:
                 if extra.health > before_x:
                     self.on_player_healed(extra)
 
-    def _handler_self_game(self, player: Player, card: Card, target: Optional[Player]) -> None:
+    def _handler_self_game(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
         """Play the card on the acting player with game context."""
         card.play(player, game=self)
 
-    def _handler_target_game(self, player: Player, card: Card, target: Optional[Player]) -> None:
+    def _handler_target_game(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
         """Play the card on ``target`` if provided using the game context."""
         if target:
             card.play(target, game=self)
 
     def _handler_target_player_game(
-        self, player: Player, card: Card, target: Optional[Player]
+        self, player: Player, card: BaseCard, target: Optional[Player]
     ) -> None:
         """Play the card on ``target`` with ``player`` and game context."""
         if target:
             card.play(target, player, game=self)
 
     def _handler_self_player_game(
-        self, player: Player, card: Card, target: Optional[Player]
+        self, player: Player, card: BaseCard, target: Optional[Player]
     ) -> None:
         """Play the card on the acting player with themselves as the target."""
         card.play(player, player, game=self)
 
     def _handler_target_or_self_player_game(
-        self, player: Player, card: Card, target: Optional[Player]
+        self, player: Player, card: BaseCard, target: Optional[Player]
     ) -> None:
         """Play on ``target`` if provided otherwise on ``player`` with game context."""
         card.play(target or player, player, game=self)
 
     def _handler_target_player(
-        self, player: Player, card: Card, target: Optional[Player]
+        self, player: Player, card: BaseCard, target: Optional[Player]
     ) -> None:
         """Play on ``target`` with ``player`` as context but without game."""
         if target:
@@ -511,9 +514,12 @@ class GameManager:
             CanteenCard: self._handler_target_or_self_player_game,
             ConestogaCard: self._handler_target_player_game,
             CanCanCard: self._handler_target_game,
+            BuffaloRifleCard: self._handler_target_player_game,
+            PepperboxCard: self._handler_target_player_game,
+            DerringerCard: self._handler_target_player_game,
         }
 
-    def play_card(self, player: Player, card: Card, target: Optional[Player] = None) -> None:
+    def play_card(self, player: Player, card: BaseCard, target: Optional[Player] = None) -> None:
         if not self._pre_card_checks(player, card, target):
             return
 
@@ -547,7 +553,7 @@ class GameManager:
         if has_ability(player, SuzyLafayette) and not player.hand:
             self.draw_card(player)
 
-    def discard_card(self, player: Player, card: Card) -> None:
+    def discard_card(self, player: Player, card: BaseCard) -> None:
         if card in player.hand:
             player.hand.remove(card)
             self._pass_left_or_discard(player, card)
@@ -651,7 +657,7 @@ class GameManager:
                 return True
         return False
 
-    def uncle_will_ability(self, player: Player, card: Card) -> bool:
+    def uncle_will_ability(self, player: Player, card: BaseCard) -> bool:
         """Play any card as General Store once per turn."""
         if not has_ability(player, UncleWill):
             return False
@@ -677,7 +683,7 @@ class GameManager:
         if not self.deck:
             return []
         alive = [p for p in self.players if p.is_alive()]
-        cards: List[Card] = []
+        cards: List[BaseCard] = []
         for _ in range(len(alive)):
             card = self._draw_from_deck()
             if card:
@@ -733,7 +739,7 @@ class GameManager:
                 return nxt
         return None
 
-    def _pass_left_or_discard(self, source: Player, card: Card) -> None:
+    def _pass_left_or_discard(self, source: Player, card: BaseCard) -> None:
         """Pass card left if The River is active, else discard."""
         if self.event_flags.get("river"):
             target = self._next_alive_player(source)

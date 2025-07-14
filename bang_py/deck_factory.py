@@ -51,10 +51,10 @@ from .cards import (
     TenGallonHatCard,
     RevCarabineCard,
 )
-from .cards.card import Card
+from .cards.card import BaseCard
 
 
-CARD_COUNTS: List[Tuple[Type[Card], int]] = [
+CARD_COUNTS: List[Tuple[Type[BaseCard], int]] = [
     (BangCard, 25),
     (MissedCard, 12),
     (BeerCard, 6),
@@ -80,7 +80,7 @@ CARD_COUNTS: List[Tuple[Type[Card], int]] = [
 ]
 
 # Additional cards provided by expansions
-DODGE_CITY_COUNTS: List[Tuple[Type[Card], int]] = [
+DODGE_CITY_COUNTS: List[Tuple[Type[BaseCard], int]] = [
     (PunchCard, 4),
     (HideoutCard, 2),
     (BinocularsCard, 2),
@@ -101,14 +101,14 @@ DODGE_CITY_COUNTS: List[Tuple[Type[Card], int]] = [
     (RevCarabineCard, 1),
 ]
 
-FISTFUL_COUNTS: List[Tuple[Type[Card], int]] = [
+FISTFUL_COUNTS: List[Tuple[Type[BaseCard], int]] = [
     (WhiskyCard, 2),
     (TequilaCard, 3),
     (PonyExpressCard, 2),
     (RagTimeCard, 2),
 ]
 
-HIGH_NOON_COUNTS: List[Tuple[Type[Card], int]] = [
+HIGH_NOON_COUNTS: List[Tuple[Type[BaseCard], int]] = [
     (HighNoonCard, 1),
 ]
 
@@ -148,7 +148,7 @@ def create_standard_deck(expansions: Iterable[str] | None = None) -> Deck:
     ranks = list(range(1, 14)) * (total // 13 + 1)
     random.shuffle(ranks)
 
-    cards: List[Card] = []
+    cards: List[BaseCard] = []
     idx = 0
     for card_cls, count in card_counts:
         for _ in range(count):

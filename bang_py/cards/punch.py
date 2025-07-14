@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 
 
-class PunchCard(Card):
+class PunchCard(BaseCard):
     """Simple attack card from the Dodge City expansion."""
 
     card_name = "Punch"
+    card_type = "action"
+    card_set = "dodge_city"
     description = "Deal 1 damage if the target is within distance 1."
 
     def play(self, target: Player, player: Player | None = None) -> None:

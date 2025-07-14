@@ -1,11 +1,16 @@
 from __future__ import annotations
 
-from .barrel import BarrelCard
+from .missed import MissedCard
+from ..player import Player
 
 
-class SombreroCard(BarrelCard):
-    """Protection equipment functioning like a Barrel from Dodge City."""
+class SombreroCard(MissedCard):
+    """Simple green-bordered Missed!"""
 
     card_name = "Sombrero"
-    description = "Barrel-like protection; draw to avoid Bang!."
-    green_border = True
+    card_type = "green"
+    card_set = "dodge_city"
+    description = "Counts as a Missed!"
+
+    def play(self, target: Player) -> None:  # type: ignore[override]
+        super().play(target)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
@@ -10,10 +10,12 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 from ..helpers import handle_out_of_turn_discard
 
 
-class RagTimeCard(Card):
+class RagTimeCard(BaseCard):
     """Discard a card to steal one from any player."""
 
     card_name = "Rag Time"
+    card_type = "action"
+    card_set = "fistful_of_cards"
     description = "Discard another card to take a card from any player."
 
     def play(

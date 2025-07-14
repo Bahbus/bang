@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
@@ -8,12 +8,13 @@ if TYPE_CHECKING:
     from ..game_manager import GameManager
 
 
-class PonyExpressCard(Card):
+class PonyExpressCard(BaseCard):
     """Draw three cards."""
 
     card_name = "Pony Express"
+    card_type = "green"
+    card_set = "fistful_of_cards"
     description = "Draw three cards."
-    green_border = True
 
     def play(
         self,

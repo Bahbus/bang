@@ -1,7 +1,7 @@
+from .card import BaseCard
 from .bang import BangCard
 from .beer import BeerCard
 from .missed import MissedCard
-from .equipment import EquipmentCard
 from .volcanic import VolcanicCard
 from .schofield import SchofieldCard
 from .remington import RemingtonCard
@@ -46,10 +46,10 @@ from .ten_gallon_hat import TenGallonHatCard
 from .rev_carabine import RevCarabineCard
 
 __all__ = [
+    "BaseCard",
     "BangCard",
     "BeerCard",
     "MissedCard",
-    "EquipmentCard",
     "VolcanicCard",
     "SchofieldCard",
     "RemingtonCard",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 from ..helpers import is_heart
@@ -11,8 +11,10 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..deck import Deck
 
 
-class BangCard(Card):
+class BangCard(BaseCard):
     card_name = "Bang!"
+    card_type = "action"
+    card_set = "base"
     description = "Basic attack that deals 1 damage unless dodged."
 
     def play(

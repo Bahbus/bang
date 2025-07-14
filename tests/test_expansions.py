@@ -336,19 +336,17 @@ def test_high_noon_event_deck_draw():
     assert gm.current_event is not None
 
 
-def test_pepperbox_activates_after_turn():
+def test_pepperbox_acts_as_bang():
     gm = GameManager()
     p1 = Player("Shooter")
-    p2 = Player("Other")
+    p2 = Player("Target")
     gm.add_player(p1)
     gm.add_player(p2)
     gm.start_game()
     card = PepperboxCard()
     p1.hand.append(card)
-    gm.play_card(p1, card, p1)
-    assert p1.attack_range == 1
-    gm.end_turn()
-    assert p1.attack_range == 3
+    gm.play_card(p1, card, p2)
+    assert p2.health == p2.max_health - 1
 
 
 def test_binoculars_and_hideout_activate_after_turn():
@@ -455,7 +453,7 @@ def test_green_bordered_cards():
     green = {
         name
         for name, obj in inspect.getmembers(card_mod, inspect.isclass)
-        if getattr(obj, "green_border", False)
+        if getattr(obj, "card_type", "") == "green"
     }
     assert green <= allowed
 

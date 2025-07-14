@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 from ..helpers import handle_out_of_turn_discard
@@ -10,8 +10,10 @@ if TYPE_CHECKING:
     from ..game_manager import GameManager
 
 
-class CatBalouCard(Card):
+class CatBalouCard(BaseCard):
     card_name = "Cat Balou"
+    card_type = "action"
+    card_set = "base"
     description = (
         "Choose a card from the target's hand or in play and discard it."
     )
