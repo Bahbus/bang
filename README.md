@@ -104,62 +104,65 @@ player = Player("Rose", character=RoseDoolan())
 
 ## Using Character Abilities
 
-Abilities are handled in three ways: popup prompts, a **Use Ability** button or
-automatic triggers.
+Character abilities use popups, the **Use Ability** button or happen
+automatically. Closing a popup does not forfeit the power&mdash;you can still
+press **Use Ability** to activate it later. Sid Ketchum, Doc Holyday,
+Chuck Wengam and Uncle Will always display buttons during your turn. All other
+powers trigger automatically with a message in the log.
 
-### Popup prompts
-The GUI opens a dialog whenever a choice is required:
+### Character reference
 
-- Vera Custer – choose a living character to copy.
-- Jesse Jones – steal the first card from an opponent or skip.
-- Kit Carlson – discard one of three drawn cards.
-- Pedro Ramirez – decide whether to take the top discard card.
-- Jose Delgado – optionally discard equipment for two cards.
-- Pat Brennan – draw a card in play instead of from the deck.
-- Lucky Duke – pick one of two cards when drawing!.
+- **Apache Kid** – automatic: ignores Diamond cards.
+- **Bart Cassidy** – automatic: draw a card whenever wounded.
+- **Belle Star** – automatic: cards in play in front of other players have no
+  effect during her turn.
+- **Bill Noface** – automatic: draw one extra card per wound during phase 1.
+- **Black Jack** – automatic: reveal the second draw; if it is Hearts or Diamonds
+  draw one more.
+- **Calamity Janet** – automatic: may play Bang! as Missed! and vice versa.
+- **Chuck Wengam** – button: lose 1 life point to draw 2 cards.
+- **Claus the Saint** – automatic: draw one more card than the number of players,
+  keep two and give the rest to the others.
+- **Doc Holyday** – button: discard two cards for a Bang! that does not count
+  toward your limit.
+- **Elena Fuente** – automatic: any card may be played as a Missed!.
+- **El Gringo** – automatic: steal a random card from whoever damages him.
+- **Greg Digger** – automatic: regain two life points whenever someone is
+  eliminated.
+- **Herb Hunter** – automatic: draw two cards whenever another player is
+  eliminated. The GUI adds these cards to your hand automatically.
+- **Jesse Jones** – popup: may take the first card from another player instead of
+  drawing. Use **Use Ability** if you closed the prompt.
+- **Johnny Kisch** – automatic: when you put a card in play, all other copies in
+  play are discarded automatically.
+- **Jose Delgado** – popup: optionally discard equipment to draw two cards.
+- **Jourdonnais** – automatic: always has a Barrel.
+- **Kit Carlson** – popup: draw three cards and discard one. Can be triggered
+  again with **Use Ability**.
+- **Lucky Duke** – popup: flip two cards for draws and choose one. The button can
+  be used to pick again.
+- **Molly Stark** – automatic: draw a card each time you play or discard Bang!,
+  Missed! or Beer out of turn.
+- **Pat Brennan** – popup: may draw a card in play instead of from the deck.
+- **Paul Regret** – automatic: opponents see him at distance +1.
+- **Pedro Ramirez** – popup: choose whether to draw the top discard card.
+- **Pixie Pete** – automatic: draw three cards each turn.
+- **Rose Doolan** – automatic: sees everyone at distance -1.
+- **Sean Mallory** – automatic: no hand limit.
+- **Sid Ketchum** – button: discard two cards to heal one life point.
+- **Slab the Killer** – automatic: requires two Missed! cards to cancel his
+  Bang!.
+- **Suzy Lafayette** – automatic: draw when your hand becomes empty.
+- **Tequila Joe** – automatic: Beer heals two life points.
+- **Uncle Will** – button: every card shows a **Store** button to play it as a
+  General Store once per turn.
+- **Vera Custer** – popup at the start of her turn to copy another ability; use
+  the button to reopen the choice.
+- **Vulture Sam** – automatic: take all cards from eliminated players.
+- **Willy the Kid** – automatic: may play unlimited Bang! cards.
 
-You can also use the **Use Ability** button for these characters if you close
-the prompt and want to activate the power later in the turn.
-
-### Use Ability button
-The button below your hand activates:
-
-- Sid Ketchum – discard two cards to heal one life point.
-- Doc Holyday – discard two cards for a free Bang!.
-- Chuck Wengam – lose one life point to draw two cards.
-- Jesse Jones, Kit Carlson, Pedro Ramirez, Jose Delgado, Pat Brennan and
-  Lucky Duke after the initial prompt.
-- Uncle Will – each card shows a **Store** button to play it as a General Store
-  once per turn.
-
-### Automatic abilities
-All other powers trigger automatically with a message in the log:
-
-- Bart Cassidy draws when wounded.
-- Black Jack reveals the second draw and may gain an extra card.
-- Calamity Janet swaps Bang! and Missed! freely.
-- El Gringo steals a card from whoever damages him.
-- Jourdonnais always has a Barrel.
-- Paul Regret is seen at distance +1.
-- Rose Doolan sees everyone one space closer.
-- Slab the Killer requires two Missed! for his Bang!.
-- Suzy Lafayette draws when her hand is empty.
-- Vulture Sam takes all cards from eliminated players.
-- Willy the Kid may play unlimited Bang!s.
-- Pixie Pete draws three cards each turn.
-- Sean Mallory has no hand limit.
-- Tequila Joe's Beer heals two life points.
-- Vera Custer copies another ability at the start of her turn.
-- Apache Kid ignores diamond cards.
-- Greg Digger regains two life when someone dies.
-- Belle Star ignores cards in play during her turn.
-- Bill Noface draws one extra card per wound.
-- Elena Fuente may play any card as a Missed!.
-- Herb Hunter draws two cards when a player is eliminated.
-- Molly Stark draws whenever she plays certain cards out of turn.
-- Johnny Kisch discards duplicates when putting a card in play.
-- Claus the Saint draws extra cards and gives one to each other player.
-
-The game screen also includes an **Auto Miss** checkbox controlling whether
-available Missed! cards are played automatically when you are attacked.
+The interface logs every automatic effect. Herb Hunter's extra cards and Johnny
+Kisch's forced discards happen seamlessly. Other inputs include the **End Turn**
+button (or its hotkey) and an **Auto Miss** checkbox that plays Missed!
+automatically when you are attacked.
 
