@@ -104,30 +104,61 @@ player = Player("Rose", character=RoseDoolan())
 
 ## Using Character Abilities
 
-When the server requires input for a character ability the GUI shows a popup
-prompt. These prompts appear automatically for:
+Abilities are handled in three ways: popup prompts, a **Use Ability** button or
+automatic triggers.
 
-- Vera Custer – choose another player's ability to copy.
-- Jesse Jones – draw the first card from an opponent or skip.
-- Kit Carlson – discard one of three cards drawn.
+### Popup prompts
+The GUI opens a dialog whenever a choice is required:
+
+- Vera Custer – choose a living character to copy.
+- Jesse Jones – steal the first card from an opponent or skip.
+- Kit Carlson – discard one of three drawn cards.
 - Pedro Ramirez – decide whether to take the top discard card.
 - Jose Delgado – optionally discard equipment for two cards.
-- Pat Brennan – select equipment in play to draw.
-- Lucky Duke – pick one of two cards when performing a draw!.
+- Pat Brennan – draw a card in play instead of from the deck.
+- Lucky Duke – pick one of two cards when drawing!.
 
-Characters with abilities you can trigger manually display a **Use Ability**
-button below your hand. Clicking it activates:
+You can also use the **Use Ability** button for these characters if you close
+the prompt and want to activate the power later in the turn.
+
+### Use Ability button
+The button below your hand activates:
 
 - Sid Ketchum – discard two cards to heal one life point.
 - Doc Holyday – discard two cards for a free Bang!.
 - Chuck Wengam – lose one life point to draw two cards.
 - Jesse Jones, Kit Carlson, Pedro Ramirez, Jose Delgado, Pat Brennan and
-  Lucky Duke if you dismiss the initial prompt.
-For Uncle Will, each card shows a **Store** button to play it as a General
-Store once per turn.
+  Lucky Duke after the initial prompt.
+- Uncle Will – each card shows a **Store** button to play it as a General Store
+  once per turn.
 
-Simply click the provided option or button. If a prompt is closed without a
-choice the default behaviour is used.
+### Automatic abilities
+All other powers trigger automatically with a message in the log:
+
+- Bart Cassidy draws when wounded.
+- Black Jack reveals the second draw and may gain an extra card.
+- Calamity Janet swaps Bang! and Missed! freely.
+- El Gringo steals a card from whoever damages him.
+- Jourdonnais always has a Barrel.
+- Paul Regret is seen at distance +1.
+- Rose Doolan sees everyone one space closer.
+- Slab the Killer requires two Missed! for his Bang!.
+- Suzy Lafayette draws when her hand is empty.
+- Vulture Sam takes all cards from eliminated players.
+- Willy the Kid may play unlimited Bang!s.
+- Pixie Pete draws three cards each turn.
+- Sean Mallory has no hand limit.
+- Tequila Joe's Beer heals two life points.
+- Vera Custer copies another ability at the start of her turn.
+- Apache Kid ignores diamond cards.
+- Greg Digger regains two life when someone dies.
+- Belle Star ignores cards in play during her turn.
+- Bill Noface draws one extra card per wound.
+- Elena Fuente may play any card as a Missed!.
+- Herb Hunter draws two cards when a player is eliminated.
+- Molly Stark draws whenever she plays certain cards out of turn.
+- Johnny Kisch discards duplicates when putting a card in play.
+- Claus the Saint draws extra cards and gives one to each other player.
 
 The game screen also includes an **Auto Miss** checkbox controlling whether
 available Missed! cards are played automatically when you are attacked.
