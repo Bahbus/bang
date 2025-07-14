@@ -139,6 +139,83 @@ def _prison_break(game: GameManager) -> None:
     game.event_flags["no_jail"] = True
 
 
+def _curse_event(game: GameManager) -> None:
+    """Players reveal their hands."""
+    game.event_flags["revealed_hands"] = True
+
+
+def _daltons_event(game: GameManager) -> None:
+    """Each player draws a card."""
+    for player in game.players:
+        game.draw_card(player)
+
+
+def _doctor_event(game: GameManager) -> None:
+    """Players heal instead of drawing."""
+    game.event_flags["doctor"] = True
+
+
+def _reverend_event(game: GameManager) -> None:
+    """Limit each player to two cards per turn."""
+    game.event_flags["reverend_limit"] = 2
+
+
+def _train_arrival_event(game: GameManager) -> None:
+    """All players draw one card."""
+    for player in game.players:
+        game.draw_card(player)
+
+
+def _handcuffs_event(game: GameManager) -> None:
+    """Skip the next player's turn."""
+    game.event_flags["skip_turn"] = True
+
+
+def _new_identity_event(game: GameManager) -> None:
+    """All players discard their hand and draw the same number of cards."""
+    for player in game.players:
+        num = len(player.hand)
+        while player.hand:
+            game.discard_pile.append(player.hand.pop())
+        if num:
+            game.draw_card(player, num)
+
+
+def _lasso_event(game: GameManager) -> None:
+    """Each player takes the first card from the next player's hand if possible."""
+    players = game.players
+    taken: list = []
+    for i, player in enumerate(players):
+        target = players[(i + 1) % len(players)]
+        card = target.hand.pop(0) if target.hand else None
+        taken.append(card)
+    for card, player in zip(taken, players):
+        if card:
+            player.hand.append(card)
+
+
+def _sniper_event(game: GameManager) -> None:
+    """All players have unlimited range."""
+    game.event_flags["range_unlimited"] = True
+
+
+def _russian_roulette_event(game: GameManager) -> None:
+    """All players take 1 damage."""
+    for player in list(game.players):
+        player.take_damage(1)
+        game.on_player_damaged(player)
+
+
+def _blood_brothers_event(game: GameManager) -> None:
+    """Players share damage."""
+    game.event_flags["blood_brothers"] = True
+
+
+def _dead_man_event(game: GameManager) -> None:
+    """Players skip their draw phase."""
+    game.event_flags["no_draw"] = True
+
+
 def _high_stakes(game: GameManager) -> None:
     """Players may play any number of Bang! cards."""
     game.event_flags["bang_limit"] = 99
@@ -160,19 +237,21 @@ class EventCard:
 def create_high_noon_deck() -> List[EventCard]:
     """Return a simple High Noon event deck."""
     return [
-        EventCard("Thirst", _thirst, "Players draw only one card"),
-        EventCard("Shootout", _shootout, "Unlimited Bang!s per turn"),
         EventCard("Blessing", _blessing, "All players heal"),
-        EventCard("Gold Rush", _gold_rush, "Draw three cards"),
-        EventCard("The Judge", _judge, "Beer cards cannot be played"),
+        EventCard("Curse", _curse_event, "Hands are visible"),
         EventCard("Ghost Town", _ghost_town, "Eliminated players return"),
-        EventCard("Law of the West", _law_of_the_west, "Unlimited range"),
-        EventCard("Siesta", _siesta, "Draw three cards"),
-        EventCard("Cattle Drive", _cattle_drive, "Discard a card"),
-        EventCard("The Sermon", _sermon, "Bang! cannot be played"),
-        EventCard("Peyote", _peyote, "Lucky draws"),
+        EventCard("Gold Rush", _gold_rush, "Draw three cards"),
         EventCard("Hangover", _hangover, "Beer gives no health"),
         EventCard("High Noon", _high_noon, "Lose 1 life at start of turn"),
+        EventCard("Shootout", _shootout, "Unlimited Bang!s per turn"),
+        EventCard("The Daltons", _daltons_event, "Everyone draws"),
+        EventCard("The Doctor", _doctor_event, "Draw to heal"),
+        EventCard("The Reverend", _reverend_event, "Limit to two cards"),
+        EventCard("The Sermon", _sermon, "Bang! cannot be played"),
+        EventCard("Thirst", _thirst, "Players draw only one card"),
+        EventCard("Train Arrival", _train_arrival_event, "Everyone draws"),
+        EventCard("Handcuffs", _handcuffs_event, "Skip the sheriff's turn"),
+        EventCard("New Identity", _new_identity_event, "Players redraw hands"),
     ]
 
 
@@ -181,15 +260,17 @@ def create_fistful_deck() -> List[EventCard]:
     return [
         EventCard("Abandoned Mine", _abandoned_mine, "Everyone draws"),
         EventCard("Ambush", _ambush_event, "Missed! has no effect"),
-        EventCard("Ricochet", _ricochet, "Bang! hits an extra player"),
-        EventCard("Ranch", _ranch, "All heal"),
-        EventCard("Gold Rush", _gold_rush, "Draw extra"),
+        EventCard("Blood Brothers", _blood_brothers_event, "Shared damage"),
+        EventCard("Dead Man", _dead_man_event, "Skip draw phase"),
         EventCard("Hard Liquor", _hard_liquor, "Beer heals 2"),
-        EventCard("The River", _river, "Discards pass left"),
-        EventCard("Bounty", _bounty, "Rewards for eliminations"),
+        EventCard("Lasso", _lasso_event, "Steal from next player"),
+        EventCard("Law of the West", _law_of_the_west, "Unlimited range"),
+        EventCard("Peyote", _peyote, "Lucky draws"),
+        EventCard("Ranch", _ranch, "All heal"),
+        EventCard("Ricochet", _ricochet, "Bang! hits an extra player"),
+        EventCard("Russian Roulette", _russian_roulette_event, "All take damage"),
+        EventCard("Sniper", _sniper_event, "Unlimited range"),
+        EventCard("The Judge", _judge, "Beer cards cannot be played"),
         EventCard("Vendetta", _vendetta, "Outlaws have +1 range"),
-        EventCard("Prison Break", _prison_break, "Jail discarded"),
-        EventCard("High Stakes", _high_stakes, "Unlimited Bang!s"),
-        EventCard("Ghost Town", _fistful_ghost_town, "Eliminated return"),
         EventCard("A Fistful of Cards", _fistful, "Damage equal to cards in hand"),
     ]
