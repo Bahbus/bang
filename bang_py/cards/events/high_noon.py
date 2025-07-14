@@ -1,0 +1,24 @@
+from __future__ import annotations
+
+from .base import BaseEventCard
+from ...player import Player
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...game_manager import GameManager
+
+
+class HighNoonEventCard(BaseEventCard):
+    """Players lose 1 life at the start of their turn."""
+
+    card_name = "High Noon"
+    description = "Lose 1 life at start of turn"
+
+    def play(
+        self,
+        target: Player | None = None,
+        player: Player | None = None,
+        game: GameManager | None = None,
+    ) -> None:
+        if game:
+            game.event_flags["start_damage"] = 1
