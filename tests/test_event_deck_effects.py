@@ -24,6 +24,12 @@ from bang_py.event_decks import (
     _prison_break,
     _high_noon,
     _high_stakes,
+    create_high_noon_deck,
+    create_fistful_deck,
+    _daltons_event,
+    _doctor_event,
+    _reverend_event,
+    _train_arrival_event,
 )
 from bang_py.game_manager import GameManager
 from bang_py.player import Player, Role
@@ -305,6 +311,50 @@ def test_high_stakes_allows_multiple_bangs():
     assert p2.health == p2.max_health - 2
 
 
+def test_high_noon_deck_contents_full_list():
+    names = {card.name for card in create_high_noon_deck()}
+    assert len(names) == 15
+    assert names == {
+        "Blessing",
+        "Curse",
+        "Ghost Town",
+        "Gold Rush",
+        "Hangover",
+        "High Noon",
+        "Shootout",
+        "The Daltons",
+        "The Doctor",
+        "The Reverend",
+        "The Sermon",
+        "Thirst",
+        "Train Arrival",
+        "Handcuffs",
+        "New Identity",
+    }
+
+
+def test_fistful_deck_contents_full_list():
+    names = {card.name for card in create_fistful_deck()}
+    assert len(names) == 15
+    assert names == {
+        "A Fistful of Cards",
+        "Abandoned Mine",
+        "Ambush",
+        "Blood Brothers",
+        "Dead Man",
+        "Hard Liquor",
+        "Lasso",
+        "Law of the West",
+        "Peyote",
+        "Ranch",
+        "Ricochet",
+        "Russian Roulette",
+        "Sniper",
+        "The Judge",
+        "Vendetta",
+    }
+
+
 def test_event_deck_order_fistful():
     gm = GameManager(expansions=["fistful_of_cards"])
     sheriff = Player("Sheriff", role=Role.SHERIFF)
@@ -350,6 +400,53 @@ def test_abandoned_mine_all_draw():
     gm.add_player(p1)
     gm.add_player(p2)
     gm.event_deck = [EventCard("Abandoned Mine", _abandoned_mine, "")]
+    gm.draw_event_card()
+    assert len(p1.hand) == 1
+    assert len(p2.hand) == 1
+
+
+def test_daltons_all_draw():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.event_deck = [EventCard("The Daltons", _daltons_event, "")]
+    gm.draw_event_card()
+    assert len(p1.hand) == 1
+    assert len(p2.hand) == 1
+
+
+def test_doctor_heals_instead_of_draw():
+    gm = GameManager()
+    p = Player("Sheriff", role=Role.SHERIFF)
+    gm.add_player(p)
+    gm.event_deck = [EventCard("The Doctor", _doctor_event, "")]
+    gm.draw_event_card()
+    p.health -= 1
+    gm.draw_phase(p)
+    assert p.health == p.max_health
+    assert not p.hand
+
+
+def test_reverend_limits_hand_size():
+    gm = GameManager()
+    p = Player("Sheriff", role=Role.SHERIFF)
+    gm.add_player(p)
+    gm.event_deck = [EventCard("The Reverend", _reverend_event, "")]
+    p.hand = [BangCard(), BangCard(), BangCard()]
+    gm.draw_event_card()
+    gm.discard_phase(p)
+    assert len(p.hand) == 2
+
+
+def test_train_arrival_all_draw():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.event_deck = [EventCard("Train Arrival", _train_arrival_event, "")]
     gm.draw_event_card()
     assert len(p1.hand) == 1
     assert len(p2.hand) == 1

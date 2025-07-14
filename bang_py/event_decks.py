@@ -151,7 +151,7 @@ def _daltons_event(game: GameManager) -> None:
 
 
 def _doctor_event(game: GameManager) -> None:
-    """Players heal instead of drawing."""
+    """Players heal 1 life instead of drawing cards."""
     game.event_flags["doctor"] = True
 
 
