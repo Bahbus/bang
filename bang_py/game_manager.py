@@ -330,6 +330,10 @@ class GameManager:
         the ability is used.
         """
 
+        if self.event_flags.get("doctor"):
+            player.heal(1)
+            return
+
         custom_draw = self.event_flags.get("draw_count")
         if custom_draw is not None:
             self.draw_card(player, custom_draw)
@@ -357,6 +361,8 @@ class GameManager:
         limit = player.health
         if has_ability(player, SeanMallory):
             limit = 99
+        if "reverend_limit" in self.event_flags:
+            limit = min(limit, int(self.event_flags["reverend_limit"]))
         while len(player.hand) > limit:
             card = player.hand.pop()
             self._pass_left_or_discard(player, card)
