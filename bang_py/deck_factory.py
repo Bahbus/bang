@@ -49,6 +49,7 @@ from .cards import (
     ConestogaCard,
     CanCanCard,
     TenGallonHatCard,
+    RevCarabineCard,
 )
 from .cards.card import Card
 
@@ -97,6 +98,7 @@ DODGE_CITY_COUNTS: List[Tuple[Type[Card], int]] = [
     (ConestogaCard, 1),
     (CanCanCard, 1),
     (TenGallonHatCard, 1),
+    (RevCarabineCard, 1),
 ]
 
 FISTFUL_COUNTS: List[Tuple[Type[Card], int]] = [

@@ -63,6 +63,7 @@ from .cards.canteen import CanteenCard
 from .cards.conestoga import ConestogaCard
 from .cards.can_can import CanCanCard
 from .cards.ten_gallon_hat import TenGallonHatCard
+from .cards.rev_carabine import RevCarabineCard
 
 from .player import Player, Role
 from .event_decks import (
@@ -213,6 +214,11 @@ class GameManager:
                     self.current_turn = self.turn_order.index(self.players.index(player))
                     idx = self.turn_order[self.current_turn]
                     player = self.players[idx]
+        if self.event_flags.get("skip_turn"):
+            self.event_flags.pop("skip_turn")
+            self.current_turn = (self.current_turn + 1) % len(self.turn_order)
+            self._begin_turn()
+            return
         dmg = self.event_flags.get("start_damage", 0)
         if dmg:
             player.take_damage(dmg)
@@ -252,6 +258,7 @@ class GameManager:
                     self.current_turn = (self.current_turn + 1) % len(self.turn_order)
                     self._begin_turn()
                     return
+
 
         ability_chars = (
             JesseJones,

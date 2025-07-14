@@ -43,6 +43,7 @@ from .canteen import CanteenCard
 from .conestoga import ConestogaCard
 from .can_can import CanCanCard
 from .ten_gallon_hat import TenGallonHatCard
+from .rev_carabine import RevCarabineCard
 
 __all__ = [
     "BangCard",
@@ -90,4 +91,5 @@ __all__ = [
     "ConestogaCard",
     "CanCanCard",
     "TenGallonHatCard",
+    "RevCarabineCard",
 ]
