@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING, List
 
@@ -8,8 +8,10 @@ if TYPE_CHECKING:
     from ..game_manager import GameManager
 
 
-class GeneralStoreCard(Card):
+class GeneralStoreCard(BaseCard):
     card_name = "General Store"
+    card_type = "action"
+    card_set = "base"
     description = "Reveal cards for all players to choose one in turn order."
 
     def play(

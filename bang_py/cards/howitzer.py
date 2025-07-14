@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
@@ -11,12 +11,13 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 from .bang import BangCard
 
 
-class HowitzerCard(Card):
+class HowitzerCard(BaseCard):
     """Attack all opponents regardless of distance."""
 
     card_name = "Howitzer"
+    card_type = "green"
+    card_set = "dodge_city"
     description = "Bang all opponents ignoring distance."
-    green_border = True
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None,

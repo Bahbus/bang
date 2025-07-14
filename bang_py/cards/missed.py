@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 
 
-class MissedCard(Card):
+class MissedCard(BaseCard):
     card_name = "Missed!"
+    card_type = "action"
+    card_set = "base"
     description = "Negates one Bang! targeting you."
 
     def play(self, target: Player) -> None:

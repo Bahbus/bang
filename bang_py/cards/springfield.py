@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
@@ -12,10 +12,12 @@ from .bang import BangCard
 from ..helpers import handle_out_of_turn_discard
 
 
-class SpringfieldCard(Card):
+class SpringfieldCard(BaseCard):
     """Discard a card to Bang! any player."""
 
     card_name = "Springfield"
+    card_type = "action"
+    card_set = "dodge_city"
     description = "Discard another card to Bang! any player."
 
     def play(

@@ -1,9 +1,20 @@
 from __future__ import annotations
 
-from .equipment import EquipmentCard
+from .card import BaseCard
+from ..player import Player
 
 
-class MustangCard(EquipmentCard):
+class MustangCard(BaseCard):
     card_name = "Mustang"
+    card_type = "equipment"
     distance_modifier = 1
     description = "Opponents see you at 1 greater distance."
+
+    def __init__(self, suit: str | None = None, rank: int | None = None) -> None:
+        super().__init__(suit, rank)
+        self.active = True
+
+    def play(self, target: Player) -> None:
+        if not target:
+            return
+        target.equip(self, active=self.active)

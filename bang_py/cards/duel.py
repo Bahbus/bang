@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from ..helpers import handle_out_of_turn_discard
 from typing import TYPE_CHECKING
@@ -9,8 +9,10 @@ if TYPE_CHECKING:
     from ..game_manager import GameManager
 
 
-class DuelCard(Card):
+class DuelCard(BaseCard):
     card_name = "Duel"
+    card_type = "action"
+    card_set = "base"
     description = "Players alternate discarding Bang! cards; loser takes 1 damage."
 
     def play(

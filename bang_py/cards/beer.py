@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
@@ -11,8 +11,10 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
 
 
-class BeerCard(Card):
+class BeerCard(BaseCard):
     card_name = "Beer"
+    card_type = "action"
+    card_set = "base"
     description = "Heals 1 health if allowed by the game rules."
 
     def play(

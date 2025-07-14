@@ -33,7 +33,6 @@ from bang_py.cards import (
     GeneralStoreCard,
     SaloonCard,
     GatlingCard,
-    EquipmentCard,
 )
 
 CHAR_CLASSES = [
@@ -103,7 +102,7 @@ def auto_turn(gm: GameManager) -> None:
         for card in list(player.hand):
             if not player.is_alive():
                 break
-            if isinstance(card, EquipmentCard) and card.card_name != "Jail":
+            if card.card_type in {"equipment", "green"} and card.card_name != "Jail":
                 gm.play_card(player, card, player)
                 played = True
                 break

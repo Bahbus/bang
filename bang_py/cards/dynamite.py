@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .equipment import EquipmentCard
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 from ..helpers import is_spade_between
@@ -10,15 +10,22 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..deck import Deck
 
 
-class DynamiteCard(EquipmentCard):
+class DynamiteCard(BaseCard):
     card_name = "Dynamite"
+    card_type = "equipment"
     description = (
         "Passes around; at the start of your turn draw a card, and if it is a "
         "spade between 2 and 9, Dynamite explodes for 3 damage."
     )
 
+    def __init__(self, suit: str | None = None, rank: int | None = None) -> None:
+        super().__init__(suit, rank)
+        self.active = True
+
     def play(self, target: Player, deck: Deck | None = None) -> None:
-        super().play(target)
+        if not target:
+            return
+        target.equip(self, active=self.active)
 
     def check_dynamite(
         self, current: Player, next_player: Player, deck: Deck

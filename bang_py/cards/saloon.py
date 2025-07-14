@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
@@ -8,8 +8,10 @@ if TYPE_CHECKING:
     from ..game_manager import GameManager
 
 
-class SaloonCard(Card):
+class SaloonCard(BaseCard):
     card_name = "Saloon"
+    card_type = "action"
+    card_set = "base"
     description = "All players heal 1 health."
 
     def play(

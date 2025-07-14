@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
@@ -11,12 +11,13 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 from .bang import BangCard
 
 
-class KnifeCard(Card):
+class KnifeCard(BaseCard):
     """Close range attack that can be dodged like a Bang!"""
 
     card_name = "Knife"
+    card_type = "green"
+    card_set = "dodge_city"
     description = "Attack at distance 1 that can be dodged."
-    green_border = True
 
     def play(
         self, target: Player, player: Player | None = None, game: GameManager | None = None

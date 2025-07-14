@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .cards.card import Card
+from .cards.card import BaseCard
 from .player import Player
 from .characters import Character, VeraCuster
 from typing import TYPE_CHECKING, Type
@@ -9,12 +9,12 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from .game_manager import GameManager
 
 
-def is_heart(card: Card | None) -> bool:
+def is_heart(card: BaseCard | None) -> bool:
     """Return True if the drawn card is a Heart."""
     return getattr(card, "suit", None) == "Hearts"
 
 
-def is_spade_between(card: Card | None, low: int, high: int) -> bool:
+def is_spade_between(card: BaseCard | None, low: int, high: int) -> bool:
     """Return True if card is a Spade with rank in [low, high]."""
     if getattr(card, "suit", None) != "Spades":
         return False
@@ -32,7 +32,7 @@ def has_ability(player: Player, char_cls: Type[Character]) -> bool:
     return False
 
 
-def handle_out_of_turn_discard(game: "GameManager", player: Player, card: Card) -> None:
+def handle_out_of_turn_discard(game: "GameManager", player: Player, card: BaseCard) -> None:
     """Trigger Molly Stark ability when appropriate for a discarded card."""
     if not game or not player:
         return

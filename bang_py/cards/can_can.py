@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 from ..helpers import handle_out_of_turn_discard
@@ -9,12 +9,13 @@ if TYPE_CHECKING:
     from ..game_manager import GameManager
 
 
-class CanCanCard(Card):
+class CanCanCard(BaseCard):
     """Discard a chosen card from the target."""
 
     card_name = "Can Can"
+    card_type = "green"
+    card_set = "dodge_city"
     description = "Choose a card to discard from any one player."
-    green_border = True
 
     def play(
         self,

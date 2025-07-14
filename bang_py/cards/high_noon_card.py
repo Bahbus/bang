@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .card import Card
+from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
@@ -8,10 +8,12 @@ if TYPE_CHECKING:
     from ..game_manager import GameManager
 
 
-class HighNoonCard(Card):
+class HighNoonCard(BaseCard):
     """All players draw a card."""
 
     card_name = "High Noon"
+    card_type = "event"
+    card_set = "high_noon"
     description = "Event: everyone draws one card."
 
     def play(
