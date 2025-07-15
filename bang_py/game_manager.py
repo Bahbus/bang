@@ -420,9 +420,6 @@ class GameManager:
         the ability is used.
         """
 
-        if self.event_flags.get("doctor"):
-            player.heal(1)
-            return
 
         custom_draw = self.event_flags.get("draw_count")
         if custom_draw is not None:
