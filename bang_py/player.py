@@ -49,6 +49,7 @@ class PlayerMetadata:
     any_card_as_missed: bool = False
     lucky_duke: bool = False
     virtual_barrel: bool = False
+    use_sniper: bool = False
     beer_heal_bonus: int = 0
 
 
