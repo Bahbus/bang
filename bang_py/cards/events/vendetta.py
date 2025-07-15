@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class VendettaEventCard(BaseEventCard):
-    """Players may draw! for another turn if they reveal a heart."""
+    """At the end of their turn, each player draws! On a heart, they may play another turn. They cannot benefit again."""
 
     card_name = "Vendetta"
     card_set = "fistful_of_cards"
-    description = "Draw! heart to play again"
+    description = "At the end of their turn, each player draws! On a heart, they may play another turn. They cannot benefit again."
 
     def play(
         self,

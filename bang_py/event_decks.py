@@ -37,12 +37,6 @@ from .cards.events import (
     TrainArrivalEventCard,
     HandcuffsEventCard,
     NewIdentityEventCard,
-    BountyEventCard,
-    SiestaEventCard,
-    RiverEventCard,
-    CattleDriveEventCard,
-    PrisonBreakEventCard,
-    HighStakesEventCard,
 )
 from .player import Player
 
@@ -51,174 +45,153 @@ if TYPE_CHECKING:
 
 
 def _peyote(game: GameManager) -> None:
-    """Each draw gives one extra card."""
+    """During their draw phase, instead of drawing, each player guesses red or black. They draw and reveal; if correct they may guess again."""
     PeyoteEventCard().play(game=game)
 
 
 def _ricochet(game: GameManager) -> None:
-    """Bang! cards also hit the next player."""
+    """Each player may discard Bang! cards to target cards in play. The target card is discarded unless its owner plays a Missed!"""
     RicochetEventCard().play(game=game)
 
-
-def _river(game: GameManager) -> None:
-    """Discarded cards pass to the left player."""
-    RiverEventCard().play(game=game)
 
 
 
 
 def _judge(game: GameManager) -> None:
-    """Beer cards cannot be played."""
+    """Players cannot play cards in front of themselves or others."""
     TheJudgeEventCard().play(game=game)
 
 
 def _ghost_town(game: GameManager) -> None:
-    """Revive eliminated players with 1 health until the next event card."""
+    """During their turn, eliminated players return as ghosts with 3 cards and cannot die. They are eliminated again at turn end."""
     GhostTownEventCard().play(game=game)
 
 
-def _bounty(game: GameManager) -> None:
-    """Reward eliminations with two cards."""
-    BountyEventCard().play(game=game)
-
 
 def _vendetta(game: GameManager) -> None:
-    """Outlaws gain +1 attack range."""
+    """At the end of their turn, each player draws! If it's a heart, they immediately take another turn. This can occur only once per player."""
     VendettaEventCard().play(game=game)
 
 
 def _thirst(game: GameManager) -> None:
+    """During their draw phase, each player draws only their first card."""
     ThirstEventCard().play(game=game)
 
 
 def _shootout(game: GameManager) -> None:
-    """Allow unlimited Bang! cards this turn."""
+    """Each player may play a second Bang! card during their turn."""
     ShootoutEventCard().play(game=game)
 
 
 def _high_noon(game: GameManager) -> None:
+    """Each player loses 1 life point at the start of their turn."""
     HighNoonEventCard().play(game=game)
 
 
 def _fistful(game: GameManager) -> None:
+    """At the beginning of each turn, target the active player with Bang! once for each card in their hand."""
     FistfulOfCardsEventCard().play(game=game)
 
 
 def _blessing(game: GameManager) -> None:
-    """Heal all players by one."""
+    """The suit of all cards is hearts."""
     BlessingEventCard().play(game=game)
 
 
 def _gold_rush(game: GameManager) -> None:
-    """Players draw three cards each draw phase."""
+    """The game proceeds counter-clockwise, but card effects still proceed clockwise."""
     GoldRushEventCard().play(game=game)
 
 
 def _law_of_the_west(game: GameManager) -> None:
-    """Second drawn card must be revealed and played if possible."""
+    """During the draw phase, each player reveals the second card they drew and plays it immediately if possible."""
     LawOfTheWestEventCard().play(game=game)
 
 
-def _siesta(game: GameManager) -> None:
-    """Players draw three cards each draw phase."""
-    SiestaEventCard().play(game=game)
-
-
-def _cattle_drive(game: GameManager) -> None:
-    """Each player discards one card if possible."""
-    CattleDriveEventCard().play(game=game)
 
 
 def _sermon(game: GameManager) -> None:
-    """Bang! cards cannot be played."""
+    """Each player cannot use Bang! cards during their turn."""
     TheSermonEventCard().play(game=game)
 
 
 def _hangover(game: GameManager) -> None:
-    """Beer cards give no health."""
+    """All characters lose their abilities."""
     HangoverEventCard().play(game=game)
 
 
 def _abandoned_mine(game: GameManager) -> None:
-    """Draw from discard pile and discard to the deck top."""
+    """During their draw phase, players draw from the discard pile instead. During their discard phase, cards are placed face down on top of the deck."""
     AbandonedMineEventCard().play(game=game)
 
 
 def _ambush_event(game: GameManager) -> None:
-    """Treat all players as distance 1 apart."""
+    """The distance between any two players is 1. Only other cards in play may modify this."""
     AmbushEventCard().play(game=game)
 
 
 def _ranch(game: GameManager) -> None:
-    """Allow a one-time discard and redraw after the draw phase."""
+    """At the end of their draw phase, each player may once discard any number of cards and draw the same number."""
     RanchEventCard().play(game=game)
 
 
 def _hard_liquor(game: GameManager) -> None:
-    """Players may skip drawing to heal 1 life."""
+    """Each player may skip their draw phase to regain 1 life."""
     HardLiquorEventCard().play(game=game)
 
 
 def _blood_brothers(game: GameManager) -> None:
-    """Allow players to transfer health at the start of their turn."""
+    """At the beginning of each turn, a player may lose 1 life (not their last) to give 1 life to any player."""
     BloodBrothersEventCard().play(game=game)
 
-
-def _prison_break(game: GameManager) -> None:
-    """Jail cards are discarded."""
-    PrisonBreakEventCard().play(game=game)
 
 
 
 
 def _daltons_event(game: GameManager) -> None:
-    """Each player draws a card."""
+    """When The Daltons enters play, each player with blue cards discards one."""
     TheDaltonsEventCard().play(game=game)
 
 
 def _doctor_event(game: GameManager) -> None:
-    """Players heal 1 life instead of drawing cards."""
+    """When The Doctor enters play, the player(s) with the fewest life points regain 1 life."""
     TheDoctorEventCard().play(game=game)
 
 
 def _reverend_event(game: GameManager) -> None:
-    """Limit each player to two cards per turn."""
+    """Players cannot play Beer cards."""
     TheReverendEventCard().play(game=game)
 
 
 def _train_arrival_event(game: GameManager) -> None:
-    """All players draw one card."""
+    """During their draw phase, each player draws an additional card."""
     TrainArrivalEventCard().play(game=game)
 
 
 def _handcuffs_event(game: GameManager) -> None:
-    """Skip the next player's turn."""
+    """After drawing, each player chooses a suit and can only play that suit for the rest of their turn."""
     HandcuffsEventCard().play(game=game)
 
 
 def _new_identity_event(game: GameManager) -> None:
-    """All players discard their hand and draw the same number of cards."""
+    """At the start of their turn, a player may look at their other character and switch to it with 2 life."""
     NewIdentityEventCard().play(game=game)
 
 
 def _lasso_event(game: GameManager) -> None:
-    """Each player takes the first card from the next player's hand if possible."""
+    """Cards in play in front of players have no effect."""
     LassoEventCard().play(game=game)
 
 
 def _sniper_event(game: GameManager) -> None:
-    """Discard two Bang! as a single shot requiring two Missed!"""
+    """During their turn, a player may discard two Bang! cards as one attack that requires two Missed!"""
     SniperEventCard().play(game=game)
 
 
 def _russian_roulette_event(game: GameManager) -> None:
-    """Players discard Missed! or lose 2 life starting from the Sheriff."""
+    """When Russian Roulette enters play, starting with the Sheriff each player discards a Missed!. The first who cannot loses 2 life points."""
     RussianRouletteEventCard().play(game=game)
 
-
-def _high_stakes(game: GameManager) -> None:
-    """Players may play any number of Bang! cards."""
-    HighStakesEventCard().play(game=game)
 
 
 @dataclass

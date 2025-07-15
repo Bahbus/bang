@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class FistfulOfCardsEventCard(BaseEventCard):
-    """Bang! a player for each card in their hand at the start of their turn."""
+    """At the beginning of his turn, each player is the target of as many Bangs! as cards in their hand."""
 
     card_name = "A Fistful of Cards"
     card_set = "fistful_of_cards"
-    description = "Bang! equals cards in hand at turn start"
+    description = "At the beginning of his turn, each player is the target of as many Bangs! as cards in their hand."
 
     def play(
         self,

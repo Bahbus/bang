@@ -6,25 +6,19 @@ from bang_py.event_decks import (
     _ghost_town,
     _peyote,
     _ricochet,
-    _river,
-    _bounty,
     _vendetta,
     _abandoned_mine,
     _hard_liquor,
     _law_of_the_west,
-    _cattle_drive,
     _shootout,
     _blessing,
     _gold_rush,
-    _siesta,
     _sermon,
     _hangover,
     _ambush_event,
     _blood_brothers,
     _ranch,
-    _prison_break,
     _high_noon,
-    _high_stakes,
     create_high_noon_deck,
     create_fistful_deck,
 )
@@ -36,7 +30,7 @@ from bang_py.cards.roles import (
     OutlawRoleCard,
     RenegadeRoleCard,
 )
-from bang_py.cards import BangCard, BeerCard, MissedCard
+from bang_py.cards import BangCard, BeerCard, MissedCard, BarrelCard
 from bang_py.cards.jail import JailCard
 from bang_py.cards.events import (
     DeadManEventCard,
@@ -156,20 +150,6 @@ def test_ghost_town_players_disappear_next_event():
     assert not outlaw.is_alive()
 
 
-def test_bounty_rewards_elimination():
-    deck = Deck([BangCard(), BangCard(), BangCard()])
-    gm = GameManager(deck=deck)
-    sheriff = Player("Sheriff", role=SheriffRoleCard())
-    outlaw = Player("Outlaw")
-    gm.add_player(sheriff)
-    gm.add_player(outlaw)
-    gm.event_deck = [EventCard("Bounty", _bounty, "")]
-    gm.draw_event_card()
-    outlaw.health = 1
-    sheriff.hand.append(BangCard())
-    gm.play_card(sheriff, sheriff.hand[0], outlaw)
-    assert len(sheriff.hand) == 2
-
 
 def test_blessing_overrides_suit():
     deck = Deck([BangCard(suit="Clubs"), BangCard(suit="Spades")])
@@ -198,14 +178,6 @@ def test_gold_rush_reverses_turn_order():
     assert gm.players[gm.turn_order[gm.current_turn]] is p3
 
 
-def test_siesta_draws_three():
-    gm = GameManager()
-    p = Player("Sheriff", role=SheriffRoleCard())
-    gm.add_player(p)
-    gm.event_deck = [EventCard("Siesta", _siesta, "")]
-    gm.draw_event_card()
-    gm.draw_phase(p)
-    assert len(p.hand) == 3
 
 
 def test_vendetta_outlaw_range_bonus():
@@ -235,20 +207,34 @@ def test_sermon_blocks_bang_real():
 
 
 
-def test_ricochet_hits_next_player():
+def test_ricochet_discards_equipment():
     gm = GameManager()
-    p1 = Player("P1")
-    p2 = Player("P2")
-    p3 = Player("P3")
-    gm.add_player(p1)
-    gm.add_player(p2)
-    gm.add_player(p3)
+    shooter = Player("P1")
+    target = Player("P2")
+    gm.add_player(shooter)
+    gm.add_player(target)
+    BarrelCard().play(target)
+    shooter.hand.append(BangCard())
     gm.event_deck = [EventCard("Ricochet", _ricochet, "")]
     gm.draw_event_card()
-    p1.hand.append(BangCard())
-    gm.play_card(p1, p1.hand[0], p2)
-    assert p2.health == p2.max_health - 1
-    assert p3.health == p3.max_health - 1
+    assert gm.ricochet_shoot(shooter, target, "Barrel")
+    assert "Barrel" not in target.equipment
+
+
+def test_ricochet_can_be_missed():
+    gm = GameManager()
+    shooter = Player("P1")
+    target = Player("P2")
+    gm.add_player(shooter)
+    gm.add_player(target)
+    BarrelCard().play(target)
+    target.hand.append(MissedCard())
+    shooter.hand.append(BangCard())
+    gm.event_deck = [EventCard("Ricochet", _ricochet, "")]
+    gm.draw_event_card()
+    assert not gm.ricochet_shoot(shooter, target, "Barrel")
+    assert "Barrel" in target.equipment
+    assert not target.hand
 
 
 def test_ambush_sets_distance_one():
@@ -275,19 +261,6 @@ def test_ranch_discard_and_redraw():
     assert len(p1.hand) == 4
 
 
-def test_prison_break_discards_jail():
-    gm = GameManager()
-    p = Player("Sheriff", role=SheriffRoleCard())
-    gm.add_player(p)
-    jail = JailCard()
-    p.equipment["Jail"] = jail
-    gm.event_deck = [EventCard("Prison Break", _prison_break, "")]
-    gm.turn_order = [0]
-    gm.current_turn = 0
-    gm.draw_event_card()
-    gm._begin_turn()
-    assert "Jail" not in p.equipment
-    assert jail in gm.discard_pile
 
 
 def test_high_noon_start_damage():
@@ -302,18 +275,6 @@ def test_high_noon_start_damage():
     assert p.health == p.max_health - 1
 
 
-def test_high_stakes_allows_multiple_bangs():
-    gm = GameManager()
-    p1 = Player("Sheriff", role=SheriffRoleCard())
-    p2 = Player("Outlaw")
-    gm.add_player(p1)
-    gm.add_player(p2)
-    gm.event_deck = [EventCard("High Stakes", _high_stakes, "")]
-    gm.draw_event_card()
-    p1.hand.extend([BangCard(), BangCard()])
-    gm.play_card(p1, p1.hand[0], p2)
-    gm.play_card(p1, p1.hand[0], p2)
-    assert p2.health == p2.max_health - 2
 
 
 def test_blood_brothers_transfer_during_turn():
@@ -386,22 +347,6 @@ def test_event_deck_order_fistful():
     assert gm.current_event is not None
     assert gm.event_deck[-1].name == "A Fistful of Cards"
 
-
-def test_river_passes_discard_left():
-    gm = GameManager()
-    p1 = Player("A")
-    p2 = Player("B")
-    p3 = Player("C")
-    gm.add_player(p1)
-    gm.add_player(p2)
-    gm.add_player(p3)
-    gm.event_deck = [EventCard("The River", _river, "")]
-    gm.draw_event_card()
-    card = BangCard()
-    p1.hand.append(card)
-    gm.discard_card(p1, card)
-    assert card in p2.hand
-    assert card not in gm.discard_pile
 
 
 def test_peyote_extra_draw():
@@ -512,17 +457,6 @@ def test_law_of_west_plays_second_card():
     assert len(p.hand) == 1
 
 
-def test_cattle_drive_discards_one_each():
-    gm = GameManager()
-    p1 = Player("A")
-    p2 = Player("B")
-    gm.add_player(p1)
-    gm.add_player(p2)
-    p1.hand.append(BangCard())
-    gm.event_deck = [EventCard("Cattle Drive", _cattle_drive, "")]
-    gm.draw_event_card()
-    assert not p1.hand
-    assert not p2.hand
 
 
 def test_shootout_allows_multiple_bangs():

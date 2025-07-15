@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class BloodBrothersEventCard(BaseEventCard):
-    """Allow players to transfer 1 life at the start of their turn."""
+    """At the beginning of his turn, each player may choose to lose 1 life (but not their last life) to give 1 life point to any player."""
 
     card_name = "Blood Brothers"
     card_set = "fistful_of_cards"
-    description = "Start of turn life transfer"
+    description = "At the beginning of his turn, each player may choose to lose 1 life (but not their last life) to give 1 life point to any player."
 
     def play(
         self,

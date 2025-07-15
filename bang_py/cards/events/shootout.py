@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class ShootoutEventCard(BaseEventCard):
-    """Allow one extra Bang! per turn."""
+    """Each player may play a second Bang! card during their turn."""
 
     card_name = "Shootout"
     card_set = "high_noon"
-    description = "Play two Bang!s"
+    description = "Each player may play a second Bang! card during their turn."
 
     def play(
         self,

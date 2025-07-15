@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class GhostTownEventCard(BaseEventCard):
-    """Eliminated players temporarily return as ghosts."""
+    """During their turn, eliminated players come back as ghosts with 3 cards and cannot die. At the end of their turn, they are eliminated again."""
 
     card_name = "Ghost Town"
     card_set = "high_noon"
-    description = "Eliminated players return for one turn"
+    description = "During their turn, eliminated players come back as ghosts with 3 cards and cannot die. At the end of their turn, they are eliminated again."
 
     def play(
         self,

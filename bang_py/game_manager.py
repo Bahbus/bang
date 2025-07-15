@@ -657,16 +657,6 @@ class GameManager:
         else:
             if not (target and self._auto_miss(target)):
                 card.play(target, self.deck, ignore_equipment=ignore_eq)
-        if self.event_flags.get("ricochet") and target:
-            extra = self._next_alive_player(target)
-            if extra and extra not in (target, player):
-                before_x = extra.health
-                if not self._auto_miss(extra):
-                    BangCard().play(extra, self.deck, ignore_equipment=ignore_eq)
-                if extra.health < before_x:
-                    self.on_player_damaged(extra, player)
-                if extra.health > before_x:
-                    self.on_player_healed(extra)
 
     def _handler_self_game(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
         """Play the card on the acting player with game context."""
@@ -889,6 +879,26 @@ class GameManager:
         self.on_player_damaged(player)
         target.heal(1)
         self.on_player_healed(target)
+
+    def ricochet_shoot(self, player: Player, target: Player, card_name: str) -> bool:
+        """Discard a Bang! to shoot at ``card_name`` in front of ``target``."""
+        if not self.event_flags.get("ricochet"):
+            return False
+        bang = next((c for c in player.hand if isinstance(c, BangCard)), None)
+        card = target.equipment.get(card_name)
+        if not bang or not card:
+            return False
+        player.hand.remove(bang)
+        self._pass_left_or_discard(player, bang)
+        miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
+        if miss:
+            target.hand.remove(miss)
+            self._pass_left_or_discard(target, miss)
+            handle_out_of_turn_discard(self, target, miss)
+            return False
+        target.unequip(card_name)
+        self.discard_pile.append(card)
+        return True
 
     # General Store management
     def start_general_store(self, player: Player) -> List[str]:

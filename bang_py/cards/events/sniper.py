@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class SniperEventCard(BaseEventCard):
-    """Discard two Bang! as a single attack requiring two Missed!"""
+    """During their turn, each player may discard 2 Bang! cards together against a player. It counts as 1 Bang!, but can only be countered by 2 Missed!"""
 
     card_name = "Sniper"
     card_set = "fistful_of_cards"
-    description = "Two Bang! counts as one"
+    description = "During their turn, each player may discard 2 Bang! cards together against a player. It counts as 1 Bang!, but can only be countered by 2 Missed!"
 
     def play(
         self,

@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class TheDaltonsEventCard(BaseEventCard):
-    """Force each player to discard one equipment if possible."""
+    """When The Daltons enters play, each player that has any blue (equipment) cards in front of them must choose one to discard."""
 
     card_name = "The Daltons"
     card_set = "high_noon"
-    description = "Discard an equipment"
+    description = "When The Daltons enters play, each player that has any blue (equipment) cards in front of them must choose one to discard."
 
     def play(
         self,
