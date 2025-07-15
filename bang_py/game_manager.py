@@ -274,7 +274,7 @@ class GameManager:
             player.character.ability(self, player)
             player.metadata.game = self
 
-    def _begin_turn(self) -> None:
+    def _begin_turn(self, *, blood_target: Player | None = None) -> None:
         if not self.turn_order:
             return
         self.current_turn %= len(self.turn_order)
@@ -364,7 +364,7 @@ class GameManager:
                 cb(player)
             return
 
-        self.draw_phase(player)
+        self.draw_phase(player, blood_target=blood_target)
         player.metadata.bangs_played = 0
         for cb in self.turn_started_listeners:
             cb(player)
@@ -412,6 +412,7 @@ class GameManager:
         jose_equipment: int | None = None,
         pat_target: Player | None = None,
         pat_card: str | None = None,
+        blood_target: Player | None = None,
     ) -> None:
         """Handle the draw phase for ``player`` with optional choices.
 
@@ -425,6 +426,9 @@ class GameManager:
         if custom_draw is not None:
             self.draw_card(player, custom_draw)
             return
+
+        if self.event_flags.get("blood_brothers") and blood_target:
+            self.blood_brothers_transfer(player, blood_target)
 
         for cb in self.draw_phase_listeners:
             if cb(player, {
@@ -754,6 +758,19 @@ class GameManager:
         player.metadata.vera_copy = target.character.__class__
         player.metadata.abilities.add(target.character.__class__)
         target.character.ability(self, player)
+
+    def blood_brothers_transfer(self, player: Player, target: Player) -> None:
+        """Transfer one health from ``player`` to ``target`` if possible."""
+        if not self.event_flags.get("blood_brothers"):
+            return
+        if player is target or not player.is_alive() or not target.is_alive():
+            return
+        if player.health <= 1:
+            return
+        player.take_damage(1)
+        self.on_player_damaged(player)
+        target.heal(1)
+        self.on_player_healed(target)
 
     # General Store management
     def start_general_store(self, player: Player) -> List[str]:
