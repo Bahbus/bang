@@ -42,6 +42,8 @@ from bang_py.cards.roles import (
 )
 from bang_py.cards import BangCard, BeerCard, MissedCard
 from bang_py.cards.jail import JailCard
+from bang_py.characters.black_jack import BlackJack
+from bang_py.characters.paul_regret import PaulRegret
 from bang_py.deck import Deck
 
 
@@ -536,3 +538,17 @@ def test_event_sequence_progresses_each_sheriff_turn():
     gm.end_turn()  # sheriff end -> outlaw turn
     gm.end_turn()  # outlaw end -> sheriff turn, draw next
     assert gm.current_event.name == "E2"
+
+
+def test_new_identity_character_swap():
+    gm = GameManager()
+    p = Player("S", role=SheriffRoleCard(), character=PaulRegret())
+    gm.add_player(p)
+    p.metadata.unused_character = BlackJack()
+    p.reset_stats()
+    gm.turn_order = [0]
+    gm.current_turn = 0
+    gm.event_flags["new_identity"] = True
+    gm._begin_turn()
+    assert isinstance(p.character, BlackJack)
+    assert p.health == 2

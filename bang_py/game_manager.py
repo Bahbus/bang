@@ -255,6 +255,21 @@ class GameManager:
         """Select which character a player will use. Defaults to the first."""
         return options[0]
 
+    def choose_new_identity(self, player: Player) -> None:
+        """Swap ``player`` to their unused character if the new identity event is active."""
+
+        if not self.event_flags.get("new_identity"):
+            return
+        new_char = player.metadata.unused_character
+        if not new_char:
+            return
+        old_char = player.character
+        player.character = new_char
+        player.metadata.unused_character = old_char
+        player.reset_stats()
+        player.character.ability(self, player)
+        player.health = min(2, player.max_health)
+
     def _deal_roles_and_characters(self) -> None:
         role_deck = self._build_role_deck()
         random.shuffle(role_deck)
@@ -304,6 +319,8 @@ class GameManager:
                     self.current_turn = self.turn_order.index(self.players.index(player))
                     idx = self.turn_order[self.current_turn]
                     player = self.players[idx]
+        if player.metadata.unused_character:
+            self.choose_new_identity(player)
         if self.event_flags.get("skip_turn"):
             self.event_flags.pop("skip_turn")
             self.current_turn = (self.current_turn + 1) % len(self.turn_order)
