@@ -27,10 +27,6 @@ from bang_py.event_decks import (
     _high_stakes,
     create_high_noon_deck,
     create_fistful_deck,
-    _daltons_event,
-    _doctor_event,
-    _reverend_event,
-    _train_arrival_event,
 )
 from bang_py.game_manager import GameManager
 from bang_py.player import Player
@@ -42,6 +38,17 @@ from bang_py.cards.roles import (
 )
 from bang_py.cards import BangCard, BeerCard, MissedCard
 from bang_py.cards.jail import JailCard
+from bang_py.cards.events import (
+    DeadManEventCard,
+    BloodBrothersEventCard,
+    CurseEventCard,
+    TheDaltonsEventCard,
+    TheDoctorEventCard,
+    TheReverendEventCard,
+    TrainArrivalEventCard,
+    HandcuffsEventCard,
+)
+from bang_py.helpers import has_ability
 from bang_py.characters.black_jack import BlackJack
 from bang_py.characters.paul_regret import PaulRegret
 from bang_py.deck import Deck
@@ -57,7 +64,7 @@ def test_thirst_event_draw_one():
     assert len(p.hand) == 1
 
 
-def test_fistful_event_damage_by_hand():
+def test_fistful_event_bangs_by_hand():
     gm = GameManager()
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
@@ -87,20 +94,16 @@ def test_sermon_event_blocks_bang():
     assert outlaw.health == outlaw.max_health
 
 
-def _enable_no_beer(game: GameManager) -> None:
-    game.event_flags.update(no_beer=True)
+def test_hangover_disables_abilities():
+    from bang_py.characters.jesse_jones import JesseJones
 
-
-def test_hangover_event_disables_beer():
     gm = GameManager()
-    sheriff = Player("Sheriff", role=SheriffRoleCard())
-    gm.add_player(sheriff)
-    gm.event_deck = [EventCard("Hangover", _enable_no_beer, "")]
+    p = Player("Sheriff", role=SheriffRoleCard(), character=JesseJones())
+    gm.add_player(p)
+    assert has_ability(p, JesseJones)
+    gm.event_deck = [EventCard("Hangover", _hangover, "")]
     gm.draw_event_card()
-    sheriff.health -= 1
-    sheriff.hand.append(BeerCard())
-    gm.play_card(sheriff, sheriff.hand[0])
-    assert sheriff.health == sheriff.max_health - 1
+    assert not has_ability(p, JesseJones)
 
 
 def test_judge_prevents_beer_play():
@@ -124,8 +127,12 @@ def test_ghost_town_revives_players():
     gm.add_player(outlaw)
     outlaw.take_damage(outlaw.health)
     gm.event_deck = [EventCard("Ghost Town", _ghost_town, "")]
-    gm.draw_event_card()
-    assert outlaw.health == 1
+    gm.turn_order = [0, 1]
+    gm.current_turn = 0
+    gm._begin_turn()  # sheriff turn -> draw event
+    gm.end_turn()  # end sheriff -> outlaw turn
+    assert outlaw.is_alive()
+    assert len(outlaw.hand) == 3
 
 
 def test_ghost_town_players_disappear_next_event():
@@ -139,13 +146,14 @@ def test_ghost_town_players_disappear_next_event():
         EventCard("Ghost Town", _ghost_town, ""),
         EventCard("Thirst", _thirst, ""),
     ]
-    gm.draw_event_card()
-    assert outlaw.is_alive()
     gm.turn_order = [0, 1]
     gm.current_turn = 0
-    gm._begin_turn()
+    gm._begin_turn()  # sheriff -> ghost town drawn
+    gm.end_turn()  # move to outlaw ghost turn
+    assert outlaw.is_alive()
+    gm.end_turn()  # finish outlaw turn -> back to sheriff
+    gm.end_turn()  # sheriff end triggers next event
     assert not outlaw.is_alive()
-    assert len(gm.turn_order) == 1
 
 
 def test_bounty_rewards_elimination():
@@ -163,28 +171,31 @@ def test_bounty_rewards_elimination():
     assert len(sheriff.hand) == 2
 
 
-def test_blessing_heals_everyone():
+def test_blessing_overrides_suit():
+    deck = Deck([BangCard(suit="Clubs"), BangCard(suit="Spades")])
+    gm = GameManager(deck=deck)
+    p = Player("Sheriff", role=SheriffRoleCard())
+    gm.add_player(p)
+    gm.event_deck = [EventCard("Blessing", _blessing, "")]
+    gm.draw_event_card()
+    gm.draw_phase(p)
+    assert all(c.suit == "Hearts" for c in p.hand)
+
+
+def test_gold_rush_reverses_turn_order():
     gm = GameManager()
     p1 = Player("A")
     p2 = Player("B")
+    p3 = Player("C")
     gm.add_player(p1)
     gm.add_player(p2)
-    p1.health -= 1
-    p2.health -= 1
-    gm.event_deck = [EventCard("Blessing", _blessing, "")]
-    gm.draw_event_card()
-    assert p1.health == p1.max_health
-    assert p2.health == p2.max_health
-
-
-def test_gold_rush_draws_three():
-    gm = GameManager()
-    p = Player("Sheriff", role=SheriffRoleCard())
-    gm.add_player(p)
+    gm.add_player(p3)
+    gm.turn_order = [0, 1, 2]
+    gm.current_turn = 0
     gm.event_deck = [EventCard("Gold Rush", _gold_rush, "")]
     gm.draw_event_card()
-    gm.draw_phase(p)
-    assert len(p.hand) == 3
+    gm.end_turn()
+    assert gm.players[gm.turn_order[gm.current_turn]] is p3
 
 
 def test_siesta_draws_three():
@@ -222,16 +233,6 @@ def test_sermon_blocks_bang_real():
     assert outlaw.health == outlaw.max_health
 
 
-def test_hangover_no_beer_real():
-    gm = GameManager()
-    p = Player("Sheriff", role=SheriffRoleCard())
-    gm.add_player(p)
-    gm.event_deck = [EventCard("Hangover", _hangover, "")]
-    gm.draw_event_card()
-    p.health -= 1
-    p.hand.append(BeerCard())
-    gm.play_card(p, p.hand[0])
-    assert p.health == p.max_health - 1
 
 
 def test_ricochet_hits_next_player():
@@ -250,7 +251,7 @@ def test_ricochet_hits_next_player():
     assert p3.health == p3.max_health - 1
 
 
-def test_ambush_disables_auto_miss():
+def test_ambush_sets_distance_one():
     gm = GameManager()
     p1 = Player("A")
     p2 = Player("B")
@@ -258,25 +259,20 @@ def test_ambush_disables_auto_miss():
     gm.add_player(p2)
     gm.event_deck = [EventCard("Ambush", _ambush_event, "")]
     gm.draw_event_card()
-    p1.hand.append(BangCard())
-    p2.hand.append(MissedCard())
-    gm.play_card(p1, p1.hand[0], p2)
-    assert p2.health == p2.max_health - 1
-    assert isinstance(p2.hand[0], MissedCard)
+    assert p1.distance_to(p2) == 1
 
 
-def test_ranch_heals_everyone():
-    gm = GameManager()
+def test_ranch_discard_and_redraw():
+    deck = Deck([])
+    deck.cards = [BangCard(), BangCard(), BangCard(), BangCard()]
+    gm = GameManager(deck=deck)
     p1 = Player("A")
-    p2 = Player("B")
     gm.add_player(p1)
-    gm.add_player(p2)
-    p1.health -= 1
-    p2.health -= 1
     gm.event_deck = [EventCard("Ranch", _ranch, "")]
     gm.draw_event_card()
-    assert p1.health == p1.max_health
-    assert p2.health == p2.max_health
+    p1.hand = [BangCard(), MissedCard()]
+    gm.draw_phase(p1, ranch_discards=[2, 3])
+    assert len(p1.hand) == 4
 
 
 def test_prison_break_discards_jail():
@@ -409,81 +405,111 @@ def test_river_passes_discard_left():
 
 
 def test_peyote_extra_draw():
-    gm = GameManager()
+    deck = Deck([])
+    deck.cards = [
+        BangCard(suit="Hearts"),
+        BangCard(suit="Clubs"),
+        BangCard(suit="Diamonds"),
+    ]
+    gm = GameManager(deck=deck)
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("Peyote", _peyote, "")]
     gm.draw_event_card()
-    gm.draw_card(p)
-    assert len(p.hand) == 2
+    gm.draw_phase(p, peyote_guesses=["red", "black", "red"])
+    assert len(p.hand) == 3
 
 
-def test_abandoned_mine_all_draw():
-    gm = GameManager()
+def test_abandoned_mine_uses_discard_pile_and_deck_top():
+    deck = Deck([MissedCard()])
+    gm = GameManager(deck=deck)
     p1 = Player("A")
-    p2 = Player("B")
     gm.add_player(p1)
-    gm.add_player(p2)
+    gm.discard_pile.append(BangCard())
     gm.event_deck = [EventCard("Abandoned Mine", _abandoned_mine, "")]
     gm.draw_event_card()
-    assert len(p1.hand) == 1
-    assert len(p2.hand) == 1
+    p1.health = 1
+    gm.draw_phase(p1)
+    assert isinstance(p1.hand[0], BangCard)
+    p1.hand.append(MissedCard())
+    gm.discard_phase(p1)
+    assert isinstance(gm.deck.cards[0], MissedCard)
 
 
-def test_daltons_all_draw():
+def test_daltons_discards_equipment():
+    from bang_py.cards import MustangCard
+
     gm = GameManager()
     p1 = Player("A")
     p2 = Player("B")
     gm.add_player(p1)
     gm.add_player(p2)
-    gm.event_deck = [EventCard("The Daltons", _daltons_event, "")]
+    MustangCard().play(p1)
+    MustangCard().play(p2)
+    gm.event_deck = [TheDaltonsEventCard()]
     gm.draw_event_card()
-    assert len(p1.hand) == 1
-    assert len(p2.hand) == 1
+    assert not p1.equipment
+    assert not p2.equipment
 
-def test_reverend_limits_hand_size():
-    gm = GameManager()
-    p = Player("Sheriff", role=SheriffRoleCard())
-    gm.add_player(p)
-    gm.event_deck = [EventCard("The Reverend", _reverend_event, "")]
-    p.hand = [BangCard(), BangCard(), BangCard()]
-    gm.draw_event_card()
-    gm.discard_phase(p)
-    assert len(p.hand) == 2
 
-def test_train_arrival_all_draw():
+def test_doctor_heals_lowest():
     gm = GameManager()
     p1 = Player("A")
     p2 = Player("B")
     gm.add_player(p1)
     gm.add_player(p2)
-    gm.event_deck = [EventCard("Train Arrival", _train_arrival_event, "")]
+    p1.health -= 2
+    p2.health -= 1
+    gm.event_deck = [TheDoctorEventCard()]
     gm.draw_event_card()
-    assert len(p1.hand) == 1
-    assert len(p2.hand) == 1
+    assert p1.health == p1.max_health - 1
+    assert p2.health == p2.max_health - 1
 
 
-def test_hard_liquor_beer_heals_two():
+def test_reverend_blocks_beer():
     gm = GameManager()
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
-    gm.add_player(Player("Other"))
-    gm.add_player(Player("Third"))
-    gm.event_deck = [EventCard("Hard Liquor", _hard_liquor, "")]
+    gm.event_deck = [TheReverendEventCard()]
     gm.draw_event_card()
-    p.health -= 2
+    p.health -= 1
     p.hand.append(BeerCard())
     gm.play_card(p, p.hand[0])
-    assert p.health == p.max_health
+    assert p.health == p.max_health - 1
 
 
-def test_law_of_west_unlimited_range():
+def test_train_arrival_draw_three():
     gm = GameManager()
+    p = Player("Sheriff", role=SheriffRoleCard())
+    gm.add_player(p)
+    gm.event_deck = [TrainArrivalEventCard()]
+    gm.draw_event_card()
+    gm.draw_phase(p)
+    assert len(p.hand) == 3
+
+
+def test_hard_liquor_skip_draw_to_heal():
+    gm = GameManager()
+    p = Player("Sheriff", role=SheriffRoleCard())
+    gm.add_player(p)
+    gm.event_deck = [EventCard("Hard Liquor", _hard_liquor, "")]
+    gm.draw_event_card()
+    p.health -= 1
+    gm.draw_phase(p, skip_heal=True)
+    assert p.health == p.max_health
+    assert not p.hand
+
+
+def test_law_of_west_plays_second_card():
+    deck = Deck([])
+    deck.cards = [BeerCard(), BeerCard()]
+    gm = GameManager(deck=deck)
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("Law of the West", _law_of_the_west, "")]
     gm.draw_event_card()
-    assert p.attack_range == 99
+    gm.draw_phase(p)
+    assert len(p.hand) == 1
 
 
 def test_cattle_drive_discards_one_each():
@@ -513,6 +539,27 @@ def test_shootout_allows_multiple_bangs():
     assert p2.health == p2.max_health - 2
 
 
+def test_handcuffs_limits_suit_played():
+    deck = Deck([])
+    deck.cards = [BangCard(suit="Hearts"), BeerCard(suit="Spades")]
+    gm = GameManager(deck=deck)
+    p1 = Player("Sheriff", role=SheriffRoleCard())
+    p2 = Player("Outlaw")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.event_deck = [HandcuffsEventCard()]
+    gm.turn_order = [0, 1]
+    gm.current_turn = 0
+    gm.draw_event_card()
+    gm._begin_turn()
+    idx = 0 if p1.hand[0].suit == "Hearts" else 1
+    gm.play_card(p1, p1.hand[idx], p2)
+    assert len(p1.hand) == 1
+    gm.play_card(p1, p1.hand[0], p2)
+    assert len(p1.hand) == 1
+    assert p1.hand[0].suit == "Spades"
+
+
 def test_event_deck_order_high_noon():
     gm = GameManager(expansions=["high_noon"])
     sheriff = Player("Sheriff", role=SheriffRoleCard())
@@ -540,6 +587,61 @@ def test_event_sequence_progresses_each_sheriff_turn():
     assert gm.current_event.name == "E2"
 
 
+def test_dead_man_revives_first_eliminated():
+    deck = Deck([BangCard(), BeerCard(), MissedCard(), BangCard(), BeerCard(), MissedCard()])
+    gm = GameManager(deck=deck)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
+    outlaw = Player("Outlaw")
+    gm.add_player(sheriff)
+    gm.add_player(outlaw)
+    gm.start_game(deal_roles=False)
+    outlaw.take_damage(outlaw.health)
+    gm.on_player_damaged(outlaw)
+    gm.event_deck = [DeadManEventCard()]
+    gm.draw_event_card()
+    gm.end_turn()  # sheriff end -> outlaw turn and revive
+    assert outlaw.health == 2
+    assert len(outlaw.hand) == 2
+
+
+def test_blood_brothers_life_transfer():
+    gm = GameManager()
+    donor = Player("A")
+    target = Player("B")
+    gm.add_player(donor)
+    gm.add_player(target)
+    gm.event_deck = [BloodBrothersEventCard()]
+    gm.draw_event_card()
+    target.take_damage(1)
+    assert gm.blood_brothers_transfer(donor, target)
+    assert donor.health == donor.max_health - 1
+    assert target.health == target.max_health
+
+
+def test_curse_overrides_to_spades():
+    deck = Deck([BangCard(suit="Hearts")])
+    gm = GameManager(deck=deck)
+    p = Player("Sheriff", role=SheriffRoleCard())
+    gm.add_player(p)
+    gm.event_deck = [CurseEventCard()]
+    gm.draw_event_card()
+    gm.draw_phase(p)
+    assert p.hand[0].suit == "Spades"
+
+
+def _no_draw(game: GameManager) -> None:
+    game.event_flags["no_draw"] = True
+
+
+def test_no_draw_skips_draw_phase():
+    gm = GameManager()
+    p = Player("Sheriff", role=SheriffRoleCard())
+    gm.add_player(p)
+    gm.event_deck = [EventCard("Skip", _no_draw, "")]
+    gm.draw_event_card()
+    gm.draw_phase(p)
+    assert not p.hand
+
 def test_new_identity_character_swap():
     gm = GameManager()
     p = Player("S", role=SheriffRoleCard(), character=PaulRegret())
@@ -552,3 +654,4 @@ def test_new_identity_character_swap():
     gm._begin_turn()
     assert isinstance(p.character, BlackJack)
     assert p.health == 2
+

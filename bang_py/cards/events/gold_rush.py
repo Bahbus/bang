@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class GoldRushEventCard(BaseEventCard):
-    """Players draw three cards each draw phase."""
+    """Reverse the direction of play."""
 
     card_name = "Gold Rush"
-    description = "Draw three cards"
+    card_set = "high_noon"
+    description = "Play proceeds counter-clockwise"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class GoldRushEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["draw_count"] = 3
+            game.event_flags["reverse_turn"] = True

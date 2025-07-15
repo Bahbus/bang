@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class BlessingEventCard(BaseEventCard):
-    """Heal all players by one."""
+    """Treat the suit of all cards as Hearts."""
 
     card_name = "Blessing"
-    description = "All players heal"
+    card_set = "high_noon"
+    description = "All cards are Hearts"
 
     def play(
         self,
@@ -20,7 +21,5 @@ class BlessingEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
-        if not game:
-            return
-        for p in game.players:
-            p.heal(1)
+        if game:
+            game.event_flags["suit_override"] = "Hearts"

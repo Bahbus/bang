@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class BloodBrothersEventCard(BaseEventCard):
-    """Players share damage."""
+    """Allow players to transfer 1 life at the start of their turn."""
 
     card_name = "Blood Brothers"
-    description = "Shared damage"
+    card_set = "fistful_of_cards"
+    description = "Start of turn life transfer"
 
     def play(
         self,

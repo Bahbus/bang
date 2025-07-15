@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class TrainArrivalEventCard(BaseEventCard):
-    """All players draw one card."""
+    """Players draw one additional card during the draw phase."""
 
     card_name = "Train Arrival"
-    description = "Everyone draws"
+    card_set = "high_noon"
+    description = "Draw three cards"
 
     def play(
         self,
@@ -20,7 +21,5 @@ class TrainArrivalEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
-        if not game:
-            return
-        for p in game.players:
-            game.draw_card(p)
+        if game:
+            game.event_flags["draw_count"] = 3

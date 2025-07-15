@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class TheDaltonsEventCard(BaseEventCard):
-    """Each player draws a card."""
+    """Force each player to discard one equipment if possible."""
 
     card_name = "The Daltons"
-    description = "Everyone draws"
+    card_set = "high_noon"
+    description = "Discard an equipment"
 
     def play(
         self,
@@ -23,4 +24,8 @@ class TheDaltonsEventCard(BaseEventCard):
         if not game:
             return
         for p in game.players:
-            game.draw_card(p)
+            if p.equipment:
+                name = next(iter(p.equipment))
+                card = p.unequip(name)
+                if card:
+                    game.discard_pile.append(card)

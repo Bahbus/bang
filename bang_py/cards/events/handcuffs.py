@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class HandcuffsEventCard(BaseEventCard):
-    """Skip the next player's turn."""
+    """Limit each player to one suit per turn."""
 
     card_name = "Handcuffs"
-    description = "Skip the sheriff's turn"
+    card_set = "high_noon"
+    description = "Choose a suit after drawing"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class HandcuffsEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["skip_turn"] = True
+            game.event_flags["handcuffs"] = True

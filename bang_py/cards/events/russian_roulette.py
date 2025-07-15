@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from .base import BaseEventCard
 from ...player import Player
+from ..roles import SheriffRoleCard
+from ..missed import MissedCard
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,10 +11,11 @@ if TYPE_CHECKING:
 
 
 class RussianRouletteEventCard(BaseEventCard):
-    """All players take 1 damage."""
+    """Players discard Missed! starting with the Sheriff or lose 2 life."""
 
     card_name = "Russian Roulette"
-    description = "All take damage"
+    card_set = "fistful_of_cards"
+    description = "Discard Missed! or lose 2 life"
 
     def play(
         self,
@@ -22,6 +25,18 @@ class RussianRouletteEventCard(BaseEventCard):
     ) -> None:
         if not game:
             return
-        for p in list(game.players):
-            p.take_damage(1)
-            game.on_player_damaged(p)
+        players = [p for p in game.players if p.is_alive()]
+        start = next(
+            (i for i, p in enumerate(players) if isinstance(p.role, SheriffRoleCard)),
+            0,
+        )
+        for offset in range(len(players)):
+            p = players[(start + offset) % len(players)]
+            miss = next((c for c in p.hand if isinstance(c, MissedCard)), None)
+            if miss:
+                p.hand.remove(miss)
+                game.discard_pile.append(miss)
+            else:
+                p.take_damage(2)
+                game.on_player_damaged(p)
+                break

@@ -9,12 +9,14 @@ from bang_py.cards.events import (
     SniperEventCard,
     RussianRouletteEventCard,
 )
-from bang_py.cards import BangCard
+from bang_py.cards import BangCard, MissedCard
 from bang_py.deck import Deck
 
 
-def test_handcuffs_event_skips_turn():
-    gm = GameManager()
+def test_handcuffs_restricts_suit():
+    deck = Deck([])
+    deck.cards = [BangCard(suit="Hearts"), BangCard(suit="Spades")]
+    gm = GameManager(deck=deck)
     sheriff = Player("S", role=SheriffRoleCard())
     outlaw = Player("O", role=OutlawRoleCard())
     gm.add_player(sheriff)
@@ -24,7 +26,11 @@ def test_handcuffs_event_skips_turn():
     gm.current_turn = 0
     gm.draw_event_card()
     gm._begin_turn()
-    assert gm.players[gm.turn_order[gm.current_turn]] is outlaw
+    idx = 0 if sheriff.hand[0].suit == "Hearts" else 1
+    gm.play_card(sheriff, sheriff.hand[idx], outlaw)
+    assert sheriff.metadata.bangs_played == 1
+    gm.play_card(sheriff, sheriff.hand[0], outlaw)
+    assert len(sheriff.hand) == 1
 
 
 def test_new_identity_event_redraw():
@@ -38,27 +44,34 @@ def test_new_identity_event_redraw():
     assert len(p.hand) == 2
 
 
-def test_lasso_event_transfers_card():
+def test_lasso_event_ignores_equipment():
+    from bang_py.cards import MustangCard
     gm = GameManager()
     a = Player("A")
     b = Player("B")
     gm.add_player(a)
     gm.add_player(b)
-    b.hand.append(BangCard())
+    MustangCard().play(b)
+    assert a.distance_to(b) > 1
     gm.event_deck = [LassoEventCard()]
     gm.draw_event_card()
-    assert isinstance(a.hand[0], BangCard)
-    assert not b.hand
+    assert a.distance_to(b) == 1
 
 
-def test_sniper_event_flag_set_without_range_change():
+
+def test_sniper_event_allows_special_bang():
     gm = GameManager()
     p = Player("P", role=SheriffRoleCard())
+    t = Player("T")
     gm.add_player(p)
+    gm.add_player(t)
     gm.event_deck = [SniperEventCard()]
     gm.draw_event_card()
+    p.hand.extend([BangCard(), BangCard()])
+    gm.play_card(p, p.hand[0], t)
+    gm.play_card(p, p.hand[0], t)
+    assert t.health == t.max_health - 1
     assert "sniper" in gm.event_flags
-    assert p.attack_range == 1
 
 
 def test_sniper_event_double_bang_damage():
@@ -77,16 +90,18 @@ def test_sniper_event_double_bang_damage():
     assert len([c for c in gm.discard_pile if isinstance(c, BangCard)]) == 2
 
 
-def test_russian_roulette_event_damage():
+def test_russian_roulette_players_discard_missed():
     gm = GameManager()
-    p1 = Player("A")
-    p2 = Player("B")
-    gm.add_player(p1)
-    gm.add_player(p2)
+    s = Player("S", role=SheriffRoleCard())
+    o = Player("O")
+    gm.add_player(s)
+    gm.add_player(o)
+    o.hand.append(MissedCard())
     gm.event_deck = [RussianRouletteEventCard()]
     gm.draw_event_card()
-    assert p1.health == p1.max_health - 1
-    assert p2.health == p2.max_health - 1
+    assert s.health == s.max_health - 2
+    assert o.health == o.max_health
+    assert len(o.hand) == 1
 
 
 def test_rev_carabine_range():

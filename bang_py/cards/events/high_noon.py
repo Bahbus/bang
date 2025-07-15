@@ -12,6 +12,7 @@ class HighNoonEventCard(BaseEventCard):
     """Players lose 1 life at the start of their turn."""
 
     card_name = "High Noon"
+    card_set = "high_noon"
     description = "Lose 1 life at start of turn"
 
     def play(

@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class TheJudgeEventCard(BaseEventCard):
-    """Beer cards cannot be played."""
+    """Players cannot play cards in front of anyone."""
 
     card_name = "The Judge"
-    description = "Beer cards cannot be played"
+    card_set = "fistful_of_cards"
+    description = "No cards can be placed in play"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class TheJudgeEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["no_beer_play"] = True
+            game.event_flags["judge"] = True

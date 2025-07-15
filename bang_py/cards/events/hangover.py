@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class HangoverEventCard(BaseEventCard):
-    """Beer cards give no health."""
+    """All characters temporarily lose their abilities."""
 
     card_name = "Hangover"
-    description = "Beer gives no health"
+    card_set = "high_noon"
+    description = "Character abilities disabled"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class HangoverEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["no_beer"] = True
+            game.event_flags["no_abilities"] = True

@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class LawOfTheWestEventCard(BaseEventCard):
-    """All players have unlimited range."""
+    """Second drawn card must be revealed and played if possible."""
 
     card_name = "Law of the West"
-    description = "Unlimited range"
+    card_set = "fistful_of_cards"
+    description = "Play the second drawn card"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class LawOfTheWestEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["range_unlimited"] = True
+            game.event_flags["law_of_the_west"] = True

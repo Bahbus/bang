@@ -82,6 +82,7 @@ class GameManager:
     event_deck: List[EventCard] | None = None
     current_event: EventCard | None = None
     event_flags: dict = field(default_factory=dict)
+    first_eliminated: Player | None = None
 
     # General Store state
     general_store_cards: List[BaseCard] | None = None
@@ -104,6 +105,10 @@ class GameManager:
     card_play_checks: List[Callable[[Player, BaseCard, Optional[Player]], bool]] = field(default_factory=list)
     card_played_listeners: List[Callable[[Player, BaseCard, Optional[Player]], None]] = field(default_factory=list)
     _duel_counts: dict | None = field(default=None, init=False, repr=False)
+
+    def choose_new_identity(self, player: Player) -> bool:
+        """Return True if the player opts to switch characters."""
+        return False
 
     def draw_event_card(self) -> None:
         """Draw and apply the next event card."""
@@ -319,8 +324,22 @@ class GameManager:
                     self.current_turn = self.turn_order.index(self.players.index(player))
                     idx = self.turn_order[self.current_turn]
                     player = self.players[idx]
-        if player.metadata.unused_character:
-            self.choose_new_identity(player)
+
+        if self.event_flags.get("new_identity") and player.metadata.unused_character:
+            if self.choose_new_identity(player):
+                player.character = player.metadata.unused_character
+                player.metadata.unused_character = None
+                player.reset_stats()
+                player.health = min(player.max_health, 2)
+        if self.event_flags.get("ghost_town") and not player.is_alive():
+            player.health = 1
+            player.metadata.ghost_revived = True
+            self.draw_card(player, 3)
+            player.metadata.bangs_played = 0
+            for cb in self.turn_started_listeners:
+                cb(player)
+            return
+
         if self.event_flags.get("skip_turn"):
             self.event_flags.pop("skip_turn")
             self.current_turn = (self.current_turn + 1) % len(self.turn_order)
@@ -333,14 +352,14 @@ class GameManager:
             if not player.is_alive():
                 self._begin_turn()
                 return
-        if self.event_flags.get("damage_by_hand"):
-            dmg = len(player.hand)
-            if dmg:
-                player.take_damage(dmg)
-                self.on_player_damaged(player)
-                if not player.is_alive():
-                    self._begin_turn()
-                    return
+        if self.event_flags.get("fistful_of_cards"):
+            for _ in range(len(player.hand)):
+                if not self._auto_miss(player):
+                    player.take_damage(1)
+                    self.on_player_damaged(player)
+                    if not player.is_alive():
+                        self._begin_turn()
+                        return
         # Handle start-of-turn equipment effects
         dyn = player.equipment.get("Dynamite")
         if dyn and getattr(dyn, "check_dynamite", None):
@@ -375,6 +394,11 @@ class GameManager:
             PatBrennan,
         )
 
+        if self.event_flags.get("dead_man") and self.event_flags.get("dead_man_player") is player and not player.is_alive() and not self.event_flags.get("dead_man_used"):
+            player.health = 2
+            self.draw_card(player, 2)
+            self.event_flags["dead_man_used"] = True
+
         if isinstance(player.character, ability_chars):
             player.metadata.awaiting_draw = True
             for cb in self.turn_started_listeners:
@@ -392,13 +416,29 @@ class GameManager:
         idx = self.turn_order[self.current_turn]
         player = self.players[idx]
         self.discard_phase(player)
+        self.event_flags.pop("turn_suit", None)
         for eq in list(player.equipment.values()):
             if eq.card_type == "green" and not getattr(eq, "active", True):
                 eq.active = True
                 modifier = int(getattr(eq, "max_health_modifier", 0))
                 if modifier:
                     player._apply_health_modifier(modifier)
-        self.current_turn = (self.current_turn + 1) % len(self.turn_order)
+        if self.event_flags.get("vendetta") and player not in self.event_flags.get("vendetta_used", set()):
+            card = self._draw_from_deck()
+            if card:
+                self.discard_pile.append(card)
+                if card.suit == "Hearts":
+                    self.event_flags.setdefault("vendetta_used", set()).add(player)
+                    self._begin_turn()
+                    return
+        if self.event_flags.get("ghost_town") and player.metadata.ghost_revived:
+            player.health = 0
+            player.metadata.ghost_revived = False
+            self._check_win_conditions()
+        if self.event_flags.get("reverse_turn"):
+            self.current_turn = (self.current_turn - 1) % len(self.turn_order)
+        else:
+            self.current_turn = (self.current_turn + 1) % len(self.turn_order)
         self._begin_turn()
 
     def _draw_from_deck(self) -> BaseCard | None:
@@ -414,8 +454,15 @@ class GameManager:
     def draw_card(self, player: Player, num: int = 1) -> None:
         bonus = int(self.event_flags.get("peyote_bonus", 0))
         for _ in range(num + bonus):
-            card = self._draw_from_deck()
+            card: BaseCard | None
+            if self.event_flags.get("abandoned_mine") and self.discard_pile:
+                card = self.discard_pile.pop()
+            else:
+                card = self._draw_from_deck()
             if card:
+                suit = self.event_flags.get("suit_override")
+                if suit:
+                    card.suit = suit
                 player.hand.append(card)
 
     def draw_phase(
@@ -429,7 +476,13 @@ class GameManager:
         jose_equipment: int | None = None,
         pat_target: Player | None = None,
         pat_card: str | None = None,
+
+        skip_heal: bool | None = None,
+        peyote_guesses: list[str] | None = None,
+        ranch_discards: list[int] | None = None,
+        handcuffs_suit: str | None = None,
         blood_target: Player | None = None,
+
     ) -> None:
         """Handle the draw phase for ``player`` with optional choices.
 
@@ -438,6 +491,14 @@ class GameManager:
         the ability is used.
         """
 
+
+        if self.event_flags.get("no_draw"):
+            return
+
+        if self.event_flags.get("hard_liquor") and skip_heal:
+            player.heal(1)
+            self.on_player_healed(player)
+            return
 
         custom_draw = self.event_flags.get("draw_count")
         if custom_draw is not None:
@@ -459,7 +520,38 @@ class GameManager:
             }):
                 return
 
-        self.draw_card(player, 2)
+        if self.event_flags.get("peyote"):
+            guesses = peyote_guesses or []
+            cont = True
+            while cont:
+                card = self._draw_from_deck()
+                if card:
+                    player.hand.append(card)
+                    guess = (guesses.pop(0).lower() if guesses else "red")
+                    is_red = card.suit in ("Hearts", "Diamonds")
+                    cont = guess.startswith("r") and is_red or guess.startswith("b") and not is_red
+                else:
+                    cont = False
+        else:
+            self.draw_card(player, 2)
+
+        if self.event_flags.get("law_of_the_west") and len(player.hand) >= 2:
+            card = player.hand[-1]
+            self.play_card(player, card)
+
+        if self.event_flags.get("ranch") and ranch_discards:
+            ranch_discards = sorted(ranch_discards, reverse=True)
+            drawn = 0
+            for idx in ranch_discards:
+                if 0 <= idx < len(player.hand):
+                    discarded = player.hand.pop(idx)
+                    self.discard_pile.append(discarded)
+                    drawn += 1
+            if drawn:
+                self.draw_card(player, drawn)
+
+        if self.event_flags.get("handcuffs"):
+            self.event_flags["turn_suit"] = (handcuffs_suit or "Hearts")
 
     def discard_phase(self, player: Player) -> None:
         """Discard down to the player's hand limit at the end of their turn."""
@@ -472,7 +564,10 @@ class GameManager:
             limit = min(limit, int(self.event_flags["reverend_limit"]))
         while len(player.hand) > limit:
             card = player.hand.pop()
-            self._pass_left_or_discard(player, card)
+            if self.event_flags.get("abandoned_mine"):
+                self.deck.cards.insert(0, card)
+            else:
+                self._pass_left_or_discard(player, card)
 
     def _pre_card_checks(
         self, player: Player, card: Card, target: Optional[Player]
@@ -495,6 +590,12 @@ class GameManager:
             return False
         if self.event_flags.get("no_jail") and isinstance(card, JailCard):
             return False
+        if self.event_flags.get("judge") and card.card_type in {"equipment", "green"}:
+            return False
+        if self.event_flags.get("handcuffs") and self.event_flags.get("turn_suit"):
+            active = self.players[self.turn_order[self.current_turn]]
+            if player is active and getattr(card, "suit", None) != self.event_flags["turn_suit"]:
+                return False
         return True
 
     def _is_bang(self, player: Player, card: BaseCard, target: Optional[Player]) -> bool:
@@ -882,7 +983,13 @@ class GameManager:
     def on_player_damaged(self, player: Player, source: Optional[Player] = None) -> None:
         for cb in self.player_damaged_listeners:
             cb(player, source)
+
         if player.health <= 0:
+            if self.event_flags.get("ghost_town") and player.metadata.ghost_revived:
+                player.health = 1
+                return
+            if self.first_eliminated is None:
+                self.first_eliminated = player
             if source and self.event_flags.get("bounty"):
                 self.draw_card(source, 2)
             for cb in self.player_death_listeners:
@@ -892,6 +999,20 @@ class GameManager:
     def on_player_healed(self, player: Player) -> None:
         for cb in self.player_healed_listeners:
             cb(player)
+
+    def blood_brothers_transfer(self, donor: Player, target: Player) -> bool:
+        """Transfer one life from ``donor`` to ``target`` if allowed."""
+        if not self.event_flags.get("blood_brothers"):
+            return False
+        if donor.health <= 1 or donor not in self.players or target not in self.players:
+            return False
+        donor.take_damage(1)
+        self.on_player_damaged(donor)
+        if not donor.is_alive():
+            return True
+        target.heal(1)
+        self.on_player_healed(target)
+        return True
 
     def _check_win_conditions(self) -> Optional[str]:
         alive = [p for p in self.players if p.is_alive()]
@@ -914,3 +1035,9 @@ class GameManager:
             for cb in self.game_over_listeners:
                 cb(result)
         return result
+
+    def get_hand(self, viewer: Player, target: Player) -> list[str]:
+        """Return the visible hand of ``target`` for ``viewer``."""
+        if viewer is target or self.event_flags.get("revealed_hands"):
+            return [c.card_name for c in target.hand]
+        return ["?" for _ in target.hand]

@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class VendettaEventCard(BaseEventCard):
-    """Outlaws gain +1 attack range."""
+    """Players may draw! for another turn if they reveal a heart."""
 
     card_name = "Vendetta"
-    description = "Outlaws have +1 range"
+    card_set = "fistful_of_cards"
+    description = "Draw! heart to play again"
 
     def play(
         self,
