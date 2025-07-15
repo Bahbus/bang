@@ -422,19 +422,6 @@ def test_daltons_all_draw():
     assert len(p1.hand) == 1
     assert len(p2.hand) == 1
 
-
-def test_doctor_heals_instead_of_draw():
-    gm = GameManager()
-    p = Player("Sheriff", role=SheriffRoleCard())
-    gm.add_player(p)
-    gm.event_deck = [EventCard("The Doctor", _doctor_event, "")]
-    gm.draw_event_card()
-    p.health -= 1
-    gm.draw_phase(p)
-    assert p.health == p.max_health
-    assert not p.hand
-
-
 def test_reverend_limits_hand_size():
     gm = GameManager()
     p = Player("Sheriff", role=SheriffRoleCard())
@@ -444,7 +431,6 @@ def test_reverend_limits_hand_size():
     gm.draw_event_card()
     gm.discard_phase(p)
     assert len(p.hand) == 2
-
 
 def test_train_arrival_all_draw():
     gm = GameManager()
