@@ -65,9 +65,6 @@ def _river(game: GameManager) -> None:
     RiverEventCard().play(game=game)
 
 
-def _fistful_ghost_town(game: GameManager) -> None:
-    """Alias of Ghost Town for the Fistful deck."""
-    _ghost_town(game)
 
 
 def _judge(game: GameManager) -> None:
@@ -167,9 +164,6 @@ def _prison_break(game: GameManager) -> None:
     PrisonBreakEventCard().play(game=game)
 
 
-def _curse_event(game: GameManager) -> None:
-    """Players reveal their hands."""
-    CurseEventCard().play(game=game)
 
 
 def _daltons_event(game: GameManager) -> None:
@@ -215,16 +209,6 @@ def _sniper_event(game: GameManager) -> None:
 def _russian_roulette_event(game: GameManager) -> None:
     """All players take 1 damage."""
     RussianRouletteEventCard().play(game=game)
-
-
-def _blood_brothers_event(game: GameManager) -> None:
-    """Players share damage."""
-    BloodBrothersEventCard().play(game=game)
-
-
-def _dead_man_event(game: GameManager) -> None:
-    """Players skip their draw phase."""
-    DeadManEventCard().play(game=game)
 
 
 def _high_stakes(game: GameManager) -> None:
