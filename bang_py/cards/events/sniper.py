@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class SniperEventCard(BaseEventCard):
-    """All players have unlimited range."""
+    """Discard two Bang! as a single attack requiring two Missed!"""
 
     card_name = "Sniper"
-    description = "Unlimited range"
+    card_set = "fistful_of_cards"
+    description = "Two Bang! counts as one"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class SniperEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["range_unlimited"] = True
+            game.event_flags["sniper"] = True

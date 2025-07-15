@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class PeyoteEventCard(BaseEventCard):
-    """Each draw gives one extra card."""
+    """Players guess card color before drawing."""
 
     card_name = "Peyote"
-    description = "Lucky draws"
+    card_set = "fistful_of_cards"
+    description = "Guess color before drawing"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class PeyoteEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["peyote_bonus"] = 1
+            game.event_flags["peyote"] = True

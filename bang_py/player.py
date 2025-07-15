@@ -120,6 +120,9 @@ class Player:
 
     @property
     def gun_range(self) -> int:
+        game = self.metadata.game
+        if getattr(game, "event_flags", {}).get("lasso"):
+            return 1
         gun = self.equipment.get("Gun")
         if gun and hasattr(gun, "range") and getattr(gun, "active", True):
             return int(getattr(gun, "range"))
@@ -129,8 +132,10 @@ class Player:
     def range_bonus(self) -> int:
         """Bonus range from equipment such as Scope."""
         bonus = 0
+        game = self.metadata.game
+        ignore = getattr(game, "event_flags", {}).get("lasso")
         for eq in self.equipment.values():
-            if getattr(eq, "active", True):
+            if not ignore and getattr(eq, "active", True):
                 bonus += getattr(eq, "range_modifier", 0)
         if self.character is not None:
             bonus += getattr(self.character, "range_modifier", 0)
@@ -140,8 +145,10 @@ class Player:
     def distance_bonus(self) -> int:
         """Distance penalty applied to opponents due to equipment such as Mustang."""
         bonus = 0
+        game = self.metadata.game
+        ignore = getattr(game, "event_flags", {}).get("lasso")
         for eq in self.equipment.values():
-            if getattr(eq, "active", True):
+            if not ignore and getattr(eq, "active", True):
                 bonus += getattr(eq, "distance_modifier", 0)
         if self.character is not None:
             bonus += getattr(self.character, "distance_modifier", 0)
@@ -169,6 +176,8 @@ class Player:
         base = 1
         if players and self in players and other in players:
             base = self._seated_distance(self, other, players)
+        if getattr(game, "event_flags", {}).get("ambush"):
+            base = 1
 
         ignore_other_bonus = False
         if game and game.turn_order:

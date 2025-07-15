@@ -12,6 +12,7 @@ class ThirstEventCard(BaseEventCard):
     """Players draw only one card."""
 
     card_name = "Thirst"
+    card_set = "high_noon"
     description = "Players draw only one card"
 
     def play(

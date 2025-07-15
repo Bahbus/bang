@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class CurseEventCard(BaseEventCard):
-    """Players reveal their hands."""
+    """Treat the suit of all cards as Spades."""
 
     card_name = "Curse"
-    description = "Hands are visible"
+    card_set = "high_noon"
+    description = "All cards are Spades"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class CurseEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["revealed_hands"] = True
+            game.event_flags["suit_override"] = "Spades"

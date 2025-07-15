@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class HardLiquorEventCard(BaseEventCard):
-    """Beer heals two health."""
+    """Players may skip their draw phase to heal 1 life."""
 
     card_name = "Hard Liquor"
-    description = "Beer heals 2"
+    card_set = "fistful_of_cards"
+    description = "Skip draw to heal 1"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class HardLiquorEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["beer_heal"] = 2
+            game.event_flags["hard_liquor"] = True

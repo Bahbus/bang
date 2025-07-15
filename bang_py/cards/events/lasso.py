@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class LassoEventCard(BaseEventCard):
-    """Each player takes the first card from the next player's hand if possible."""
+    """Cards in play in front of players have no effect."""
 
     card_name = "Lasso"
-    description = "Steal from next player"
+    card_set = "fistful_of_cards"
+    description = "Ignore equipment in play"
 
     def play(
         self,
@@ -20,14 +21,5 @@ class LassoEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
-        if not game:
-            return
-        players = game.players
-        taken: list = []
-        for i, p in enumerate(players):
-            target_p = players[(i + 1) % len(players)]
-            card = target_p.hand.pop(0) if target_p.hand else None
-            taken.append(card)
-        for card, p in zip(taken, players):
-            if card:
-                p.hand.append(card)
+        if game:
+            game.event_flags["lasso"] = True

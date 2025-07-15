@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class FistfulOfCardsEventCard(BaseEventCard):
-    """Damage equal to cards in hand at start of turn."""
+    """Bang! a player for each card in their hand at the start of their turn."""
 
     card_name = "A Fistful of Cards"
-    description = "Damage equal to cards in hand"
+    card_set = "fistful_of_cards"
+    description = "Bang! equals cards in hand at turn start"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class FistfulOfCardsEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["damage_by_hand"] = True
+            game.event_flags["fistful_of_cards"] = True

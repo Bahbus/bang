@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class DeadManEventCard(BaseEventCard):
-    """Players skip their draw phase."""
+    """Revive the first eliminated player with two life and two cards."""
 
     card_name = "Dead Man"
-    description = "Skip draw phase"
+    card_set = "fistful_of_cards"
+    description = "First eliminated player returns with 2 life"
 
     def play(
         self,
@@ -21,4 +22,13 @@ class DeadManEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["no_draw"] = True
+            game.event_flags["dead_man"] = True
+            player_obj = game.first_eliminated
+            if player_obj and not player_obj.is_alive():
+                idx = game.players.index(player_obj)
+                if idx not in game.turn_order:
+                    insert_pos = (game.current_turn + 1) % (len(game.turn_order) + 1)
+                    game.turn_order.insert(insert_pos, idx)
+                    if insert_pos <= game.current_turn:
+                        game.current_turn += 1
+                game.event_flags["dead_man_player"] = player_obj

@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class GhostTownEventCard(BaseEventCard):
-    """Revive eliminated players with 1 health until the next event card."""
+    """Eliminated players temporarily return as ghosts."""
 
     card_name = "Ghost Town"
-    description = "Eliminated players return"
+    card_set = "high_noon"
+    description = "Eliminated players return for one turn"
 
     def play(
         self,
@@ -20,14 +21,6 @@ class GhostTownEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
-        if not game:
-            return
-        game.event_flags["ghost_town"] = True
-        revived = []
-        for p in game.players:
-            if not p.is_alive():
-                p.health = 1
-                p.metadata.ghost_revived = True
-                revived.append(p)
-        if revived:
-            game.turn_order = [i for i, pl in enumerate(game.players) if pl.is_alive()]
+        if game:
+            game.event_flags["ghost_town"] = True
+            game.turn_order = list(range(len(game.players)))

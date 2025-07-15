@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class AbandonedMineEventCard(BaseEventCard):
-    """All players draw a card."""
+    """Draw from discard pile and discard to deck top."""
 
     card_name = "Abandoned Mine"
-    description = "Everyone draws"
+    card_set = "fistful_of_cards"
+    description = "Draw from discard pile"
 
     def play(
         self,
@@ -20,7 +21,5 @@ class AbandonedMineEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
-        if not game:
-            return
-        for p in game.players:
-            game.draw_card(p)
+        if game:
+            game.event_flags["abandoned_mine"] = True

@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class RicochetEventCard(BaseEventCard):
-    """Bang! cards also hit the next player."""
+    """Discard Bang! cards to shoot at cards in play."""
 
     card_name = "Ricochet"
-    description = "Bang! hits an extra player"
+    card_set = "fistful_of_cards"
+    description = "Bang! to discard cards in play"
 
     def play(
         self,

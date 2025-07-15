@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class AmbushEventCard(BaseEventCard):
-    """Missed! cards have no effect."""
+    """All players are at distance 1 from each other."""
 
     card_name = "Ambush"
-    description = "Missed! has no effect"
+    card_set = "fistful_of_cards"
+    description = "Everyone distance 1"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class AmbushEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["no_missed"] = True
+            game.event_flags["ambush"] = True

@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class TheReverendEventCard(BaseEventCard):
-    """Limit each player to two cards per turn."""
+    """Beer cards cannot be played."""
 
     card_name = "The Reverend"
-    description = "Limit to two cards"
+    card_set = "high_noon"
+    description = "Beer cannot be played"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class TheReverendEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["reverend_limit"] = 2
+            game.event_flags["no_beer_play"] = True

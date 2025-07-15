@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class TheDoctorEventCard(BaseEventCard):
-    """Players heal 1 life instead of drawing cards."""
+    """Heal the weakest player(s) by one life."""
 
     card_name = "The Doctor"
-    description = "Draw to heal"
+    card_set = "high_noon"
+    description = "Lowest health players heal 1"
 
     def play(
         self,
@@ -20,5 +21,15 @@ class TheDoctorEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
-        if game:
-            game.event_flags["doctor"] = True
+        if not game:
+            return
+        alive = [p for p in game.players if p.is_alive()]
+        if not alive:
+            return
+        min_hp = min(p.health for p in alive)
+        for p in alive:
+            if p.health == min_hp and p.health < p.max_health:
+                before = p.health
+                p.heal(1)
+                if p.health > before:
+                    game.on_player_healed(p)

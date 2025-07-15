@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class ShootoutEventCard(BaseEventCard):
-    """Allow unlimited Bang! cards this turn."""
+    """Allow one extra Bang! per turn."""
 
     card_name = "Shootout"
-    description = "Unlimited Bang!s per turn"
+    card_set = "high_noon"
+    description = "Play two Bang!s"
 
     def play(
         self,
@@ -21,4 +22,4 @@ class ShootoutEventCard(BaseEventCard):
         game: GameManager | None = None,
     ) -> None:
         if game:
-            game.event_flags["bang_limit"] = 99
+            game.event_flags["bang_limit"] = 2

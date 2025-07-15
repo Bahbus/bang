@@ -115,7 +115,7 @@ def _gold_rush(game: GameManager) -> None:
 
 
 def _law_of_the_west(game: GameManager) -> None:
-    """All players have unlimited range."""
+    """Second drawn card must be revealed and played if possible."""
     LawOfTheWestEventCard().play(game=game)
 
 
@@ -140,22 +140,22 @@ def _hangover(game: GameManager) -> None:
 
 
 def _abandoned_mine(game: GameManager) -> None:
-    """All players draw a card."""
+    """Draw from discard pile and discard to the deck top."""
     AbandonedMineEventCard().play(game=game)
 
 
 def _ambush_event(game: GameManager) -> None:
-    """Missed! cards have no effect."""
+    """Treat all players as distance 1 apart."""
     AmbushEventCard().play(game=game)
 
 
 def _ranch(game: GameManager) -> None:
-    """Heal all players by one."""
+    """Allow a one-time discard and redraw after the draw phase."""
     RanchEventCard().play(game=game)
 
 
 def _hard_liquor(game: GameManager) -> None:
-    """Beer heals two health."""
+    """Players may skip drawing to heal 1 life."""
     HardLiquorEventCard().play(game=game)
 
 
@@ -202,12 +202,12 @@ def _lasso_event(game: GameManager) -> None:
 
 
 def _sniper_event(game: GameManager) -> None:
-    """All players have unlimited range."""
+    """Discard two Bang! as a single shot requiring two Missed!"""
     SniperEventCard().play(game=game)
 
 
 def _russian_roulette_event(game: GameManager) -> None:
-    """All players take 1 damage."""
+    """Players discard Missed! or lose 2 life starting from the Sheriff."""
     RussianRouletteEventCard().play(game=game)
 
 

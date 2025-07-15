@@ -9,10 +9,11 @@ if TYPE_CHECKING:
 
 
 class RanchEventCard(BaseEventCard):
-    """Heal all players by one."""
+    """Players may discard any number of cards once to draw the same amount."""
 
     card_name = "Ranch"
-    description = "All heal"
+    card_set = "fistful_of_cards"
+    description = "Optional discard and redraw"
 
     def play(
         self,
@@ -20,7 +21,5 @@ class RanchEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
-        if not game:
-            return
-        for p in game.players:
-            p.heal(1)
+        if game:
+            game.event_flags["ranch"] = True

@@ -12,6 +12,7 @@ class TheSermonEventCard(BaseEventCard):
     """Bang! cards cannot be played."""
 
     card_name = "The Sermon"
+    card_set = "high_noon"
     description = "Bang! cannot be played"
 
     def play(
