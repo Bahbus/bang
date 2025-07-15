@@ -15,7 +15,7 @@ def test_start_game_initializes_turn_order_and_calls_listener():
 
     gm.turn_started_listeners.append(_record_start)
 
-    gm.start_game()
+    gm.start_game(deal_roles=False)
 
     assert gm.turn_order == [0, 1]
     assert gm.current_turn == 0

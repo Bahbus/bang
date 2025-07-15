@@ -2,7 +2,13 @@ import random
 from typing import List
 
 from bang_py.game_manager import GameManager
-from bang_py.player import Player, Role
+from bang_py.player import Player
+from bang_py.cards.roles import (
+    SheriffRoleCard,
+    DeputyRoleCard,
+    OutlawRoleCard,
+    RenegadeRoleCard,
+)
 from bang_py.characters.bart_cassidy import BartCassidy
 from bang_py.characters.black_jack import BlackJack
 from bang_py.characters.calamity_janet import CalamityJanet
@@ -53,24 +59,30 @@ CHAR_CLASSES = [
 ]
 
 ROLE_MAP = {
-    4: [Role.SHERIFF, Role.RENEGADE, Role.OUTLAW, Role.OUTLAW],
-    5: [Role.SHERIFF, Role.RENEGADE, Role.DEPUTY, Role.OUTLAW, Role.OUTLAW],
+    4: [SheriffRoleCard, RenegadeRoleCard, OutlawRoleCard, OutlawRoleCard],
+    5: [
+        SheriffRoleCard,
+        RenegadeRoleCard,
+        DeputyRoleCard,
+        OutlawRoleCard,
+        OutlawRoleCard,
+    ],
     6: [
-        Role.SHERIFF,
-        Role.RENEGADE,
-        Role.DEPUTY,
-        Role.OUTLAW,
-        Role.OUTLAW,
-        Role.OUTLAW,
+        SheriffRoleCard,
+        RenegadeRoleCard,
+        DeputyRoleCard,
+        OutlawRoleCard,
+        OutlawRoleCard,
+        OutlawRoleCard,
     ],
     7: [
-        Role.SHERIFF,
-        Role.RENEGADE,
-        Role.DEPUTY,
-        Role.DEPUTY,
-        Role.OUTLAW,
-        Role.OUTLAW,
-        Role.OUTLAW,
+        SheriffRoleCard,
+        RenegadeRoleCard,
+        DeputyRoleCard,
+        DeputyRoleCard,
+        OutlawRoleCard,
+        OutlawRoleCard,
+        OutlawRoleCard,
     ],
 }
 
@@ -162,7 +174,7 @@ def simulate_game(num_players: int) -> str:
     chars = CHAR_CLASSES[:]
     random.shuffle(chars)
     for i in range(num_players):
-        player = Player(f"P{i}", role=roles[i], character=chars[i]())
+        player = Player(f"P{i}", role=roles[i](), character=chars[i]())
         gm.add_player(player)
     result: List[str] = []
 
@@ -170,7 +182,7 @@ def simulate_game(num_players: int) -> str:
         result.append(res)
 
     gm.game_over_listeners.append(_record_result)
-    gm.start_game()
+    gm.start_game(deal_roles=False)
     steps = 0
     while not result and steps < 2000:
         auto_turn(gm)

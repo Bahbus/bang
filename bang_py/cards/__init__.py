@@ -44,6 +44,13 @@ from .conestoga import ConestogaCard
 from .can_can import CanCanCard
 from .ten_gallon_hat import TenGallonHatCard
 from .rev_carabine import RevCarabineCard
+from .roles import (
+    BaseRole,
+    SheriffRoleCard,
+    DeputyRoleCard,
+    OutlawRoleCard,
+    RenegadeRoleCard,
+)
 
 __all__ = [
     "BaseCard",
@@ -92,4 +99,9 @@ __all__ = [
     "CanCanCard",
     "TenGallonHatCard",
     "RevCarabineCard",
+    "BaseRole",
+    "SheriffRoleCard",
+    "DeputyRoleCard",
+    "OutlawRoleCard",
+    "RenegadeRoleCard",
 ]

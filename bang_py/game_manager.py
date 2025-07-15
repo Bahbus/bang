@@ -52,7 +52,15 @@ from .cards.buffalo_rifle import BuffaloRifleCard
 from .cards.pepperbox import PepperboxCard
 from .cards.derringer import DerringerCard
 
-from .player import Player, Role
+from .player import Player
+from .cards.roles import (
+    BaseRole,
+    DeputyRoleCard,
+    OutlawRoleCard,
+    RenegadeRoleCard,
+    SheriffRoleCard,
+)
+from .characters.base import BaseCharacter
 from .event_decks import (
     EventCard,
     create_high_noon_deck,
@@ -175,7 +183,9 @@ class GameManager:
 
         self.current_turn %= len(self.turn_order)
 
-    def start_game(self) -> None:
+    def start_game(self, deal_roles: bool = True) -> None:
+        if deal_roles:
+            self._deal_roles_and_characters()
         self.turn_order = list(range(len(self.players)))
         self.current_turn = 0
         # Deal initial hands
@@ -183,6 +193,85 @@ class GameManager:
             for player in self.players:
                 self.draw_card(player)
         self._begin_turn()
+
+    # ------------------------------------------------------------------
+    # Setup helpers
+    def _build_role_deck(self) -> List[BaseRole]:
+        role_map = {
+            3: [DeputyRoleCard, OutlawRoleCard, RenegadeRoleCard],
+            4: [SheriffRoleCard, RenegadeRoleCard, OutlawRoleCard, OutlawRoleCard],
+            5: [
+                SheriffRoleCard,
+                RenegadeRoleCard,
+                DeputyRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+            ],
+            6: [
+                SheriffRoleCard,
+                RenegadeRoleCard,
+                DeputyRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+            ],
+            7: [
+                SheriffRoleCard,
+                RenegadeRoleCard,
+                DeputyRoleCard,
+                DeputyRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+            ],
+            8: [
+                SheriffRoleCard,
+                RenegadeRoleCard,
+                RenegadeRoleCard,
+                DeputyRoleCard,
+                DeputyRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+            ],
+        }
+        classes = role_map.get(len(self.players))
+        if not classes:
+            raise ValueError("Unsupported player count")
+        return [cls() for cls in classes]
+
+    def _build_character_deck(self) -> List[type[BaseCharacter]]:
+        from . import characters
+
+        return [
+            getattr(characters, name)
+            for name in characters.__all__
+            if name != "BaseCharacter"
+        ]
+
+    def choose_character(
+        self, player: Player, options: List[BaseCharacter]
+    ) -> BaseCharacter:
+        """Select which character a player will use. Defaults to the first."""
+        return options[0]
+
+    def _deal_roles_and_characters(self) -> None:
+        role_deck = self._build_role_deck()
+        random.shuffle(role_deck)
+        char_deck = [cls() for cls in self._build_character_deck()]
+        random.shuffle(char_deck)
+
+        for player in self.players:
+            player.role = role_deck.pop()
+            choices = [char_deck.pop(), char_deck.pop()]
+            chosen = self.choose_character(player, choices)
+            player.character = chosen
+            for ch in choices:
+                if ch is not chosen:
+                    player.metadata.unused_character = ch
+                    break
+            player.reset_stats()
+            player.metadata.game = self
 
     def _begin_turn(self) -> None:
         if not self.turn_order:
@@ -198,7 +287,7 @@ class GameManager:
                     player._apply_health_modifier(modifier)
         self.reset_turn_flags(player)
         pre_ghost = self.event_flags.get("ghost_town")
-        if self.event_deck and player.role == Role.SHERIFF:
+        if self.event_deck and isinstance(player.role, SheriffRoleCard):
             self.draw_event_card()
             if pre_ghost:
                 removed = False
@@ -382,7 +471,7 @@ class GameManager:
             return False
         if isinstance(card, PanicCard) and target and player.distance_to(target) > 1:
             return False
-        if isinstance(card, JailCard) and target and target.role == Role.SHERIFF:
+        if isinstance(card, JailCard) and target and isinstance(target.role, SheriffRoleCard):
             return False
         if self.event_flags.get("no_jail") and isinstance(card, JailCard):
             return False
@@ -766,18 +855,16 @@ class GameManager:
             self.current_turn %= len(self.turn_order)
         else:
             self.current_turn = 0
-        sheriff_alive = any(p.role == Role.SHERIFF for p in alive)
-        outlaws_alive = any(p.role == Role.OUTLAW for p in alive)
-        renegade_alive = any(p.role == Role.RENEGADE for p in alive)
-
         result = None
-        if not sheriff_alive:
-            if len(alive) == 1 and alive[0].role == Role.RENEGADE:
-                result = "Renegade wins!"
-            else:
-                result = "Outlaws win!"
-        elif not outlaws_alive and not renegade_alive:
-            result = "Sheriff and Deputies win!"
+        has_sheriff = any(isinstance(p.role, SheriffRoleCard) for p in self.players)
+        if not has_sheriff and len(self.players) == 3:
+            if len(alive) == 1:
+                result = alive[0].role.victory_message
+        else:
+            for player in alive:
+                if player.role.check_win(self, player):
+                    result = player.role.victory_message
+                    break
         if result:
             for cb in self.game_over_listeners:
                 cb(result)

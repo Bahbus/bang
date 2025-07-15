@@ -1,6 +1,7 @@
 from bang_py.deck_factory import create_standard_deck
 from bang_py.game_manager import GameManager
-from bang_py.player import Player, Role
+from bang_py.player import Player
+from bang_py.cards.roles import SheriffRoleCard
 from bang_py.deck import Deck
 from bang_py.cards import (
     PunchCard,
@@ -369,11 +370,11 @@ def test_bullet_characters_instantiable():
 
 def test_high_noon_event_deck_draw():
     gm = GameManager(expansions=["high_noon"])
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
-    gm.start_game()
+    gm.start_game(deal_roles=False)
     assert gm.current_event is not None
 
 
@@ -384,7 +385,7 @@ def test_pepperbox_acts_as_bang():
     p2 = Player("Target")
     gm.add_player(p1)
     gm.add_player(p2)
-    gm.start_game()
+    gm.start_game(deal_roles=False)
     card = PepperboxCard()
     p1.hand.append(card)
     gm.play_card(p1, card, p2)
@@ -397,7 +398,7 @@ def test_binoculars_and_hideout_activate_after_turn():
     p2 = Player("B")
     gm.add_player(p1)
     gm.add_player(p2)
-    gm.start_game()
+    gm.start_game(deal_roles=False)
     b = BinocularsCard()
     h = HideoutCard()
     p1.hand.extend([b, h])

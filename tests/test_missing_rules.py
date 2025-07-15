@@ -1,5 +1,6 @@
 from bang_py.game_manager import GameManager
-from bang_py.player import Player, Role
+from bang_py.player import Player
+from bang_py.cards.roles import SheriffRoleCard
 from bang_py.cards.bang import BangCard
 from bang_py.cards.beer import BeerCard
 from bang_py.cards.panic import PanicCard
@@ -56,7 +57,7 @@ def test_beer_no_effect_with_two_players():
 
 def test_jail_cannot_target_sheriff():
     gm = GameManager()
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)

@@ -1,10 +1,11 @@
 import json
-from bang_py.player import Player, Role
+from bang_py.player import Player
+from bang_py.cards.roles import SheriffRoleCard
 from bang_py.network.server import _serialize_players
 
 
 def test_serialize_players_json_roundtrip():
-    players = [Player("Alice"), Player("Bob", role=Role.SHERIFF)]
+    players = [Player("Alice"), Player("Bob", role=SheriffRoleCard())]
     assert players[0].max_health == 4
     assert players[1].max_health == 5
     serialized = _serialize_players(players)
@@ -14,27 +15,27 @@ def test_serialize_players_json_roundtrip():
         {
             "name": "Alice",
             "health": players[0].health,
-            "role": "OUTLAW",
+            "role": "Outlaw",
             "equipment": [],
         },
         {
             "name": "Bob",
             "health": players[1].health,
-            "role": "SHERIFF",
+            "role": "Sheriff",
             "equipment": [],
         },
     ]
 
 
 def test_serialize_players_with_health_changes():
-    sheriff = Player("Bill", role=Role.SHERIFF)
+    sheriff = Player("Bill", role=SheriffRoleCard())
     sheriff.health = 3
     data = _serialize_players([sheriff])
     assert data == [
         {
             "name": "Bill",
             "health": 3,
-            "role": "SHERIFF",
+            "role": "Sheriff",
             "equipment": [],
         }
     ]
