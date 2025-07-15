@@ -13,7 +13,7 @@ class LassoEventCard(BaseEventCard):
 
     card_name = "Lasso"
     card_set = "fistful_of_cards"
-    description = "Ignore equipment in play"
+    description = "Cards in play in front of players have no effect."
 
     def play(
         self,

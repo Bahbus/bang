@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class LawOfTheWestEventCard(BaseEventCard):
-    """Second drawn card must be revealed and played if possible."""
+    """During their draw phase, each player must reveal the second card they drew and play it immediately if possible."""
 
     card_name = "Law of the West"
     card_set = "fistful_of_cards"
-    description = "Play the second drawn card"
+    description = "During their draw phase, each player must reveal the second card they drew and play it immediately if possible."
 
     def play(
         self,

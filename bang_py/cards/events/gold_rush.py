@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class GoldRushEventCard(BaseEventCard):
-    """Reverse the direction of play."""
+    """The game proceeds counter-clockwise, but card effects still proceed clockwise."""
 
     card_name = "Gold Rush"
     card_set = "high_noon"
-    description = "Play proceeds counter-clockwise"
+    description = "The game proceeds counter-clockwise, but card effects still proceed clockwise."
 
     def play(
         self,

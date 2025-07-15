@@ -13,7 +13,7 @@ class HangoverEventCard(BaseEventCard):
 
     card_name = "Hangover"
     card_set = "high_noon"
-    description = "Character abilities disabled"
+    description = "All characters lose their abilities."
 
     def play(
         self,

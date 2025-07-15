@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class TheJudgeEventCard(BaseEventCard):
-    """Players cannot play cards in front of anyone."""
+    """Players cannot play cards in front of themselves or others."""
 
     card_name = "The Judge"
     card_set = "fistful_of_cards"
-    description = "No cards can be placed in play"
+    description = "Players cannot play cards in front of themselves or others."
 
     def play(
         self,

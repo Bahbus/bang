@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class HandcuffsEventCard(BaseEventCard):
-    """Limit each player to one suit per turn."""
+    """After their draw phase, each player announces a suit and can only play that suit for the rest of their turn."""
 
     card_name = "Handcuffs"
     card_set = "high_noon"
-    description = "Choose a suit after drawing"
+    description = "After their draw phase, each player announces a suit and can only play that suit for the rest of their turn."
 
     def play(
         self,

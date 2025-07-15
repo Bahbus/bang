@@ -9,11 +9,11 @@ if TYPE_CHECKING:
 
 
 class AmbushEventCard(BaseEventCard):
-    """All players are at distance 1 from each other."""
+    """The distance between any two players is 1. Only other cards in play may modify this."""
 
     card_name = "Ambush"
     card_set = "fistful_of_cards"
-    description = "Everyone distance 1"
+    description = "The distance between any two players is 1. Only other cards in play may modify this."
 
     def play(
         self,

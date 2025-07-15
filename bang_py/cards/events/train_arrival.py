@@ -13,7 +13,7 @@ class TrainArrivalEventCard(BaseEventCard):
 
     card_name = "Train Arrival"
     card_set = "high_noon"
-    description = "Draw three cards"
+    description = "During their draw phase, each player draws an additional card."
 
     def play(
         self,
