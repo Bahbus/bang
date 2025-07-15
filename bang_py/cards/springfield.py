@@ -37,7 +37,11 @@ class SpringfieldCard(BaseCard):
         game.discard_pile.append(discard)
         handle_out_of_turn_discard(game, player, discard)
         if not game._auto_miss(target):
-            BangCard().play(target, game.deck)
+            BangCard().play(
+                target,
+                game.deck,
+                ignore_equipment=player.metadata.ignore_others_equipment,
+            )
             if target.health < target.max_health:
                 game.on_player_damaged(target, player)
 

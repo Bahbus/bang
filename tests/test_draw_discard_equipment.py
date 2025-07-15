@@ -6,7 +6,8 @@ from bang_py.cards.scope import ScopeCard
 from bang_py.cards.mustang import MustangCard
 from bang_py.cards.iron_plate import IronPlateCard
 from bang_py.cards.cat_balou import CatBalouCard
-from bang_py.characters import BlackJack, SidKetchum
+from bang_py.characters.black_jack import BlackJack
+from bang_py.characters.sid_ketchum import SidKetchum
 
 
 def test_draw_phase_black_jack_extra_card():
@@ -45,7 +46,7 @@ def test_sid_ketchum_discard_two_to_heal():
     gm.add_player(sid)
     sid.health = sid.max_health - 1
     sid.hand.extend([BangCard(), BangCard()])
-    gm.sid_ketchum_ability(sid, [0, 1])
+    sid.character.use_ability(gm, sid, [0, 1])
     assert sid.health == sid.max_health
     assert len(sid.hand) == 0
 

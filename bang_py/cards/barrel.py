@@ -7,7 +7,6 @@ from ..player import Player
 from typing import TYPE_CHECKING
 
 from ..helpers import is_heart
-from ..characters import LuckyDuke
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..deck import Deck
@@ -29,9 +28,18 @@ class BarrelCard(BaseCard):
 
     def draw_check(self, deck: Deck, player: Player | None = None) -> bool:
         """Perform the Barrel draw! check, returning True if Bang! is dodged."""
-        if player and isinstance(player.character, LuckyDuke):
+        gm = player.metadata.game if player else None
+        if player and player.metadata.lucky_duke:
             card1 = deck.draw()
             card2 = deck.draw()
-            return is_heart(card1) or is_heart(card2)
+            chosen = card1 if is_heart(card1) or not is_heart(card2) else card2
+            if gm:
+                if card1:
+                    gm.discard_pile.append(card1)
+                if card2:
+                    gm.discard_pile.append(card2)
+            return is_heart(chosen)
         card = deck.draw()
+        if gm and card:
+            gm.discard_pile.append(card)
         return is_heart(card)

@@ -8,33 +8,17 @@ from .deck import Deck
 from .deck_factory import create_standard_deck
 from .cards.card import BaseCard
 from .helpers import has_ability, handle_out_of_turn_discard
-from .characters import (
-    BartCassidy,
-    CalamityJanet,
-    ElGringo,
-    JesseJones,
-    KitCarlson,
-    LuckyDuke,
-    PedroRamirez,
-    SidKetchum,
-    SlabTheKiller,
-    SuzyLafayette,
-    VultureSam,
-    WillyTheKid,
-    JoseDelgado,
-    SeanMallory,
-    VeraCuster,
-    ApacheKid,
-    GregDigger,
-    BelleStar,
-    ChuckWengam,
-    DocHolyday,
-    ElenaFuente,
-    HerbHunter,
-    PatBrennan,
-    UncleWill,
-    JohnnyKisch,
-)
+from .characters.chuck_wengam import ChuckWengam
+from .characters.doc_holyday import DocHolyday
+from .characters.jesse_jones import JesseJones
+from .characters.jose_delgado import JoseDelgado
+from .characters.kit_carlson import KitCarlson
+from .characters.pat_brennan import PatBrennan
+from .characters.pedro_ramirez import PedroRamirez
+from .characters.sid_ketchum import SidKetchum
+from .characters.uncle_will import UncleWill
+from .characters.vera_custer import VeraCuster
+from .characters.sean_mallory import SeanMallory
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
 from .cards.stagecoach import StagecoachCard
@@ -97,10 +81,21 @@ class GameManager:
     general_store_index: int = 0
 
     # Event listeners
-    player_damaged_listeners: List[Callable[[Player], None]] = field(default_factory=list)
+    draw_phase_listeners: List[Callable[[Player, object], bool]] = field(
+        default_factory=list
+    )
+    player_damaged_listeners: List[Callable[[Player, Player | None], None]] = field(
+        default_factory=list
+    )
     player_healed_listeners: List[Callable[[Player], None]] = field(default_factory=list)
+    player_death_listeners: List[Callable[[Player, Player | None], None]] = field(
+        default_factory=list
+    )
     turn_started_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
+    card_play_checks: List[Callable[[Player, BaseCard, Optional[Player]], bool]] = field(default_factory=list)
+    card_played_listeners: List[Callable[[Player, BaseCard, Optional[Player]], None]] = field(default_factory=list)
+    _duel_counts: dict | None = field(default=None, init=False, repr=False)
 
     def draw_event_card(self) -> None:
         """Draw and apply the next event card."""
@@ -140,6 +135,8 @@ class GameManager:
         """Add a player to the game and record the game reference."""
         player.metadata.game = self
         self.players.append(player)
+        if player.character is not None:
+            player.character.ability(self, player)
 
     def remove_player(self, player: Player) -> None:
         """Remove ``player`` from the game and update turn order."""
@@ -269,7 +266,6 @@ class GameManager:
             PedroRamirez,
             JoseDelgado,
             PatBrennan,
-            LuckyDuke,
         )
 
         if isinstance(player.character, ability_chars):
@@ -320,7 +316,8 @@ class GameManager:
         player: Player,
         *,
         jesse_target: Player | None = None,
-        kit_discard: int | None = None,
+        jesse_card: int | None = None,
+        kit_back: int | None = None,
         pedro_use_discard: bool | None = None,
         jose_equipment: int | None = None,
         pat_target: Player | None = None,
@@ -342,19 +339,16 @@ class GameManager:
             self.draw_card(player, custom_draw)
             return
 
-        char = player.character
-        if char and getattr(char, "draw_phase", None):
-            handled = char.draw_phase(
-                self,
-                player,
-                jesse_target=jesse_target,
-                kit_discard=kit_discard,
-                pedro_use_discard=pedro_use_discard,
-                jose_equipment=jose_equipment,
-                pat_target=pat_target,
-                pat_card=pat_card,
-            )
-            if handled:
+        for cb in self.draw_phase_listeners:
+            if cb(player, {
+                "jesse_target": jesse_target,
+                "jesse_card": jesse_card,
+                "kit_back": kit_back,
+                "pedro_use_discard": pedro_use_discard,
+                "jose_equipment": jose_equipment,
+                "pat_target": pat_target,
+                "pat_card": pat_card,
+            }):
                 return
 
         self.draw_card(player, 2)
@@ -362,7 +356,9 @@ class GameManager:
     def discard_phase(self, player: Player) -> None:
         """Discard down to the player's hand limit at the end of their turn."""
         limit = player.health
-        if has_ability(player, SeanMallory):
+        if player.metadata.hand_limit is not None:
+            limit = max(limit, player.metadata.hand_limit)
+        if player.metadata.no_hand_limit:
             limit = 99
         if "reverend_limit" in self.event_flags:
             limit = min(limit, int(self.event_flags["reverend_limit"]))
@@ -375,10 +371,8 @@ class GameManager:
     ) -> bool:
         if card not in player.hand:
             return False
-        if target and has_ability(target, ApacheKid):
-            if getattr(card, "suit", None) == "Diamonds":
-                player.hand.remove(card)
-                self._pass_left_or_discard(player, card)
+        for cb in self.card_play_checks:
+            if not cb(player, card, target):
                 return False
         if (
             isinstance(card, BangCard)
@@ -396,7 +390,7 @@ class GameManager:
 
     def _is_bang(self, player: Player, card: BaseCard, target: Optional[Player]) -> bool:
         return isinstance(card, BangCard) or (
-            has_ability(player, CalamityJanet) and isinstance(card, MissedCard) and target
+            player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target
         )
 
     def _can_play_bang(self, player: Player) -> bool:
@@ -406,7 +400,7 @@ class GameManager:
         gun = player.equipment.get("Gun")
         extra = player.metadata.doc_free_bang
         unlimited = (
-            has_ability(player, WillyTheKid)
+            player.metadata.unlimited_bang
             or getattr(gun, "unlimited_bang", False)
             or extra > 0
         )
@@ -414,7 +408,7 @@ class GameManager:
         return count < limit or unlimited
 
     def _dispatch_play(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
-        if has_ability(player, CalamityJanet) and isinstance(card, MissedCard) and target:
+        if player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target:
             handler = self._card_handlers.get(BangCard)
             if handler:
                 handler(player, BangCard(), target)
@@ -426,8 +420,8 @@ class GameManager:
             card.play(target)
 
     def _play_bang_card(self, player: Player, card: BangCard, target: Optional[Player]) -> None:
-        ignore_eq = has_ability(player, BelleStar)
-        if target and has_ability(player, SlabTheKiller):
+        ignore_eq = player.metadata.ignore_others_equipment
+        if target and player.metadata.double_miss:
             misses = [c for c in target.hand if isinstance(c, MissedCard)]
             if len(misses) >= 2:
                 for _ in range(2):
@@ -530,27 +524,19 @@ class GameManager:
         player.hand.remove(card)
         before = target.health if target else None
         self._dispatch_play(player, card, target)
-
-        if has_ability(player, JohnnyKisch) and hasattr(card, "card_name"):
-            for p in self.players:
-                if p is player:
-                    continue
-                other = p.unequip(card.card_name)
-                if other:
-                    self._pass_left_or_discard(p, other)
+        for cb in self.card_played_listeners:
+            cb(player, card, target)
         if target and before is not None and target.health < before:
             self.on_player_damaged(target, player)
         if target and before is not None and target.health > before:
             self.on_player_healed(target)
         self._pass_left_or_discard(player, card)
-        player.metadata.last_card_played = card.__class__
-        player.metadata.last_card_target = target
         if is_bang:
             if player.metadata.doc_free_bang > 0:
                 player.metadata.doc_free_bang -= 1
             else:
                 player.metadata.bangs_played += 1
-        if has_ability(player, SuzyLafayette) and not player.hand:
+        if player.metadata.draw_when_empty and not player.hand:
             self.draw_card(player)
 
     def discard_card(self, player: Player, card: BaseCard) -> None:
@@ -559,12 +545,10 @@ class GameManager:
             self._pass_left_or_discard(player, card)
             if not self.event_flags.get("river"):
                 handle_out_of_turn_discard(self, player, card)
-            if has_ability(player, SuzyLafayette) and not player.hand:
+            if player.metadata.draw_when_empty and not player.hand:
                 self.draw_card(player)
 
     def sid_ketchum_ability(self, player: Player, indices: List[int] | None = None) -> None:
-        if not has_ability(player, SidKetchum):
-            return
         if len(player.hand) < 2 or player.health >= player.max_health:
             return
         discard_indices = indices or list(range(2))
@@ -589,7 +573,7 @@ class GameManager:
                 handle_out_of_turn_discard(self, target, miss)
             target.metadata.dodged = True
             return True
-        if has_ability(target, CalamityJanet):
+        if target.metadata.bang_as_missed:
             bang = next((c for c in target.hand if isinstance(c, BangCard)), None)
             if bang:
                 target.hand.remove(bang)
@@ -598,7 +582,7 @@ class GameManager:
                     handle_out_of_turn_discard(self, target, bang)
                 target.metadata.dodged = True
                 return True
-        if has_ability(target, ElenaFuente) and target.hand:
+        if target.metadata.any_card_as_missed and target.hand:
             card = target.hand.pop()
             self._pass_left_or_discard(target, card)
             if not self.event_flags.get("river"):
@@ -609,8 +593,6 @@ class GameManager:
 
     def chuck_wengam_ability(self, player: Player) -> None:
         """Lose 1 life to draw 2 cards, usable multiple times per turn."""
-        if not has_ability(player, ChuckWengam):
-            return
         if player.health <= 1:
             return
         player.take_damage(1)
@@ -619,8 +601,6 @@ class GameManager:
 
     def doc_holyday_ability(self, player: Player, indices: List[int] | None = None) -> None:
         """Discard two cards to gain a Bang! that doesn't count toward the limit."""
-        if not has_ability(player, DocHolyday):
-            return
         if player.metadata.doc_used:
             return
         if len(player.hand) < 2:
@@ -642,8 +622,6 @@ class GameManager:
         card_name: str | None = None,
     ) -> bool:
         """During draw phase, draw a card in play instead of from deck."""
-        if not has_ability(player, PatBrennan):
-            return False
         targets = [t for t in self.players if t is not player]
         if target in targets and card_name and card_name in target.equipment:
             card = target.unequip(card_name)
@@ -659,8 +637,6 @@ class GameManager:
 
     def uncle_will_ability(self, player: Player, card: BaseCard) -> bool:
         """Play any card as General Store once per turn."""
-        if not has_ability(player, UncleWill):
-            return False
         if player.metadata.uncle_used:
             return False
         player.metadata.uncle_used = True
@@ -676,6 +652,8 @@ class GameManager:
         if not target.is_alive() or target is player:
             return
         player.metadata.vera_copy = target.character.__class__
+        player.metadata.abilities.add(target.character.__class__)
+        target.character.ability(self, player)
 
     # General Store management
     def start_general_store(self, player: Player) -> List[str]:
@@ -727,6 +705,20 @@ class GameManager:
         player.metadata.uncle_used = False
         if isinstance(player.character, VeraCuster):
             player.metadata.vera_copy = None
+            player.metadata.unlimited_bang = False
+            player.metadata.ignore_others_equipment = False
+            player.metadata.no_hand_limit = False
+            player.metadata.double_miss = False
+            player.metadata.draw_when_empty = False
+            player.metadata.immune_diamond = False
+            player.metadata.play_missed_as_bang = False
+            player.metadata.bang_as_missed = False
+            player.metadata.any_card_as_missed = False
+            player.metadata.lucky_duke = False
+            player.metadata.virtual_barrel = False
+            player.metadata.beer_heal_bonus = 0
+            player.metadata.hand_limit = None
+            player.metadata.abilities = {VeraCuster}
 
     def _next_alive_player(self, player: Player) -> Optional[Player]:
         """Return the next living player to the left."""
@@ -755,29 +747,12 @@ class GameManager:
 
     def on_player_damaged(self, player: Player, source: Optional[Player] = None) -> None:
         for cb in self.player_damaged_listeners:
-            cb(player)
-        if has_ability(player, BartCassidy):
-            self.draw_card(player)
-        if has_ability(player, ElGringo) and source and source.hand:
-            stolen = random.choice(source.hand)
-            source.hand.remove(stolen)
-            player.hand.append(stolen)
+            cb(player, source)
         if player.health <= 0:
             if source and self.event_flags.get("bounty"):
                 self.draw_card(source, 2)
-            for p in self.players:
-                if has_ability(p, GregDigger) and p.is_alive():
-                    before = p.health
-                    p.heal(2)
-                    if p.health > before:
-                        self.on_player_healed(p)
-            for p in self.players:
-                if p is not player and has_ability(p, HerbHunter):
-                    self.draw_card(p, 2)
-            for p in self.players:
-                if p is not player and has_ability(p, VultureSam):
-                    p.hand.extend(player.hand)
-                    player.hand.clear()
+            for cb in self.player_death_listeners:
+                cb(player, source)
             self._check_win_conditions()
 
     def on_player_healed(self, player: Player) -> None:
@@ -787,6 +762,10 @@ class GameManager:
     def _check_win_conditions(self) -> Optional[str]:
         alive = [p for p in self.players if p.is_alive()]
         self.turn_order = [i for i in self.turn_order if self.players[i].is_alive()]
+        if self.turn_order:
+            self.current_turn %= len(self.turn_order)
+        else:
+            self.current_turn = 0
         sheriff_alive = any(p.role == Role.SHERIFF for p in alive)
         outlaws_alive = any(p.role == Role.OUTLAW for p in alive)
         renegade_alive = any(p.role == Role.RENEGADE for p in alive)

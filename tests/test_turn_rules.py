@@ -2,7 +2,7 @@ from bang_py.game_manager import GameManager
 from bang_py.deck import Deck
 from bang_py.player import Player, Role
 from bang_py.cards.bang import BangCard
-from bang_py.characters import WillyTheKid
+from bang_py.characters.willy_the_kid import WillyTheKid
 
 
 def test_bang_limit_default():

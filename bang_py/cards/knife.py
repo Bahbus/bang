@@ -29,7 +29,11 @@ class KnifeCard(BaseCard):
         deck = game.deck if game else None
         if game and game._auto_miss(target):
             return
-        BangCard().play(target, deck)
+        BangCard().play(
+            target,
+            deck,
+            ignore_equipment=player.metadata.ignore_others_equipment if game else False,
+        )
         if game and target.health < target.max_health:
             game.on_player_damaged(target, player)
 

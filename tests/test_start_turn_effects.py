@@ -20,7 +20,7 @@ def test_jail_auto_skip_turn():
     gm._begin_turn()
     assert gm.current_turn == 1
     assert "Jail" not in p1.equipment
-    assert len(gm.discard_pile) == 1
+    assert len(gm.discard_pile) == 2
     assert len(p1.hand) == 0
 
 
@@ -38,7 +38,7 @@ def test_dynamite_explodes_on_turn_start():
     gm._begin_turn()
     assert p1.health == p1.max_health - 3
     assert "Dynamite" not in p1.equipment
-    assert len(gm.discard_pile) == 1
+    assert len(gm.discard_pile) == 2
 
 
 def test_dynamite_passes_to_next_player():
@@ -55,4 +55,4 @@ def test_dynamite_passes_to_next_player():
     gm._begin_turn()
     assert "Dynamite" not in p1.equipment
     assert "Dynamite" in p2.equipment
-    assert len(gm.discard_pile) == 0
+    assert len(gm.discard_pile) == 1

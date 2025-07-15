@@ -1,6 +1,7 @@
 from bang_py.game_manager import GameManager
 from bang_py.player import Player
-from bang_py.characters import VeraCuster, WillyTheKid
+from bang_py.characters.vera_custer import VeraCuster
+from bang_py.characters.willy_the_kid import WillyTheKid
 from bang_py.cards.bang import BangCard
 from bang_py.helpers import has_ability
 
@@ -14,7 +15,7 @@ def test_vera_custer_copies_other_ability() -> None:
     gm.add_player(willy)
     gm.add_player(target)
 
-    gm.vera_custer_copy(vera, willy)
+    vera.character.copy_ability(gm, vera, willy)
     assert has_ability(vera, WillyTheKid)
 
     vera.hand.extend([BangCard(), BangCard()])

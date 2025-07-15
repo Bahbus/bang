@@ -3,10 +3,9 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Dict, List, TYPE_CHECKING
 
-from .characters import BelleStar
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from .characters import Character
+    from .characters.base import BaseCharacter
     from .cards.card import BaseCard
     from .game_manager import GameManager
 
@@ -25,10 +24,24 @@ class PlayerMetadata:
     ghost_revived: bool = False
     kit_cards: list["BaseCard"] | None = None
     lucky_cards: list["BaseCard"] | None = None
-    last_card_played: type["BaseCard"] | None = None
-    last_card_target: "Player | None" = None
+    gringo_index: int | None = None
     uncle_used: bool = False
-    vera_copy: type["Character"] | None = None
+    vera_copy: type["BaseCharacter"] | None = None
+    abilities: set[type["BaseCharacter"]] = field(default_factory=set)
+    hand_limit: int | None = None
+    # ability flags
+    ignore_others_equipment: bool = False
+    unlimited_bang: bool = False
+    no_hand_limit: bool = False
+    double_miss: bool = False
+    draw_when_empty: bool = False
+    immune_diamond: bool = False
+    play_missed_as_bang: bool = False
+    bang_as_missed: bool = False
+    any_card_as_missed: bool = False
+    lucky_duke: bool = False
+    virtual_barrel: bool = False
+    beer_heal_bonus: int = 0
 
 
 class Role(Enum):
@@ -42,7 +55,7 @@ class Role(Enum):
 class Player:
     name: str
     role: Role = Role.OUTLAW
-    character: "Character | None" = None
+    character: "BaseCharacter | None" = None
     max_health: int = 4
     health: int = field(init=False)
     metadata: PlayerMetadata = field(default_factory=PlayerMetadata)
@@ -58,6 +71,8 @@ class Player:
             base += 1
         self.max_health = base
         self.health = self.max_health
+        if self.character is not None:
+            self.metadata.abilities.add(self.character.__class__)
 
     def _apply_health_modifier(self, amount: int) -> None:
         """Adjust max and current health by a modifier."""
@@ -152,7 +167,7 @@ class Player:
         ignore_other_bonus = False
         if game and game.turn_order:
             current = game.players[game.turn_order[game.current_turn % len(game.turn_order)]]
-            if current is self and isinstance(getattr(self, "character", None), BelleStar):
+            if current is self and current.metadata.ignore_others_equipment:
                 ignore_other_bonus = True
 
         distance = base + (0 if ignore_other_bonus else other.distance_bonus) - self.range_bonus

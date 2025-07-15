@@ -3,24 +3,22 @@ from typing import List
 
 from bang_py.game_manager import GameManager
 from bang_py.player import Player, Role
-from bang_py.characters import (
-    BartCassidy,
-    BlackJack,
-    CalamityJanet,
-    ElGringo,
-    JesseJones,
-    Jourdonnais,
-    KitCarlson,
-    LuckyDuke,
-    PaulRegret,
-    PedroRamirez,
-    RoseDoolan,
-    SidKetchum,
-    SlabTheKiller,
-    SuzyLafayette,
-    VultureSam,
-    WillyTheKid,
-)
+from bang_py.characters.bart_cassidy import BartCassidy
+from bang_py.characters.black_jack import BlackJack
+from bang_py.characters.calamity_janet import CalamityJanet
+from bang_py.characters.el_gringo import ElGringo
+from bang_py.characters.jesse_jones import JesseJones
+from bang_py.characters.jourdonnais import Jourdonnais
+from bang_py.characters.kit_carlson import KitCarlson
+from bang_py.characters.lucky_duke import LuckyDuke
+from bang_py.characters.paul_regret import PaulRegret
+from bang_py.characters.pedro_ramirez import PedroRamirez
+from bang_py.characters.rose_doolan import RoseDoolan
+from bang_py.characters.sid_ketchum import SidKetchum
+from bang_py.characters.slab_the_killer import SlabTheKiller
+from bang_py.characters.suzy_lafayette import SuzyLafayette
+from bang_py.characters.vulture_sam import VultureSam
+from bang_py.characters.willy_the_kid import WillyTheKid
 from bang_py.cards import (
     BangCard,
     BeerCard,
@@ -96,6 +94,9 @@ def auto_turn(gm: GameManager) -> None:
             gm.current_turn %= len(gm.turn_order)
             gm.end_turn()
         return
+    if player.metadata.awaiting_draw:
+        gm.draw_phase(player)
+        player.metadata.awaiting_draw = False
     played = True
     while played:
         played = False

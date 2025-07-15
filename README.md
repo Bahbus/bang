@@ -98,7 +98,7 @@ included:
 Create a player with a character using:
 
 ```python
-from bang_py.characters import RoseDoolan
+from bang_py.characters.rose_doolan import RoseDoolan
 player = Player("Rose", character=RoseDoolan())
 ```
 
@@ -126,23 +126,24 @@ powers trigger automatically with a message in the log.
 - **Doc Holyday** – button: discard two cards for a Bang! that does not count
   toward your limit.
 - **Elena Fuente** – automatic: any card may be played as a Missed!.
-- **El Gringo** – automatic: steal a random card from whoever damages him.
+ - **El Gringo** – automatic: choose a card blindly from whoever damages him.
 - **Greg Digger** – automatic: regain two life points whenever someone is
   eliminated.
 - **Herb Hunter** – automatic: draw two cards whenever another player is
   eliminated. The GUI adds these cards to your hand automatically.
-- **Jesse Jones** – popup: may take the first card from another player instead of
-  drawing. Use **Use Ability** if you closed the prompt.
+ - **Jesse Jones** – popup: may choose an opponent and take a card from their hand
+   instead of drawing. Use **Use Ability** if you closed the prompt.
 - **Johnny Kisch** – automatic: when you put a card in play, all other copies in
   play are discarded automatically.
 - **Jose Delgado** – popup: optionally discard equipment to draw two cards.
 - **Jourdonnais** – automatic: always has a Barrel.
-- **Kit Carlson** – popup: draw three cards and discard one. Can be triggered
-  again with **Use Ability**.
+ - **Kit Carlson** – popup: look at the top three cards of the deck, keep two and
+   put the third back on top. Can be triggered again with **Use Ability**.
 - **Lucky Duke** – popup: flip two cards for draws and choose one. The button can
   be used to pick again.
-- **Molly Stark** – automatic: draw a card each time you play or discard Bang!,
-  Missed! or Beer out of turn.
+ - **Molly Stark** – automatic: draw a card whenever you play or voluntarily
+   discard any card out of turn. If targeted by a Duel, draw for all Bangs played
+   after the Duel ends.
 - **Pat Brennan** – popup: may draw a card in play instead of from the deck.
 - **Paul Regret** – automatic: opponents see him at distance +1.
 - **Pedro Ramirez** – popup: choose whether to draw the top discard card.

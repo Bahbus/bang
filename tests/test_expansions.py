@@ -29,22 +29,21 @@ from bang_py.cards import (
     CatBalouCard,
     PanicCard,
     IndiansCard,
+    DuelCard,
 )
-from bang_py.characters import (
-    PixiePete,
-    SeanMallory,
-    TequilaJoe,
-    BillNoface,
-    BelleStar,
-    ChuckWengam,
-    DocHolyday,
-    ElenaFuente,
-    MollyStark,
-    PatBrennan,
-    UncleWill,
-    JohnnyKisch,
-    ClausTheSaint,
-)
+from bang_py.characters.bill_noface import BillNoface
+from bang_py.characters.belle_star import BelleStar
+from bang_py.characters.chuck_wengam import ChuckWengam
+from bang_py.characters.claus_the_saint import ClausTheSaint
+from bang_py.characters.doc_holyday import DocHolyday
+from bang_py.characters.elena_fuente import ElenaFuente
+from bang_py.characters.johnny_kisch import JohnnyKisch
+from bang_py.characters.molly_stark import MollyStark
+from bang_py.characters.pat_brennan import PatBrennan
+from bang_py.characters.pixie_pete import PixiePete
+from bang_py.characters.sean_mallory import SeanMallory
+from bang_py.characters.tequila_joe import TequilaJoe
+from bang_py.characters.uncle_will import UncleWill
 
 
 def test_dodge_city_cards_added():
@@ -61,7 +60,8 @@ def test_dodge_city_cards_added():
 
 
 def test_whisky_heals_two():
-    gm = GameManager()
+    deck = Deck([BangCard(), BangCard(), BangCard(), BangCard()])
+    gm = GameManager(deck=deck)
     p1 = Player("A")
     gm.add_player(p1)
     card = WhiskyCard()
@@ -170,7 +170,24 @@ def test_belle_star_ignores_barrel():
     gm.add_player(target)
     BarrelCard().play(target)
     belle.hand.append(BangCard())
+    for cb in gm.turn_started_listeners:
+        cb(belle)
     gm.play_card(belle, belle.hand[0], target)
+    assert target.health == target.max_health - 1
+
+
+def test_belle_star_ignores_barrel_on_green():
+    gm = GameManager()
+    belle = Player("Belle", character=BelleStar())
+    target = Player("T")
+    gm.add_player(belle)
+    gm.add_player(target)
+    BarrelCard().play(target)
+    pepper = PepperboxCard()
+    belle.hand.append(pepper)
+    for cb in gm.turn_started_listeners:
+        cb(belle)
+    gm.play_card(belle, pepper, target)
     assert target.health == target.max_health - 1
 
 
@@ -178,7 +195,7 @@ def test_chuck_wengam_ability():
     gm = GameManager()
     chuck = Player("Chuck", character=ChuckWengam())
     gm.add_player(chuck)
-    gm.chuck_wengam_ability(chuck)
+    chuck.character.use_ability(gm, chuck)
     assert chuck.health == chuck.max_health - 1
     assert len(chuck.hand) == 2
 
@@ -190,7 +207,7 @@ def test_doc_holyday_free_bang():
     gm.add_player(doc)
     gm.add_player(target)
     doc.hand.extend([PanicCard(), PanicCard()])
-    gm.doc_holyday_ability(doc, [0, 1])
+    doc.character.use_ability(gm, doc, [0, 1])
     bang = next(c for c in doc.hand if isinstance(c, BangCard))
     gm.play_card(doc, bang, target)
     assert doc.metadata.bangs_played == 0
@@ -245,6 +262,20 @@ def test_molly_stark_draws_when_panicked():
     assert len(molly.hand) == 1
 
 
+def test_molly_stark_draws_after_duel():
+    deck = Deck([BangCard()])
+    gm = GameManager(deck=deck)
+    molly = Player("Molly", character=MollyStark())
+    attacker = Player("A")
+    gm.add_player(molly)
+    gm.add_player(attacker)
+    molly.hand.append(BangCard())
+    duel = DuelCard()
+    attacker.hand.append(duel)
+    gm.play_card(attacker, duel, molly)
+    assert len(molly.hand) == 1
+
+
 def test_pat_brennan_draw_in_play():
     gm = GameManager()
     pat = Player("Pat", character=PatBrennan())
@@ -263,7 +294,7 @@ def test_uncle_will_general_store():
     gm.add_player(uw)
     gm.add_player(other)
     uw.hand.append(PanicCard())
-    gm.uncle_will_ability(uw, uw.hand[0])
+    uw.character.use_ability(gm, uw, uw.hand[0])
     assert len(uw.hand) == 1
 
 
@@ -277,6 +308,18 @@ def test_johnny_kisch_discards_duplicates():
     johnny.hand.append(BarrelCard())
     gm.play_card(johnny, johnny.hand[0], johnny)
     assert "Barrel" not in other.equipment
+
+
+def test_johnny_kisch_discards_green_equipment():
+    gm = GameManager()
+    johnny = Player("Johnny", character=JohnnyKisch())
+    other = Player("O")
+    gm.add_player(johnny)
+    gm.add_player(other)
+    BinocularsCard().play(other)
+    johnny.hand.append(BinocularsCard())
+    gm.play_card(johnny, johnny.hand[0], johnny)
+    assert "Binoculars" not in other.equipment
 
 
 def test_claus_the_saint_distributes_cards():
@@ -294,19 +337,17 @@ def test_claus_the_saint_distributes_cards():
 
 
 def test_bullet_characters_instantiable():
-    from bang_py.characters import (
-        BelleStar,
-        BillNoface,
-        ChuckWengam,
-        DocHolyday,
-        ElenaFuente,
-        HerbHunter,
-        MollyStark,
-        PatBrennan,
-        UncleWill,
-        JohnnyKisch,
-        ClausTheSaint,
-    )
+    from bang_py.characters.belle_star import BelleStar
+    from bang_py.characters.bill_noface import BillNoface
+    from bang_py.characters.chuck_wengam import ChuckWengam
+    from bang_py.characters.doc_holyday import DocHolyday
+    from bang_py.characters.elena_fuente import ElenaFuente
+    from bang_py.characters.herb_hunter import HerbHunter
+    from bang_py.characters.molly_stark import MollyStark
+    from bang_py.characters.pat_brennan import PatBrennan
+    from bang_py.characters.uncle_will import UncleWill
+    from bang_py.characters.johnny_kisch import JohnnyKisch
+    from bang_py.characters.claus_the_saint import ClausTheSaint
 
     chars = [
         BelleStar,
@@ -337,7 +378,8 @@ def test_high_noon_event_deck_draw():
 
 
 def test_pepperbox_acts_as_bang():
-    gm = GameManager()
+    deck = Deck([BangCard(), BangCard(), BangCard(), BangCard()])
+    gm = GameManager(deck=deck)
     p1 = Player("Shooter")
     p2 = Player("Target")
     gm.add_player(p1)

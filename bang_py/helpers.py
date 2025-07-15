@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from .cards.card import BaseCard
 from .player import Player
-from .characters import Character, VeraCuster
+from .characters.base import BaseCharacter
+from .characters.vera_custer import VeraCuster
 from typing import TYPE_CHECKING, Type
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
@@ -22,18 +23,19 @@ def is_spade_between(card: BaseCard | None, low: int, high: int) -> bool:
     return rank is not None and low <= rank <= high
 
 
-def has_ability(player: Player, char_cls: Type[Character]) -> bool:
+def has_ability(player: Player, char_cls: Type[BaseCharacter]) -> bool:
     """Return True if the player effectively has the given character ability."""
     if isinstance(player.character, char_cls):
         return True
     if isinstance(player.character, VeraCuster):
         copied = player.metadata.vera_copy
-        return bool(copied and issubclass(copied, char_cls))
-    return False
+        if copied and issubclass(copied, char_cls):
+            return True
+    return char_cls in getattr(player.metadata, "abilities", set())
 
 
 def handle_out_of_turn_discard(game: "GameManager", player: Player, card: BaseCard) -> None:
-    """Trigger Molly Stark ability when appropriate for a discarded card."""
+    """Notify the player's character of an out-of-turn discard."""
     if not game or not player:
         return
     active = None
@@ -41,10 +43,5 @@ def handle_out_of_turn_discard(game: "GameManager", player: Player, card: BaseCa
         active = game.players[game.turn_order[game.current_turn]]
     if player is active:
         return
-    from .characters import MollyStark
-    from .cards.bang import BangCard
-    from .cards.missed import MissedCard
-    from .cards.beer import BeerCard
-
-    if has_ability(player, MollyStark) and isinstance(card, (BangCard, MissedCard, BeerCard)):
-        game.draw_card(player)
+    if player.character and hasattr(player.character, "on_out_of_turn_discard"):
+        player.character.on_out_of_turn_discard(game, player, card)

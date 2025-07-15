@@ -24,6 +24,7 @@ class DuelCard(BaseCard):
 
         attacker = target
         defender = player
+        game._duel_counts = {}
         while True:
             bang = next((c for c in attacker.hand if isinstance(c, BangCard)), None)
             if bang:
@@ -37,3 +38,9 @@ class DuelCard(BaseCard):
                 if attacker.health < before:
                     game.on_player_damaged(attacker, defender)
                 break
+        for pname, count in getattr(game, "_duel_counts", {}).items():
+            pl = next((pl for pl in game.players if pl.name == pname), None)
+            if pl:
+                for _ in range(count):
+                    game.draw_card(pl)
+        game._duel_counts = None

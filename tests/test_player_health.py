@@ -1,8 +1,10 @@
 from bang_py.player import Player, Role
-from bang_py.characters import Character
+from bang_py.characters.base import BaseCharacter
 
 
-class BonusLife(Character):
+class BonusLife(BaseCharacter):
+    def ability(self, *_: object, **__: object) -> bool:
+        return False
     starting_health = 5
 
 
