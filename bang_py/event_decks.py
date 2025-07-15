@@ -202,7 +202,7 @@ def _lasso_event(game: GameManager) -> None:
 
 
 def _sniper_event(game: GameManager) -> None:
-    """All players have unlimited range."""
+    """Players may discard two Bang! cards as one attack."""
     SniperEventCard().play(game=game)
 
 

@@ -51,13 +51,30 @@ def test_lasso_event_transfers_card():
     assert not b.hand
 
 
-def test_sniper_event_unlimited_range():
+def test_sniper_event_flag_set_without_range_change():
     gm = GameManager()
     p = Player("P", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [SniperEventCard()]
     gm.draw_event_card()
-    assert p.attack_range == 99
+    assert "sniper" in gm.event_flags
+    assert p.attack_range == 1
+
+
+def test_sniper_event_double_bang_damage():
+    gm = GameManager()
+    attacker = Player("A")
+    target = Player("B")
+    gm.add_player(attacker)
+    gm.add_player(target)
+    attacker.hand.extend([BangCard(), BangCard()])
+    gm.event_deck = [SniperEventCard()]
+    gm.draw_event_card()
+    attacker.metadata.use_sniper = True
+    gm.play_card(attacker, attacker.hand[0], target)
+    assert not attacker.hand
+    assert target.health == target.max_health - 1
+    assert len([c for c in gm.discard_pile if isinstance(c, BangCard)]) == 2
 
 
 def test_russian_roulette_event_damage():

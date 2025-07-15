@@ -461,12 +461,13 @@ class GameManager:
         for cb in self.card_play_checks:
             if not cb(player, card, target):
                 return False
-        if (
-            isinstance(card, BangCard)
-            and target
-            and player.distance_to(target) > player.attack_range
-        ):
-            return False
+        if isinstance(card, BangCard) and target:
+            if player.distance_to(target) > player.attack_range:
+                return False
+            if self.event_flags.get("sniper") and player.metadata.use_sniper:
+                bang_count = sum(isinstance(c, BangCard) for c in player.hand)
+                if bang_count < 2:
+                    return False
         if isinstance(card, PanicCard) and target and player.distance_to(target) > 1:
             return False
         if isinstance(card, JailCard) and target and isinstance(target.role, SheriffRoleCard):
@@ -508,7 +509,19 @@ class GameManager:
 
     def _play_bang_card(self, player: Player, card: BangCard, target: Optional[Player]) -> None:
         ignore_eq = player.metadata.ignore_others_equipment
-        if target and player.metadata.double_miss:
+        extra_bang_used = False
+        if self.event_flags.get("sniper") and player.metadata.use_sniper:
+            extra = next(
+                (c for c in player.hand if isinstance(c, BangCard) and c is not card),
+                None,
+            )
+            player.metadata.use_sniper = False
+            if extra:
+                player.hand.remove(extra)
+                self._pass_left_or_discard(player, extra)
+                extra_bang_used = True
+        need_two = player.metadata.double_miss or extra_bang_used
+        if target and need_two:
             misses = [c for c in target.hand if isinstance(c, MissedCard)]
             if len(misses) >= 2:
                 for _ in range(2):
