@@ -1,6 +1,4 @@
 from __future__ import annotations
-
-import random
 from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING

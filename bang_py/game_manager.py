@@ -7,18 +7,13 @@ import random
 from .deck import Deck
 from .deck_factory import create_standard_deck
 from .cards.card import BaseCard
-from .helpers import has_ability, handle_out_of_turn_discard
-from .characters.chuck_wengam import ChuckWengam
-from .characters.doc_holyday import DocHolyday
+from .helpers import handle_out_of_turn_discard
 from .characters.jesse_jones import JesseJones
 from .characters.jose_delgado import JoseDelgado
 from .characters.kit_carlson import KitCarlson
 from .characters.pat_brennan import PatBrennan
 from .characters.pedro_ramirez import PedroRamirez
-from .characters.sid_ketchum import SidKetchum
-from .characters.uncle_will import UncleWill
 from .characters.vera_custer import VeraCuster
-from .characters.sean_mallory import SeanMallory
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
 from .cards.stagecoach import StagecoachCard
@@ -46,8 +41,6 @@ from .cards.bible import BibleCard
 from .cards.canteen import CanteenCard
 from .cards.conestoga import ConestogaCard
 from .cards.can_can import CanCanCard
-from .cards.ten_gallon_hat import TenGallonHatCard
-from .cards.rev_carabine import RevCarabineCard
 from .cards.buffalo_rifle import BuffaloRifleCard
 from .cards.pepperbox import PepperboxCard
 from .cards.derringer import DerringerCard
@@ -106,9 +99,9 @@ class GameManager:
     card_played_listeners: List[Callable[[Player, BaseCard, Optional[Player]], None]] = field(default_factory=list)
     _duel_counts: dict | None = field(default=None, init=False, repr=False)
 
-    def choose_new_identity(self, player: Player) -> bool:
+    def prompt_new_identity(self, player: Player) -> bool:
         """Return True if the player opts to switch characters."""
-        return False
+        return True
 
     def draw_event_card(self) -> None:
         """Draw and apply the next event card."""
@@ -260,7 +253,7 @@ class GameManager:
         """Select which character a player will use. Defaults to the first."""
         return options[0]
 
-    def choose_new_identity(self, player: Player) -> None:
+    def apply_new_identity(self, player: Player) -> None:
         """Swap ``player`` to their unused character if the new identity event is active."""
 
         if not self.event_flags.get("new_identity"):
@@ -326,11 +319,9 @@ class GameManager:
                     player = self.players[idx]
 
         if self.event_flags.get("new_identity") and player.metadata.unused_character:
-            if self.choose_new_identity(player):
-                player.character = player.metadata.unused_character
-                player.metadata.unused_character = None
-                player.reset_stats()
-                player.health = min(player.max_health, 2)
+            if self.prompt_new_identity(player):
+                self.apply_new_identity(player)
+            # if the prompt returns False, do nothing
         if self.event_flags.get("ghost_town") and not player.is_alive():
             player.health = 1
             player.metadata.ghost_revived = True
@@ -506,7 +497,7 @@ class GameManager:
             return
 
         if self.event_flags.get("blood_brothers") and blood_target:
-            self.blood_brothers_transfer(player, blood_target)
+            self._blood_brothers_transfer(player, blood_target)
 
         for cb in self.draw_phase_listeners:
             if cb(player, {
@@ -570,7 +561,7 @@ class GameManager:
                 self._pass_left_or_discard(player, card)
 
     def _pre_card_checks(
-        self, player: Player, card: Card, target: Optional[Player]
+        self, player: Player, card: BaseCard, target: Optional[Player]
     ) -> bool:
         if card not in player.hand:
             return False
@@ -867,7 +858,7 @@ class GameManager:
         player.metadata.abilities.add(target.character.__class__)
         target.character.ability(self, player)
 
-    def blood_brothers_transfer(self, player: Player, target: Player) -> None:
+    def _blood_brothers_transfer(self, player: Player, target: Player) -> None:
         """Transfer one health from ``player`` to ``target`` if possible."""
         if not self.event_flags.get("blood_brothers"):
             return
