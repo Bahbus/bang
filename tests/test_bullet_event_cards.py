@@ -58,6 +58,7 @@ def test_lasso_event_ignores_equipment():
     assert a.distance_to(b) == 1
 
 
+
 def test_sniper_event_allows_special_bang():
     gm = GameManager()
     p = Player("P", role=SheriffRoleCard())
@@ -70,6 +71,23 @@ def test_sniper_event_allows_special_bang():
     gm.play_card(p, p.hand[0], t)
     gm.play_card(p, p.hand[0], t)
     assert t.health == t.max_health - 1
+    assert "sniper" in gm.event_flags
+
+
+def test_sniper_event_double_bang_damage():
+    gm = GameManager()
+    attacker = Player("A")
+    target = Player("B")
+    gm.add_player(attacker)
+    gm.add_player(target)
+    attacker.hand.extend([BangCard(), BangCard()])
+    gm.event_deck = [SniperEventCard()]
+    gm.draw_event_card()
+    attacker.metadata.use_sniper = True
+    gm.play_card(attacker, attacker.hand[0], target)
+    assert not attacker.hand
+    assert target.health == target.max_health - 1
+    assert len([c for c in gm.discard_pile if isinstance(c, BangCard)]) == 2
 
 
 def test_russian_roulette_players_discard_missed():

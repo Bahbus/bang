@@ -159,6 +159,11 @@ def _hard_liquor(game: GameManager) -> None:
     HardLiquorEventCard().play(game=game)
 
 
+def _blood_brothers(game: GameManager) -> None:
+    """Allow players to transfer health at the start of their turn."""
+    BloodBrothersEventCard().play(game=game)
+
+
 def _prison_break(game: GameManager) -> None:
     """Jail cards are discarded."""
     PrisonBreakEventCard().play(game=game)

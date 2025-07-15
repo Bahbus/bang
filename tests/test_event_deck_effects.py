@@ -20,6 +20,7 @@ from bang_py.event_decks import (
     _sermon,
     _hangover,
     _ambush_event,
+    _blood_brothers,
     _ranch,
     _prison_break,
     _high_noon,
@@ -48,6 +49,8 @@ from bang_py.cards.events import (
     HandcuffsEventCard,
 )
 from bang_py.helpers import has_ability
+from bang_py.characters.black_jack import BlackJack
+from bang_py.characters.paul_regret import PaulRegret
 from bang_py.deck import Deck
 
 
@@ -311,6 +314,22 @@ def test_high_stakes_allows_multiple_bangs():
     gm.play_card(p1, p1.hand[0], p2)
     gm.play_card(p1, p1.hand[0], p2)
     assert p2.health == p2.max_health - 2
+
+
+def test_blood_brothers_transfer_during_turn():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    p2.health -= 1
+    gm.event_deck = [EventCard("Blood Brothers", _blood_brothers, "")]
+    gm.turn_order = [0]
+    gm.current_turn = 0
+    gm.draw_event_card()
+    gm._begin_turn(blood_target=p2)
+    assert p1.health == p1.max_health - 1
+    assert p2.health == p2.max_health
 
 
 def test_high_noon_deck_contents_full_list():
@@ -622,3 +641,17 @@ def test_no_draw_skips_draw_phase():
     gm.draw_event_card()
     gm.draw_phase(p)
     assert not p.hand
+
+def test_new_identity_character_swap():
+    gm = GameManager()
+    p = Player("S", role=SheriffRoleCard(), character=PaulRegret())
+    gm.add_player(p)
+    p.metadata.unused_character = BlackJack()
+    p.reset_stats()
+    gm.turn_order = [0]
+    gm.current_turn = 0
+    gm.event_flags["new_identity"] = True
+    gm._begin_turn()
+    assert isinstance(p.character, BlackJack)
+    assert p.health == 2
+

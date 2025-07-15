@@ -260,6 +260,21 @@ class GameManager:
         """Select which character a player will use. Defaults to the first."""
         return options[0]
 
+    def choose_new_identity(self, player: Player) -> None:
+        """Swap ``player`` to their unused character if the new identity event is active."""
+
+        if not self.event_flags.get("new_identity"):
+            return
+        new_char = player.metadata.unused_character
+        if not new_char:
+            return
+        old_char = player.character
+        player.character = new_char
+        player.metadata.unused_character = old_char
+        player.reset_stats()
+        player.character.ability(self, player)
+        player.health = min(2, player.max_health)
+
     def _deal_roles_and_characters(self) -> None:
         role_deck = self._build_role_deck()
         random.shuffle(role_deck)
@@ -279,7 +294,7 @@ class GameManager:
             player.character.ability(self, player)
             player.metadata.game = self
 
-    def _begin_turn(self) -> None:
+    def _begin_turn(self, *, blood_target: Player | None = None) -> None:
         if not self.turn_order:
             return
         self.current_turn %= len(self.turn_order)
@@ -309,6 +324,7 @@ class GameManager:
                     self.current_turn = self.turn_order.index(self.players.index(player))
                     idx = self.turn_order[self.current_turn]
                     player = self.players[idx]
+
         if self.event_flags.get("new_identity") and player.metadata.unused_character:
             if self.choose_new_identity(player):
                 player.character = player.metadata.unused_character
@@ -323,6 +339,7 @@ class GameManager:
             for cb in self.turn_started_listeners:
                 cb(player)
             return
+
         if self.event_flags.get("skip_turn"):
             self.event_flags.pop("skip_turn")
             self.current_turn = (self.current_turn + 1) % len(self.turn_order)
@@ -388,7 +405,7 @@ class GameManager:
                 cb(player)
             return
 
-        self.draw_phase(player)
+        self.draw_phase(player, blood_target=blood_target)
         player.metadata.bangs_played = 0
         for cb in self.turn_started_listeners:
             cb(player)
@@ -459,10 +476,13 @@ class GameManager:
         jose_equipment: int | None = None,
         pat_target: Player | None = None,
         pat_card: str | None = None,
+
         skip_heal: bool | None = None,
         peyote_guesses: list[str] | None = None,
         ranch_discards: list[int] | None = None,
         handcuffs_suit: str | None = None,
+        blood_target: Player | None = None,
+
     ) -> None:
         """Handle the draw phase for ``player`` with optional choices.
 
@@ -471,9 +491,6 @@ class GameManager:
         the ability is used.
         """
 
-        if self.event_flags.get("doctor"):
-            player.heal(1)
-            return
 
         if self.event_flags.get("no_draw"):
             return
@@ -487,6 +504,9 @@ class GameManager:
         if custom_draw is not None:
             self.draw_card(player, custom_draw)
             return
+
+        if self.event_flags.get("blood_brothers") and blood_target:
+            self.blood_brothers_transfer(player, blood_target)
 
         for cb in self.draw_phase_listeners:
             if cb(player, {
@@ -557,12 +577,13 @@ class GameManager:
         for cb in self.card_play_checks:
             if not cb(player, card, target):
                 return False
-        if (
-            isinstance(card, BangCard)
-            and target
-            and player.distance_to(target) > player.attack_range
-        ):
-            return False
+        if isinstance(card, BangCard) and target:
+            if player.distance_to(target) > player.attack_range:
+                return False
+            if self.event_flags.get("sniper") and player.metadata.use_sniper:
+                bang_count = sum(isinstance(c, BangCard) for c in player.hand)
+                if bang_count < 2:
+                    return False
         if isinstance(card, PanicCard) and target and player.distance_to(target) > 1:
             return False
         if isinstance(card, JailCard) and target and isinstance(target.role, SheriffRoleCard):
@@ -610,7 +631,19 @@ class GameManager:
 
     def _play_bang_card(self, player: Player, card: BangCard, target: Optional[Player]) -> None:
         ignore_eq = player.metadata.ignore_others_equipment
-        if target and player.metadata.double_miss:
+        extra_bang_used = False
+        if self.event_flags.get("sniper") and player.metadata.use_sniper:
+            extra = next(
+                (c for c in player.hand if isinstance(c, BangCard) and c is not card),
+                None,
+            )
+            player.metadata.use_sniper = False
+            if extra:
+                player.hand.remove(extra)
+                self._pass_left_or_discard(player, extra)
+                extra_bang_used = True
+        need_two = player.metadata.double_miss or extra_bang_used
+        if target and need_two:
             misses = [c for c in target.hand if isinstance(c, MissedCard)]
             if len(misses) >= 2:
                 for _ in range(2):
@@ -843,6 +876,19 @@ class GameManager:
         player.metadata.vera_copy = target.character.__class__
         player.metadata.abilities.add(target.character.__class__)
         target.character.ability(self, player)
+
+    def blood_brothers_transfer(self, player: Player, target: Player) -> None:
+        """Transfer one health from ``player`` to ``target`` if possible."""
+        if not self.event_flags.get("blood_brothers"):
+            return
+        if player is target or not player.is_alive() or not target.is_alive():
+            return
+        if player.health <= 1:
+            return
+        player.take_damage(1)
+        self.on_player_damaged(player)
+        target.heal(1)
+        self.on_player_healed(target)
 
     # General Store management
     def start_general_store(self, player: Player) -> List[str]:
