@@ -271,6 +271,7 @@ class GameManager:
                     player.metadata.unused_character = ch
                     break
             player.reset_stats()
+            player.character.ability(self, player)
             player.metadata.game = self
 
     def _begin_turn(self) -> None:
