@@ -1,5 +1,6 @@
 from bang_py.game_manager import GameManager
-from bang_py.player import Player, Role
+from bang_py.player import Player
+from bang_py.cards.roles import SheriffRoleCard, OutlawRoleCard
 from bang_py.event_decks import create_high_noon_deck, create_fistful_deck
 from bang_py.cards.events import (
     HandcuffsEventCard,
@@ -14,8 +15,8 @@ from bang_py.deck import Deck
 
 def test_handcuffs_event_skips_turn():
     gm = GameManager()
-    sheriff = Player("S", role=Role.SHERIFF)
-    outlaw = Player("O")
+    sheriff = Player("S", role=SheriffRoleCard())
+    outlaw = Player("O", role=OutlawRoleCard())
     gm.add_player(sheriff)
     gm.add_player(outlaw)
     gm.event_deck = [HandcuffsEventCard()]
@@ -29,7 +30,7 @@ def test_handcuffs_event_skips_turn():
 def test_new_identity_event_redraw():
     deck = Deck([BangCard(), BangCard(), BangCard(), BangCard(), BangCard()])
     gm = GameManager(deck=deck)
-    p = Player("P", role=Role.SHERIFF)
+    p = Player("P", role=SheriffRoleCard())
     gm.add_player(p)
     p.hand = [BangCard(), BangCard()]
     gm.event_deck = [NewIdentityEventCard()]
@@ -52,7 +53,7 @@ def test_lasso_event_transfers_card():
 
 def test_sniper_event_unlimited_range():
     gm = GameManager()
-    p = Player("P", role=Role.SHERIFF)
+    p = Player("P", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [SniperEventCard()]
     gm.draw_event_card()

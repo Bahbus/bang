@@ -1,7 +1,14 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from enum import Enum, auto
 from typing import Dict, List, TYPE_CHECKING
+
+from .cards.roles import (
+    BaseRole,
+    DeputyRoleCard,
+    OutlawRoleCard,
+    RenegadeRoleCard,
+    SheriffRoleCard,
+)
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
@@ -27,6 +34,7 @@ class PlayerMetadata:
     gringo_index: int | None = None
     uncle_used: bool = False
     vera_copy: type["BaseCharacter"] | None = None
+    unused_character: "BaseCharacter | None" = None
     abilities: set[type["BaseCharacter"]] = field(default_factory=set)
     hand_limit: int | None = None
     # ability flags
@@ -44,17 +52,10 @@ class PlayerMetadata:
     beer_heal_bonus: int = 0
 
 
-class Role(Enum):
-    SHERIFF = auto()
-    DEPUTY = auto()
-    OUTLAW = auto()
-    RENEGADE = auto()
-
-
 @dataclass
 class Player:
     name: str
-    role: Role = Role.OUTLAW
+    role: BaseRole = field(default_factory=OutlawRoleCard)
     character: "BaseCharacter | None" = None
     max_health: int = 4
     health: int = field(init=False)
@@ -64,13 +65,18 @@ class Player:
 
     def __post_init__(self) -> None:
         """Initialize max health from role and character."""
+        self.reset_stats()
+
+    def reset_stats(self) -> None:
+        """Recalculate health and abilities after assigning role or character."""
         base = 4
         if self.character is not None:
             base = getattr(self.character, "starting_health", 4)
-        if self.role == Role.SHERIFF:
+        if isinstance(self.role, SheriffRoleCard):
             base += 1
         self.max_health = base
-        self.health = self.max_health
+        self.health = base
+        self.metadata.abilities.clear()
         if self.character is not None:
             self.metadata.abilities.add(self.character.__class__)
 
@@ -150,7 +156,7 @@ class Player:
         rng = self.gun_range + self.range_bonus
         if (
             getattr(game, "event_flags", {}).get("vendetta")
-            and self.role == Role.OUTLAW
+            and isinstance(self.role, OutlawRoleCard)
         ):
             rng += 1
         return rng

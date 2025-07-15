@@ -32,7 +32,13 @@ from bang_py.event_decks import (
     _train_arrival_event,
 )
 from bang_py.game_manager import GameManager
-from bang_py.player import Player, Role
+from bang_py.player import Player
+from bang_py.cards.roles import (
+    SheriffRoleCard,
+    DeputyRoleCard,
+    OutlawRoleCard,
+    RenegadeRoleCard,
+)
 from bang_py.cards import BangCard, BeerCard, MissedCard
 from bang_py.cards.jail import JailCard
 from bang_py.deck import Deck
@@ -41,7 +47,7 @@ from bang_py.deck import Deck
 def test_thirst_event_draw_one():
     gm = GameManager()
     gm.event_deck = [EventCard("Thirst", _thirst, "")]
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.draw_event_card()
     gm.draw_phase(p)
@@ -50,7 +56,7 @@ def test_thirst_event_draw_one():
 
 def test_fistful_event_damage_by_hand():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     p.hand = [BangCard(), BangCard()]
     gm.event_deck = [EventCard("A Fistful of Cards", _fistful, "")]
@@ -66,7 +72,7 @@ def _enable_no_bang(game: GameManager) -> None:
 
 def test_sermon_event_blocks_bang():
     gm = GameManager()
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
@@ -84,7 +90,7 @@ def _enable_no_beer(game: GameManager) -> None:
 
 def test_hangover_event_disables_beer():
     gm = GameManager()
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(sheriff)
     gm.event_deck = [EventCard("Hangover", _enable_no_beer, "")]
     gm.draw_event_card()
@@ -96,7 +102,7 @@ def test_hangover_event_disables_beer():
 
 def test_judge_prevents_beer_play():
     gm = GameManager()
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(sheriff)
     gm.event_deck = [EventCard("The Judge", _judge, "")]
     gm.draw_event_card()
@@ -109,7 +115,7 @@ def test_judge_prevents_beer_play():
 
 def test_ghost_town_revives_players():
     gm = GameManager()
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
@@ -121,7 +127,7 @@ def test_ghost_town_revives_players():
 
 def test_ghost_town_players_disappear_next_event():
     gm = GameManager()
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
@@ -142,7 +148,7 @@ def test_ghost_town_players_disappear_next_event():
 def test_bounty_rewards_elimination():
     deck = Deck([BangCard(), BangCard(), BangCard()])
     gm = GameManager(deck=deck)
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
@@ -170,7 +176,7 @@ def test_blessing_heals_everyone():
 
 def test_gold_rush_draws_three():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("Gold Rush", _gold_rush, "")]
     gm.draw_event_card()
@@ -180,7 +186,7 @@ def test_gold_rush_draws_three():
 
 def test_siesta_draws_three():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("Siesta", _siesta, "")]
     gm.draw_event_card()
@@ -190,7 +196,7 @@ def test_siesta_draws_three():
 
 def test_vendetta_outlaw_range_bonus():
     gm = GameManager()
-    outlaw = Player("Out", role=Role.OUTLAW)
+    outlaw = Player("Out", role=OutlawRoleCard())
     target = Player("T")
     gm.add_player(outlaw)
     gm.add_player(target)
@@ -201,7 +207,7 @@ def test_vendetta_outlaw_range_bonus():
 
 def test_sermon_blocks_bang_real():
     gm = GameManager()
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
@@ -215,7 +221,7 @@ def test_sermon_blocks_bang_real():
 
 def test_hangover_no_beer_real():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("Hangover", _hangover, "")]
     gm.draw_event_card()
@@ -272,7 +278,7 @@ def test_ranch_heals_everyone():
 
 def test_prison_break_discards_jail():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     jail = JailCard()
     p.equipment["Jail"] = jail
@@ -287,7 +293,7 @@ def test_prison_break_discards_jail():
 
 def test_high_noon_start_damage():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("High Noon", _high_noon, "")]
     gm.turn_order = [0]
@@ -299,7 +305,7 @@ def test_high_noon_start_damage():
 
 def test_high_stakes_allows_multiple_bangs():
     gm = GameManager()
-    p1 = Player("Sheriff", role=Role.SHERIFF)
+    p1 = Player("Sheriff", role=SheriffRoleCard())
     p2 = Player("Outlaw")
     gm.add_player(p1)
     gm.add_player(p2)
@@ -357,11 +363,11 @@ def test_fistful_deck_contents_full_list():
 
 def test_event_deck_order_fistful():
     gm = GameManager(expansions=["fistful_of_cards"])
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
-    gm.start_game()
+    gm.start_game(deal_roles=False)
     assert gm.current_event is not None
     assert gm.event_deck[-1].name == "A Fistful of Cards"
 
@@ -385,7 +391,7 @@ def test_river_passes_discard_left():
 
 def test_peyote_extra_draw():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("Peyote", _peyote, "")]
     gm.draw_event_card()
@@ -419,7 +425,7 @@ def test_daltons_all_draw():
 
 def test_doctor_heals_instead_of_draw():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("The Doctor", _doctor_event, "")]
     gm.draw_event_card()
@@ -431,7 +437,7 @@ def test_doctor_heals_instead_of_draw():
 
 def test_reverend_limits_hand_size():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("The Reverend", _reverend_event, "")]
     p.hand = [BangCard(), BangCard(), BangCard()]
@@ -454,7 +460,7 @@ def test_train_arrival_all_draw():
 
 def test_hard_liquor_beer_heals_two():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.add_player(Player("Other"))
     gm.add_player(Player("Third"))
@@ -468,7 +474,7 @@ def test_hard_liquor_beer_heals_two():
 
 def test_law_of_west_unlimited_range():
     gm = GameManager()
-    p = Player("Sheriff", role=Role.SHERIFF)
+    p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.event_deck = [EventCard("Law of the West", _law_of_the_west, "")]
     gm.draw_event_card()
@@ -490,7 +496,7 @@ def test_cattle_drive_discards_one_each():
 
 def test_shootout_allows_multiple_bangs():
     gm = GameManager()
-    p1 = Player("Sheriff", role=Role.SHERIFF)
+    p1 = Player("Sheriff", role=SheriffRoleCard())
     p2 = Player("Outlaw")
     gm.add_player(p1)
     gm.add_player(p2)
@@ -504,11 +510,11 @@ def test_shootout_allows_multiple_bangs():
 
 def test_event_deck_order_high_noon():
     gm = GameManager(expansions=["high_noon"])
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
-    gm.start_game()
+    gm.start_game(deal_roles=False)
     assert gm.current_event is not None
     assert gm.event_deck[-1].name == "High Noon"
 
@@ -517,12 +523,12 @@ def test_event_sequence_progresses_each_sheriff_turn():
     e1 = EventCard("E1", lambda g: g.event_flags.update(test=1))
     e2 = EventCard("E2", lambda g: g.event_flags.update(test=2))
     gm = GameManager()
-    sheriff = Player("Sheriff", role=Role.SHERIFF)
+    sheriff = Player("Sheriff", role=SheriffRoleCard())
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
     gm.event_deck = [e1, e2]
-    gm.start_game()
+    gm.start_game(deal_roles=False)
     assert gm.current_event.name == "E1"
     gm.end_turn()  # sheriff end -> outlaw turn
     gm.end_turn()  # outlaw end -> sheriff turn, draw next

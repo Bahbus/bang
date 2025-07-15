@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from ..player import Player
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - import for type checking only
+    from ..player import Player
 
 
 class BaseCard(ABC):

@@ -11,7 +11,8 @@ except ModuleNotFoundError:  # pragma: no cover - handled in start()
     WebSocketServerProtocol = Any  # type: ignore[assignment]
 
 from ..game_manager import GameManager
-from ..player import Player, Role
+from ..player import Player
+from ..cards.roles import OutlawRoleCard
 from ..characters.jesse_jones import JesseJones
 from ..characters.jose_delgado import JoseDelgado
 from ..characters.kit_carlson import KitCarlson
@@ -34,7 +35,7 @@ def _serialize_players(players: List[Player]) -> List[dict]:
         {
             "name": p.name,
             "health": p.health,
-            "role": p.role.name,
+            "role": p.role.card_name,
             "equipment": [eq.card_name for eq in p.equipment.values()],
         }
         for p in players
@@ -75,7 +76,7 @@ class BangServer:
         if len(self.game.players) >= self.max_players:
             await websocket.send("Game full")
             return
-        player = Player(name, role=Role.OUTLAW)
+        player = Player(name, role=OutlawRoleCard())
         player.metadata.auto_miss = True
         self.game.add_player(player)
         self.connections[websocket] = Connection(websocket, player)

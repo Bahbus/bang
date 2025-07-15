@@ -2,7 +2,14 @@
 
 from .game_manager import GameManager
 from .deck_factory import create_standard_deck
-from .player import Player, Role, PlayerMetadata
+from .player import Player, PlayerMetadata
+from .cards.roles import (
+    BaseRole,
+    SheriffRoleCard,
+    DeputyRoleCard,
+    OutlawRoleCard,
+    RenegadeRoleCard,
+)
 from .characters.base import BaseCharacter
 from .characters.bart_cassidy import BartCassidy
 from .characters.black_jack import BlackJack
@@ -24,8 +31,12 @@ from .characters.willy_the_kid import WillyTheKid
 __all__ = [
     "GameManager",
     "Player",
-    "Role",
     "PlayerMetadata",
+    "BaseRole",
+    "SheriffRoleCard",
+    "DeputyRoleCard",
+    "OutlawRoleCard",
+    "RenegadeRoleCard",
     "BaseCharacter",
     "BartCassidy",
     "BlackJack",
