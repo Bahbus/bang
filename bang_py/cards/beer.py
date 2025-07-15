@@ -4,8 +4,6 @@ from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 
-from ..helpers import has_ability
-from ..characters import TequilaJoe
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -42,8 +40,8 @@ class BeerCard(BaseCard):
         else:
             heal_amt = 1
 
-        if player and has_ability(player, TequilaJoe):
-            heal_amt += 1
+        if player and player.metadata.beer_heal_bonus:
+            heal_amt += player.metadata.beer_heal_bonus
 
         if target.health < target.max_health:
             before = target.health

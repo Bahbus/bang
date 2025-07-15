@@ -29,6 +29,10 @@ class HowitzerCard(BaseCard):
             if p is player:
                 continue
             before = p.health
-            BangCard().play(p, deck or game.deck)
+            BangCard().play(
+                p,
+                deck or game.deck,
+                ignore_equipment=player.metadata.ignore_others_equipment,
+            )
             if p.health < before:
                 game.on_player_damaged(p, player)

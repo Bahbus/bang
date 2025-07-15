@@ -4,7 +4,6 @@ from .card import BaseCard
 from ..player import Player
 from typing import TYPE_CHECKING
 from ..helpers import is_spade_between
-from ..characters import LuckyDuke
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..deck import Deck
@@ -34,12 +33,20 @@ class DynamiteCard(BaseCard):
 
         Returns True if it exploded on the current player.
         """
-        if isinstance(current.character, LuckyDuke):
+        gm = current.metadata.game
+        if current.metadata.lucky_duke:
             c1 = deck.draw()
             c2 = deck.draw()
             card = c1 if not is_spade_between(c1, 2, 9) else c2
+            if gm:
+                if c1:
+                    gm.discard_pile.append(c1)
+                if c2:
+                    gm.discard_pile.append(c2)
         else:
             card = deck.draw()
+            if gm and card:
+                gm.discard_pile.append(card)
         current.unequip(self.card_name)
         if is_spade_between(card, 2, 9):
             current.take_damage(3)

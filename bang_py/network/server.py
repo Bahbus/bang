@@ -12,15 +12,13 @@ except ModuleNotFoundError:  # pragma: no cover - handled in start()
 
 from ..game_manager import GameManager
 from ..player import Player, Role
-from ..characters import (
-    VeraCuster,
-    JesseJones,
-    KitCarlson,
-    PedroRamirez,
-    JoseDelgado,
-    PatBrennan,
-    LuckyDuke,
-)
+from ..characters.jesse_jones import JesseJones
+from ..characters.jose_delgado import JoseDelgado
+from ..characters.kit_carlson import KitCarlson
+from ..characters.lucky_duke import LuckyDuke
+from ..characters.pat_brennan import PatBrennan
+from ..characters.pedro_ramirez import PedroRamirez
+from ..characters.vera_custer import VeraCuster
 from ..cards.general_store import GeneralStoreCard
 
 
@@ -175,8 +173,9 @@ class BangServer:
                             self.game.vera_custer_copy(player, target)
                     elif ability == "jesse_jones":
                         idx = data.get("target")
+                        card_idx = data.get("card_index")
                         target = self.game._get_player_by_index(idx) if idx is not None else None
-                        self.game.draw_phase(player, jesse_target=target)
+                        self.game.draw_phase(player, jesse_target=target, jesse_card=card_idx)
                     elif ability == "kit_carlson":
                         discard = data.get("discard")
                         cards = player.metadata.kit_cards
@@ -188,7 +187,7 @@ class BangServer:
                                 else:
                                     player.hand.append(card)
                         else:
-                            self.game.draw_phase(player, kit_discard=discard)
+                            self.game.draw_phase(player, kit_back=discard)
                     elif ability == "pedro_ramirez":
                         use_discard = bool(data.get("use_discard", True))
                         self.game.draw_phase(player, pedro_use_discard=use_discard)
@@ -352,7 +351,7 @@ class BangServer:
                     asyncio.create_task(self.broadcast_state())
                 return
 
-    def _on_player_damaged(self, player: Player) -> None:
+    def _on_player_damaged(self, player: Player, _src: Player | None = None) -> None:
         msg = (
             f"{player.name} was eliminated"
             if not player.is_alive()

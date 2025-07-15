@@ -34,6 +34,10 @@ class PepperboxCard(BaseCard):
         if game and game._auto_miss(target):
             return
         before = target.health
-        BangCard().play(target, d)
+        BangCard().play(
+            target,
+            d,
+            ignore_equipment=player.metadata.ignore_others_equipment if game else False,
+        )
         if game and target.health < before:
             game.on_player_damaged(target, player)
