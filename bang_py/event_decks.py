@@ -45,7 +45,8 @@ if TYPE_CHECKING:
 
 
 def _peyote(game: GameManager) -> None:
-    """During their draw phase, instead of drawing, each player guesses red or black. They draw and reveal; if correct they may guess again."""
+    """During the draw phase each player guesses red or black instead of drawing.
+    They draw and reveal. If correct they may guess again."""
     PeyoteEventCard().play(game=game)
 
 
@@ -57,22 +58,20 @@ def _ricochet(game: GameManager) -> None:
     RicochetEventCard().play(game=game)
 
 
-
-
-
 def _judge(game: GameManager) -> None:
     """Players cannot play cards in front of themselves or others."""
     TheJudgeEventCard().play(game=game)
 
 
 def _ghost_town(game: GameManager) -> None:
-    """During their turn, eliminated players return as ghosts with 3 cards and cannot die. They are eliminated again at turn end."""
+    """During a player's turn eliminated players return as ghosts with three cards
+    and cannot die. They are eliminated again at turn end."""
     GhostTownEventCard().play(game=game)
 
 
-
 def _vendetta(game: GameManager) -> None:
-    """At the end of their turn, each player draws! If it's a heart, they immediately take another turn. This can occur only once per player."""
+    """After their turn each player draws! If it's a heart they immediately take
+    another turn. This can occur only once per player."""
     VendettaEventCard().play(game=game)
 
 
@@ -92,7 +91,8 @@ def _high_noon(game: GameManager) -> None:
 
 
 def _fistful(game: GameManager) -> None:
-    """At the beginning of each turn, target the active player with Bang! once for each card in their hand."""
+    """At the beginning of each turn target the active player with Bang! once for
+    each card in their hand."""
     FistfulOfCardsEventCard().play(game=game)
 
 
@@ -107,10 +107,9 @@ def _gold_rush(game: GameManager) -> None:
 
 
 def _law_of_the_west(game: GameManager) -> None:
-    """During the draw phase, each player reveals the second card they drew and plays it immediately if possible."""
+    """During the draw phase each player reveals the second card they drew and
+    plays it immediately if possible."""
     LawOfTheWestEventCard().play(game=game)
-
-
 
 
 def _sermon(game: GameManager) -> None:
@@ -124,7 +123,8 @@ def _hangover(game: GameManager) -> None:
 
 
 def _abandoned_mine(game: GameManager) -> None:
-    """During their draw phase, players draw from the discard pile instead. During their discard phase, cards are placed face down on top of the deck."""
+    """During the draw phase players draw from the discard pile instead. During
+    their discard phase cards are placed face down on top of the deck."""
     AbandonedMineEventCard().play(game=game)
 
 
@@ -137,7 +137,8 @@ def _ambush_event(game: GameManager) -> None:
 
 
 def _ranch(game: GameManager) -> None:
-    """At the end of their draw phase, each player may once discard any number of cards and draw the same number."""
+    """At the end of their draw phase each player may discard any number of cards
+    once and draw the same number."""
     RanchEventCard().play(game=game)
 
 
@@ -147,11 +148,9 @@ def _hard_liquor(game: GameManager) -> None:
 
 
 def _blood_brothers(game: GameManager) -> None:
-    """At the beginning of each turn, a player may lose 1 life (not their last) to give 1 life to any player."""
+    """At the beginning of each turn a player may lose one life, not their last,
+    to give one life to any player."""
     BloodBrothersEventCard().play(game=game)
-
-
-
 
 
 def _daltons_event(game: GameManager) -> None:
@@ -175,12 +174,14 @@ def _train_arrival_event(game: GameManager) -> None:
 
 
 def _handcuffs_event(game: GameManager) -> None:
-    """After drawing, each player chooses a suit and can only play that suit for the rest of their turn."""
+    """After drawing each player chooses a suit and can only play that suit for
+    the rest of their turn."""
     HandcuffsEventCard().play(game=game)
 
 
 def _new_identity_event(game: GameManager) -> None:
-    """At the start of their turn, a player may look at their other character and switch to it with 2 life."""
+    """At the start of their turn a player may look at their other character and
+    switch to it with two life."""
     NewIdentityEventCard().play(game=game)
 
 
@@ -195,9 +196,9 @@ def _sniper_event(game: GameManager) -> None:
 
 
 def _russian_roulette_event(game: GameManager) -> None:
-    """When Russian Roulette enters play, starting with the Sheriff each player discards a Missed!. The first who cannot loses 2 life points."""
+    """When Russian Roulette enters play starting with the Sheriff each player
+    discards a Missed!. The first who cannot loses two life points."""
     RussianRouletteEventCard().play(game=game)
-
 
 
 @dataclass

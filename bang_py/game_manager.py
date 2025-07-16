@@ -97,8 +97,12 @@ class GameManager:
     )
     turn_started_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
-    card_play_checks: List[Callable[[Player, BaseCard, Optional[Player]], bool]] = field(default_factory=list)
-    card_played_listeners: List[Callable[[Player, BaseCard, Optional[Player]], None]] = field(default_factory=list)
+    card_play_checks: List[
+        Callable[[Player, BaseCard, Optional[Player]], bool]
+    ] = field(default_factory=list)
+    card_played_listeners: List[
+        Callable[[Player, BaseCard, Optional[Player]], None]
+    ] = field(default_factory=list)
     play_phase_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     _duel_counts: dict | None = field(default=None, init=False, repr=False)
 
@@ -312,10 +316,9 @@ class GameManager:
             player.metadata.game = self
 
     def _apply_event_start_effects(self, player: Player) -> Player | None:
-        """Run start-of-turn event logic and return the acting player.
+        """Run start-of-turn event logic.
 
-        If any effect eliminates or skips the player, the next turn is started
-        and ``None`` is returned.
+        Return the acting player or ``None`` if they are eliminated or skipped.
         """
         pre_ghost = self.event_flags.get("ghost_town")
         player = self._sheriff_event_updates(player, bool(pre_ghost))
@@ -419,8 +422,7 @@ class GameManager:
     def _maybe_revive_ghost_town(self, player: Player) -> bool:
         """Revive ``player`` if Ghost Town is active.
 
-        Returns ``True`` if the player was revived and no further start actions
-        should run this turn.
+        Return ``True`` if revived so no further start actions occur.
         """
         if self.event_flags.get("ghost_town") and not player.is_alive():
             player.health = 1
@@ -562,7 +564,10 @@ class GameManager:
 
     def _handle_vendetta(self, player: Player) -> bool:
         """Resolve the Vendetta event. Return ``True`` if an extra turn occurs."""
-        if not self.event_flags.get("vendetta") or player in self.event_flags.get("vendetta_used", set()):
+        if (
+            not self.event_flags.get("vendetta")
+            or player in self.event_flags.get("vendetta_used", set())
+        ):
             return False
         card = self._draw_from_deck()
         if card:
@@ -935,7 +940,9 @@ class GameManager:
         """Play the card on the acting player with game context."""
         card.play(player, game=self)
 
-    def _handler_target_game(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
+    def _handler_target_game(
+        self, player: Player, card: BaseCard, target: Optional[Player]
+    ) -> None:
         """Play the card on ``target`` if provided using the game context."""
         if target:
             card.play(target, game=self)
