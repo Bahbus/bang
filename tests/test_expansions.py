@@ -375,6 +375,9 @@ def test_high_noon_event_deck_draw():
     gm.add_player(sheriff)
     gm.add_player(outlaw)
     gm.start_game(deal_roles=False)
+    assert gm.current_event is None
+    gm.end_turn()
+    gm.end_turn()
     assert gm.current_event is not None
 
 
