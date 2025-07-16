@@ -19,7 +19,6 @@ class ApacheKid(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(ApacheKid)
 
-
         def check(p: "Player", card: "BaseCard", target: "Player | None") -> bool:
             if (
                 p is not player

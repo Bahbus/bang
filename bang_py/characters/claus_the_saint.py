@@ -17,7 +17,6 @@ class ClausTheSaint(BaseCharacter):
     )
     starting_health = 3
 
-
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(ClausTheSaint)
 

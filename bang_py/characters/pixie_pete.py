@@ -14,7 +14,6 @@ class PixiePete(BaseCharacter):
     description = "During your draw phase, draw three cards instead of two."
     starting_health = 4
 
-
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(PixiePete)
 
