@@ -158,6 +158,10 @@ class BangUI:
             "pat_brennan": self._handle_pat_brennan_prompt,
             "lucky_duke": self._handle_lucky_duke_prompt,
         }
+        self._queue_handlers: dict[str, Callable[[dict], None]] = {
+            "players": self._handle_players_update,
+            "prompt": self._handle_prompt,
+        }
         self._build_start_menu()
 
     def _build_start_menu(self) -> None:
@@ -325,11 +329,13 @@ class BangUI:
                 continue
 
             if isinstance(data, dict):
-                if "players" in data:
-                    self._handle_players_update(data)
-                    continue
-                if self._handle_prompt(data):
-                    continue
+                for key, handler in self._queue_handlers.items():
+                    if key in data:
+                        handler(data)
+                        break
+                else:
+                    self._append_message(msg)
+                continue
             self._append_message(msg)
         if self.client and self.client.is_alive():
             self.root.after(100, self._process_queue)
