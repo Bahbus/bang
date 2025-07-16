@@ -9,7 +9,8 @@ if TYPE_CHECKING:
 
 
 class BloodBrothersEventCard(BaseEventCard):
-    """At the beginning of his turn, each player may choose to lose 1 life (but not their last life) to give 1 life point to any player."""
+    """At the beginning of his turn, each player may choose to lose 1 life
+    (but not their last life) to give 1 life point to any player."""
 
     card_name = "Blood Brothers"
     card_set = "fistful_of_cards"

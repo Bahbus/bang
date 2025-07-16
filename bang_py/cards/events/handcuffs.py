@@ -9,7 +9,8 @@ if TYPE_CHECKING:
 
 
 class HandcuffsEventCard(BaseEventCard):
-    """After their draw phase, each player announces a suit and can only play that suit for the rest of their turn."""
+    """After their draw phase, each player announces a suit and can only play that suit
+    for the rest of their turn."""
 
     card_name = "Handcuffs"
     card_set = "high_noon"
