@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class CalamityJanet(BaseCharacter):
     name = "Calamity Janet"
     description = "You may play Bang! cards as Missed! and vice versa."

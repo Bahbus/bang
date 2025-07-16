@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class VeraCuster(BaseCharacter):
     name = "Vera Custer"
     description = "At the start of your turn, copy another living character's ability."

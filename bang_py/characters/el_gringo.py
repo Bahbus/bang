@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class ElGringo(BaseCharacter):
     name = "El Gringo"
     description = (
@@ -18,6 +19,7 @@ class ElGringo(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(ElGringo)
+
 
         def on_damaged(p: "Player", src: "Player | None", *__: object) -> None:
             if p is player and src and src.hand:

@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class ElenaFuente(BaseCharacter):
     name = "Elena Fuente"
     description = "You may play any card from your hand as a Missed!."

@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class HerbHunter(BaseCharacter):
     name = "Herb Hunter"
     description = (
@@ -17,6 +18,7 @@ class HerbHunter(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(HerbHunter)
+
         def on_death(victim: "Player", _src: "Player | None") -> None:
             if victim is not player:
                 gm.draw_card(player, 2)

@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class SeanMallory(BaseCharacter):
     name = "Sean Mallory"
     description = "You may hold up to 10 cards in your hand."
