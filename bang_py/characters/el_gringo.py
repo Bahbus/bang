@@ -20,7 +20,6 @@ class ElGringo(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(ElGringo)
 
-
         def on_damaged(p: "Player", src: "Player | None", *__: object) -> None:
             if p is player and src and src.hand:
                 idx = player.metadata.gringo_index or 0

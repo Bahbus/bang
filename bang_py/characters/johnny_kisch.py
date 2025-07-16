@@ -20,7 +20,6 @@ class JohnnyKisch(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(JohnnyKisch)
 
-
         def on_play(p: "Player", card: "BaseCard", _t: "Player | None") -> None:
             if p is player and hasattr(card, "card_name"):
                 for o in gm.players:

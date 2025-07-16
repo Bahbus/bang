@@ -17,7 +17,6 @@ class KitCarlson(BaseCharacter):
     )
     starting_health = 4
 
-
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(KitCarlson)
 

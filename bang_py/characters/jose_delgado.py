@@ -14,7 +14,6 @@ class JoseDelgado(BaseCharacter):
     description = "You may discard an equipment card to draw two cards."
     starting_health = 4
 
-
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(JoseDelgado)
 
