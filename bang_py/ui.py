@@ -1,6 +1,6 @@
 import asyncio
 import json
-import random
+import secrets
 import threading
 import queue
 import tkinter as tk
@@ -226,7 +226,7 @@ class BangUI:
     def _start_host(self) -> None:
         port = int(self.port_var.get())
         max_players = int(self.max_players_var.get())
-        room_code = str(random.randint(1000, 9999))
+        room_code = str(secrets.randbelow(9000) + 1000)
         expansions = []
         if self.exp_dodge_city.get():
             expansions.append("dodge_city")
