@@ -237,15 +237,9 @@ class BangServer:
 
     async def broadcast_state(self, message: str | None = None) -> None:
         """Send updated game state to all connected clients."""
-        for websocket, conn in list(self.connections.items()):
-            payload = {
-                "players": _serialize_players(self.game.players),
-                "hand": [c.card_name for c in conn.player.hand],
-                "character": getattr(conn.player.character, "name", ""),
-                "event": getattr(self.game.current_event, "name", ""),
-            }
-            if message:
-                payload["message"] = message
+        async def send_payload(
+            websocket: WebSocketServerProtocol, conn: Connection, payload: dict
+        ) -> None:
             try:
                 await conn.websocket.send(json.dumps(payload))
             except Exception as exc:
@@ -258,11 +252,27 @@ class BangServer:
                     await conn.websocket.close()
                 except Exception as close_exc:
                     logger.exception(
-                        "Error closing websocket for %s", conn.player.name,
-                        exc_info=close_exc
+                        "Error closing websocket for %s",
+                        conn.player.name,
+                        exc_info=close_exc,
                     )
                 self.game.remove_player(conn.player)
                 self.connections.pop(websocket, None)
+
+        tasks = []
+        for websocket, conn in list(self.connections.items()):
+            payload = {
+                "players": _serialize_players(self.game.players),
+                "hand": [c.card_name for c in conn.player.hand],
+                "character": getattr(conn.player.character, "name", ""),
+                "event": getattr(self.game.current_event, "name", ""),
+            }
+            if message:
+                payload["message"] = message
+            tasks.append(send_payload(websocket, conn, payload))
+
+        if tasks:
+            await asyncio.gather(*tasks)
 
     def _find_connection(self, player: Player) -> Connection | None:
         for conn in self.connections.values():
