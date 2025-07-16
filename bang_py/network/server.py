@@ -7,9 +7,11 @@ import logging
 
 try:  # Optional websockets import for test environments
     from websockets.server import serve, WebSocketServerProtocol
+    from websockets import WebSocketException
 except ModuleNotFoundError:  # pragma: no cover - handled in start()
     serve = None  # type: ignore[assignment]
     WebSocketServerProtocol = Any  # type: ignore[assignment]
+    WebSocketException = Exception  # type: ignore[assignment]
 
 from ..game_manager import GameManager
 from ..player import Player
@@ -68,6 +70,23 @@ class BangServer:
         self.game.player_healed_listeners.append(self._on_player_healed)
         self.game.game_over_listeners.append(self._on_game_over)
         self.game.turn_started_listeners.append(self._on_turn_started)
+
+    def _create_send_task(self, conn: Connection, payload: str) -> None:
+        """Send ``payload`` to ``conn`` and log any delivery errors."""
+
+        async def _send() -> None:
+            try:
+                await conn.websocket.send(payload)
+            except asyncio.CancelledError as exc:  # pragma: no cover - network
+                logger.warning(
+                    "Send to %s cancelled", conn.player.name, exc_info=exc
+                )
+            except WebSocketException as exc:  # pragma: no cover - network
+                logger.exception(
+                    "Send to %s failed", conn.player.name, exc_info=exc
+                )
+
+        asyncio.create_task(_send())
 
     async def handler(self, websocket: WebSocketServerProtocol) -> None:
         """Register a new client and process game commands sent over the socket."""
@@ -174,7 +193,7 @@ class BangServer:
                 conn = self._find_connection(first)
                 if conn:
                     payload = json.dumps({"prompt": "general_store", "cards": names})
-                    asyncio.create_task(conn.websocket.send(payload))
+                    self._create_send_task(conn, payload)
         else:
             self.game.play_card(player, card, target)
             desc = f"{player.name} played {card.__class__.__name__}"
@@ -200,7 +219,7 @@ class BangServer:
                         "prompt": "general_store",
                         "cards": [c.card_name for c in self.game.general_store_cards],
                     })
-                    asyncio.create_task(conn.websocket.send(payload))
+                    self._create_send_task(conn, payload)
 
     async def _handle_use_ability(
         self, websocket: WebSocketServerProtocol, data: Dict[str, Any]
@@ -371,7 +390,7 @@ class BangServer:
         ]
         if options:
             payload = json.dumps({"prompt": "vera", "options": options})
-            asyncio.create_task(conn.websocket.send(payload))
+            self._create_send_task(conn, payload)
 
     def _handle_character_draw_start(self, conn: Connection, player: Player) -> None:
         handlers = [
@@ -398,7 +417,7 @@ class BangServer:
         ]
         if targets:
             payload = json.dumps({"prompt": "jesse_jones", "targets": targets})
-            asyncio.create_task(conn.websocket.send(payload))
+            self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player)
             asyncio.create_task(self.broadcast_state())
@@ -411,7 +430,7 @@ class BangServer:
         player.metadata.kit_cards = [c for c in cards if c]
         names = [c.card_name for c in player.metadata.kit_cards or []]
         payload = json.dumps({"prompt": "kit_carlson", "cards": names})
-        asyncio.create_task(conn.websocket.send(payload))
+        self._create_send_task(conn, payload)
         return True
 
     def _start_pedro_ramirez(self, conn: Connection, player: Player) -> bool:
@@ -419,7 +438,7 @@ class BangServer:
             return False
         if self.game.discard_pile:
             payload = json.dumps({"prompt": "pedro_ramirez"})
-            asyncio.create_task(conn.websocket.send(payload))
+            self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player, pedro_use_discard=False)
             asyncio.create_task(self.broadcast_state())
@@ -435,7 +454,7 @@ class BangServer:
         ]
         if equips:
             payload = json.dumps({"prompt": "jose_delgado", "equipment": equips})
-            asyncio.create_task(conn.websocket.send(payload))
+            self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player)
             asyncio.create_task(self.broadcast_state())
@@ -451,7 +470,7 @@ class BangServer:
             targets.append({"index": i, "cards": [c.card_name for c in p.equipment.values()]})
         if targets:
             payload = json.dumps({"prompt": "pat_brennan", "targets": targets})
-            asyncio.create_task(conn.websocket.send(payload))
+            self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player)
             asyncio.create_task(self.broadcast_state())
@@ -465,7 +484,7 @@ class BangServer:
         names = [c.card_name for c in player.metadata.lucky_cards or []]
         if names:
             payload = json.dumps({"prompt": "lucky_duke", "cards": names})
-            asyncio.create_task(conn.websocket.send(payload))
+            self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player)
             asyncio.create_task(self.broadcast_state())
