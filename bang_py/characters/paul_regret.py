@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class PaulRegret(BaseCharacter):
     name = "Paul Regret"
     description = "Players see you at distance +1."

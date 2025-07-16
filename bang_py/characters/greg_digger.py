@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class GregDigger(BaseCharacter):
     name = "Greg Digger"
     description = "Each time a player is eliminated, regain two life points."
@@ -15,6 +16,7 @@ class GregDigger(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(GregDigger)
+
         def on_death(victim: "Player", _src: "Player | None") -> None:
             if victim is not player and player.is_alive():
                 before = player.health

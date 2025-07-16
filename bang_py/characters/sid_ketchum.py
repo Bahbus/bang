@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class SidKetchum(BaseCharacter):
     name = "Sid Ketchum"
     description = "You may discard two cards to regain one life point."

@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class BlackJack(BaseCharacter):
     name = "Black Jack"
     description = (
@@ -19,6 +20,7 @@ class BlackJack(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(BlackJack)
+
         def on_draw(p: "Player", _k: object) -> bool:
             if p is not player:
                 return True

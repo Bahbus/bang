@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class BillNoface(BaseCharacter):
     name = "Bill Noface"
     description = (
@@ -18,6 +19,7 @@ class BillNoface(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(BillNoface)
+
         def on_draw(p: "Player", _opts: dict) -> bool:
             if p is not player:
                 return True

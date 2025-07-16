@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class Jourdonnais(BaseCharacter):
     name = "Jourdonnais"
     description = "You are considered to have a Barrel in play at all times."

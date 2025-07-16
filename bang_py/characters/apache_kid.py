@@ -10,6 +10,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..cards.card import BaseCard
     from ..cards.duel import DuelCard
 
+
 class ApacheKid(BaseCharacter):
     name = "Apache Kid"
     description = "You are unaffected by Diamond suited cards."
@@ -17,6 +18,7 @@ class ApacheKid(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(ApacheKid)
+
 
         def check(p: "Player", card: "BaseCard", target: "Player | None") -> bool:
             if (

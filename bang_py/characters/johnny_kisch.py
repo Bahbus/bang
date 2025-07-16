@@ -9,6 +9,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..player import Player
     from ..cards.card import BaseCard
 
+
 class JohnnyKisch(BaseCharacter):
     name = "Johnny Kisch"
     description = (
@@ -18,6 +19,7 @@ class JohnnyKisch(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(JohnnyKisch)
+
 
         def on_play(p: "Player", card: "BaseCard", _t: "Player | None") -> None:
             if p is player and hasattr(card, "card_name"):

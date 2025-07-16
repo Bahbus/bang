@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class VultureSam(BaseCharacter):
     name = "Vulture Sam"
     description = (
@@ -17,6 +18,7 @@ class VultureSam(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(VultureSam)
+
         def on_death(victim: "Player", _src: "Player | None") -> None:
             if victim is not player:
                 player.hand.extend(victim.hand)

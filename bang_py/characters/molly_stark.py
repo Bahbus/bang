@@ -9,6 +9,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..player import Player
     from ..cards.card import BaseCard
 
+
 class MollyStark(BaseCharacter):
     name = "Molly Stark"
     description = (

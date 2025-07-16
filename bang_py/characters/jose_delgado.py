@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class JoseDelgado(BaseCharacter):
     name = "Jose Delgado"
     description = "You may discard an equipment card to draw two cards."
@@ -16,6 +17,7 @@ class JoseDelgado(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(JoseDelgado)
+
         def on_draw(p: "Player", opts: dict) -> bool:
             if p is not player:
                 return True

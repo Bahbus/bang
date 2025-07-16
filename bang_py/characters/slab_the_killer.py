@@ -8,6 +8,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
 
+
 class SlabTheKiller(BaseCharacter):
     name = "Slab the Killer"
     description = "Players need two Missed! cards to cancel your Bang!."
