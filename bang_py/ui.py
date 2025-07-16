@@ -8,6 +8,7 @@ from tkinter import ttk, messagebox
 from typing import Callable
 import logging
 import websockets
+from websockets import WebSocketException
 
 from .network.server import BangServer
 
@@ -80,8 +81,8 @@ class ClientThread(threading.Thread):
             fut = asyncio.run_coroutine_threadsafe(self.websocket.close(), self.loop)
             try:
                 fut.result(timeout=1)
-            except Exception:
-                logging.exception("Failed to close websocket")
+            except Exception as exc:
+                logging.exception("Failed to close websocket: %s", exc)
         if self.loop.is_running():
             self.loop.call_soon_threadsafe(self.loop.stop)
 
@@ -103,7 +104,8 @@ class ClientThread(threading.Thread):
                 except json.JSONDecodeError:
                     data = message
                 self.msg_queue.put(str(data))
-        except Exception as exc:
+        except (OSError, WebSocketException) as exc:
+            logging.exception("Connection error: %s", exc)
             self.msg_queue.put(f"Connection error: {exc}")
         finally:
             if self.websocket:
@@ -120,7 +122,8 @@ class ClientThread(threading.Thread):
             return
         try:
             await self.websocket.send(msg)
-        except Exception as exc:
+        except WebSocketException as exc:
+            logging.exception("Send error: %s", exc)
             self.msg_queue.put(f"Send error: {exc}")
 
 
