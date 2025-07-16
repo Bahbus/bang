@@ -9,7 +9,8 @@ if TYPE_CHECKING:
 
 
 class TheDaltonsEventCard(BaseEventCard):
-    """When The Daltons enters play, each player that has any blue (equipment) cards in front of them must choose one to discard."""
+    """When The Daltons enters play, each player that has any blue (equipment) cards in front of them
+    must choose one to discard."""
 
     card_name = "The Daltons"
     card_set = "high_noon"

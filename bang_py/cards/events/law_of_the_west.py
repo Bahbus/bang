@@ -9,7 +9,8 @@ if TYPE_CHECKING:
 
 
 class LawOfTheWestEventCard(BaseEventCard):
-    """During their draw phase, each player must reveal the second card they drew and play it immediately if possible."""
+    """During their draw phase, each player must reveal the second card they drew
+    and play it immediately if possible."""
 
     card_name = "Law of the West"
     card_set = "fistful_of_cards"
