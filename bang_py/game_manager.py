@@ -291,12 +291,31 @@ class GameManager:
             player.metadata.game = self
 
     def _apply_event_start_effects(self, player: Player) -> Player | None:
-        """Handle start-of-turn event effects and return the active player.
+        """Run start-of-turn event logic and return the acting player.
 
-        If an effect eliminates or skips the player, the next turn is started
-        automatically and ``None`` is returned.
+        If any effect eliminates or skips the player, the next turn is started
+        and ``None`` is returned.
         """
         pre_ghost = self.event_flags.get("ghost_town")
+        player = self._sheriff_event_updates(player, bool(pre_ghost))
+
+        self._process_new_identity(player)
+
+        if self._skip_turn_if_needed():
+            return None
+
+        if not self._apply_start_damage(player):
+            return None
+
+        if not self._apply_fistful_of_cards(player):
+            return None
+
+        self._handle_dead_man(player)
+
+        return player
+
+    def _sheriff_event_updates(self, player: Player, pre_ghost: bool) -> Player:
+        """Update sheriff-related counters and Ghost Town clean up."""
         if isinstance(player.role, SheriffRoleCard):
             self.sheriff_turns += 1
             if self.event_deck and self.sheriff_turns >= 2:
@@ -313,25 +332,36 @@ class GameManager:
                     self.current_turn = self.turn_order.index(self.players.index(player))
                     idx = self.turn_order[self.current_turn]
                     player = self.players[idx]
+        return player
 
+    def _process_new_identity(self, player: Player) -> None:
+        """Handle the New Identity event for ``player``."""
         if self.event_flags.get("new_identity") and player.metadata.unused_character:
             if self.prompt_new_identity(player):
                 self.apply_new_identity(player)
 
+    def _skip_turn_if_needed(self) -> bool:
+        """Skip the current turn if the corresponding event is active."""
         if self.event_flags.get("skip_turn"):
             self.event_flags.pop("skip_turn")
             self.current_turn = (self.current_turn + 1) % len(self.turn_order)
             self._begin_turn()
-            return None
+            return True
+        return False
 
+    def _apply_start_damage(self, player: Player) -> bool:
+        """Apply start-of-turn damage to ``player`` if required."""
         dmg = self.event_flags.get("start_damage", 0)
         if dmg:
             player.take_damage(dmg)
             self.on_player_damaged(player)
             if not player.is_alive():
                 self._begin_turn()
-                return None
+                return False
+        return True
 
+    def _apply_fistful_of_cards(self, player: Player) -> bool:
+        """Resolve the Fistful of Cards effect against ``player``."""
         if self.event_flags.get("fistful_of_cards"):
             for _ in range(len(player.hand)):
                 if not self._auto_miss(player):
@@ -339,8 +369,11 @@ class GameManager:
                     self.on_player_damaged(player)
                     if not player.is_alive():
                         self._begin_turn()
-                        return None
+                        return False
+        return True
 
+    def _handle_dead_man(self, player: Player) -> None:
+        """Apply the Dead Man event to ``player`` if applicable."""
         if (
             self.event_flags.get("dead_man")
             and self.event_flags.get("dead_man_player") is player
@@ -350,8 +383,6 @@ class GameManager:
             player.health = 2
             self.draw_card(player, 2)
             self.event_flags["dead_man_used"] = True
-
-        return player
 
     def _maybe_revive_ghost_town(self, player: Player) -> bool:
         """Revive ``player`` if Ghost Town is active.
@@ -532,42 +563,90 @@ class GameManager:
         blood_target: Player | None = None,
 
     ) -> None:
-        """Handle the draw phase for ``player`` with optional choices.
+        """Run the draw phase for ``player`` with optional selections."""
 
-        Parameters allow callers to specify selections for characters with
-        draw-phase abilities. If a parameter is ``None`` the default behavior of
-        the ability is used.
-        """
-
-
-        if self.event_flags.get("no_draw"):
+        if self._draw_pre_checks(player, skip_heal=skip_heal, blood_target=blood_target):
             return
+
+        if self._dispatch_draw_listeners(
+            player,
+            jesse_target=jesse_target,
+            jesse_card=jesse_card,
+            kit_back=kit_back,
+            pedro_use_discard=pedro_use_discard,
+            jose_equipment=jose_equipment,
+            pat_target=pat_target,
+            pat_card=pat_card,
+        ):
+            return
+
+        self._perform_draw(player, peyote_guesses)
+
+        self._post_draw_events(
+            player,
+            ranch_discards=ranch_discards,
+            handcuffs_suit=handcuffs_suit,
+        )
+
+    def _draw_pre_checks(
+        self,
+        player: Player,
+        *,
+        skip_heal: bool | None,
+        blood_target: Player | None,
+    ) -> bool:
+        """Handle early draw-phase events. Returns ``True`` if phase ends."""
+        if self.event_flags.get("no_draw"):
+            return True
 
         if self.event_flags.get("hard_liquor") and skip_heal:
             player.heal(1)
             self.on_player_healed(player)
-            return
+            return True
 
         custom_draw = self.event_flags.get("draw_count")
         if custom_draw is not None:
             self.draw_card(player, custom_draw)
-            return
+            return True
 
         if self.event_flags.get("blood_brothers") and blood_target:
             self._blood_brothers_transfer(player, blood_target)
 
-        for cb in self.draw_phase_listeners:
-            if cb(player, {
-                "jesse_target": jesse_target,
-                "jesse_card": jesse_card,
-                "kit_back": kit_back,
-                "pedro_use_discard": pedro_use_discard,
-                "jose_equipment": jose_equipment,
-                "pat_target": pat_target,
-                "pat_card": pat_card,
-            }):
-                return
+        return False
 
+    def _dispatch_draw_listeners(
+        self,
+        player: Player,
+        *,
+        jesse_target: Player | None,
+        jesse_card: int | None,
+        kit_back: int | None,
+        pedro_use_discard: bool | None,
+        jose_equipment: int | None,
+        pat_target: Player | None,
+        pat_card: str | None,
+    ) -> bool:
+        """Notify draw phase listeners, returning ``True`` to stop."""
+        for cb in self.draw_phase_listeners:
+            if cb(
+                player,
+                {
+                    "jesse_target": jesse_target,
+                    "jesse_card": jesse_card,
+                    "kit_back": kit_back,
+                    "pedro_use_discard": pedro_use_discard,
+                    "jose_equipment": jose_equipment,
+                    "pat_target": pat_target,
+                    "pat_card": pat_card,
+                },
+            ):
+                return True
+        return False
+
+    def _perform_draw(
+        self, player: Player, peyote_guesses: list[str] | None
+    ) -> None:
+        """Execute the actual card draws for the phase."""
         if self.event_flags.get("peyote"):
             guesses = peyote_guesses or []
             cont = True
@@ -575,14 +654,27 @@ class GameManager:
                 card = self._draw_from_deck()
                 if card:
                     player.hand.append(card)
-                    guess = (guesses.pop(0).lower() if guesses else "red")
+                    guess = guesses.pop(0).lower() if guesses else "red"
                     is_red = card.suit in ("Hearts", "Diamonds")
-                    cont = guess.startswith("r") and is_red or guess.startswith("b") and not is_red
+                    cont = (
+                        guess.startswith("r")
+                        and is_red
+                        or guess.startswith("b")
+                        and not is_red
+                    )
                 else:
                     cont = False
         else:
             self.draw_card(player, 2)
 
+    def _post_draw_events(
+        self,
+        player: Player,
+        *,
+        ranch_discards: list[int] | None,
+        handcuffs_suit: str | None,
+    ) -> None:
+        """Handle effects that trigger after cards are drawn."""
         if self.event_flags.get("law_of_the_west") and len(player.hand) >= 2:
             card = player.hand[-1]
             self.play_card(player, card)
@@ -599,7 +691,7 @@ class GameManager:
                 self.draw_card(player, drawn)
 
         if self.event_flags.get("handcuffs"):
-            self.event_flags["turn_suit"] = (handcuffs_suit or "Hearts")
+            self.event_flags["turn_suit"] = handcuffs_suit or "Hearts"
 
     def play_phase(self, player: Player) -> None:
         """Signal the start of the play phase for ``player``."""
@@ -626,11 +718,30 @@ class GameManager:
     def _pre_card_checks(
         self, player: Player, card: BaseCard, target: Optional[Player]
     ) -> bool:
-        if card not in player.hand:
-            return False
+        return (
+            self._card_in_hand(player, card)
+            and self._run_card_play_checks(player, card, target)
+            and self._check_target_restrictions(player, card, target)
+            and self._check_event_restrictions(player, card)
+        )
+
+    def _card_in_hand(self, player: Player, card: BaseCard) -> bool:
+        """Return ``True`` if ``card`` is currently in ``player``'s hand."""
+        return card in player.hand
+
+    def _run_card_play_checks(
+        self, player: Player, card: BaseCard, target: Optional[Player]
+    ) -> bool:
+        """Execute registered pre-play checks."""
         for cb in self.card_play_checks:
             if not cb(player, card, target):
                 return False
+        return True
+
+    def _check_target_restrictions(
+        self, player: Player, card: BaseCard, target: Optional[Player]
+    ) -> bool:
+        """Validate distance and target based limitations."""
         if isinstance(card, BangCard) and target:
             if player.distance_to(target) > player.attack_range:
                 return False
@@ -642,13 +753,22 @@ class GameManager:
             return False
         if isinstance(card, JailCard) and target and isinstance(target.role, SheriffRoleCard):
             return False
+        return True
+
+    def _check_event_restrictions(
+        self, player: Player, card: BaseCard
+    ) -> bool:
+        """Check event related card play restrictions."""
         if self.event_flags.get("no_jail") and isinstance(card, JailCard):
             return False
         if self.event_flags.get("judge") and card.card_type in {"equipment", "green"}:
             return False
         if self.event_flags.get("handcuffs") and self.event_flags.get("turn_suit"):
             active = self.players[self.turn_order[self.current_turn]]
-            if player is active and getattr(card, "suit", None) != self.event_flags["turn_suit"]:
+            if (
+                player is active
+                and getattr(card, "suit", None) != self.event_flags["turn_suit"]
+            ):
                 return False
         return True
 
