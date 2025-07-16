@@ -3,6 +3,7 @@ import json
 import secrets
 from dataclasses import dataclass
 from typing import Any, Dict, List
+import logging
 
 try:  # Optional websockets import for test environments
     from websockets.server import serve, WebSocketServerProtocol
@@ -21,6 +22,8 @@ from ..characters.pat_brennan import PatBrennan
 from ..characters.pedro_ramirez import PedroRamirez
 from ..characters.vera_custer import VeraCuster
 from ..cards.general_store import GeneralStoreCard
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -245,13 +248,19 @@ class BangServer:
                 payload["message"] = message
             try:
                 await conn.websocket.send(json.dumps(payload))
-            except Exception:
+            except Exception as exc:
+                logger.exception(
+                    "Failed to send state to %s", conn.player.name, exc_info=exc
+                )
                 # Remove the player from the game if their websocket is no
                 # longer reachable before dropping the connection entirely.
                 try:
                     await conn.websocket.close()
-                except Exception:
-                    pass
+                except Exception as close_exc:
+                    logger.exception(
+                        "Error closing websocket for %s", conn.player.name,
+                        exc_info=close_exc
+                    )
                 self.game.remove_player(conn.player)
                 self.connections.pop(websocket, None)
 
