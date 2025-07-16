@@ -9,11 +9,15 @@ if TYPE_CHECKING:
 
 
 class AbandonedMineEventCard(BaseEventCard):
-    """During draw, draw from discard pile if possible. Discards go face down on top of the deck."""
+    """During draw, draw from discard pile if possible.
+    Discards go face down on top of the deck."""
 
     card_name = "Abandoned Mine"
     card_set = "fistful_of_cards"
-    description = "During draw, draw from discard pile if possible. Discards go face down on top of the deck."
+    description = (
+        "During draw, draw from discard pile if possible. "
+        "Discards go face down on top of the deck."
+    )
 
     def play(
         self,

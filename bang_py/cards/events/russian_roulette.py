@@ -11,12 +11,15 @@ if TYPE_CHECKING:
 
 
 class RussianRouletteEventCard(BaseEventCard):
-    """When Russian Roulette enters play, starting with the Sheriff each player discards a Missed!
-    The first not to do so loses 2 life points."""
+    """When Russian Roulette enters play, starting with the Sheriff each player
+    discards a Missed! The first not to do so loses 2 life points."""
 
     card_name = "Russian Roulette"
     card_set = "fistful_of_cards"
-    description = "When Russian Roulette enters play, starting with the Sheriff each player discards a Missed! The first not to do so loses 2 life points."
+    description = (
+        "When Russian Roulette enters play, starting with the Sheriff each player "
+        "discards a Missed! The first not to do so loses 2 life points."
+    )
 
     def play(
         self,

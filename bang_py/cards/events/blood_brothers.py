@@ -14,7 +14,10 @@ class BloodBrothersEventCard(BaseEventCard):
 
     card_name = "Blood Brothers"
     card_set = "fistful_of_cards"
-    description = "At the beginning of his turn, each player may choose to lose 1 life (but not their last life) to give 1 life point to any player."
+    description = (
+        "At the beginning of his turn, each player may choose to lose 1 life "
+        "(but not their last life) to give 1 life point to any player."
+    )
 
     def play(
         self,
