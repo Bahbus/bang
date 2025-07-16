@@ -43,5 +43,3 @@ class SpringfieldCard(BaseCard):
             )
             if target.health < target.max_health:
                 game.on_player_damaged(target, player)
-
-

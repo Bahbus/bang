@@ -21,4 +21,3 @@ class BaseCharacter(ABC):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         """Perform the character's special ability."""
         raise NotImplementedError
-

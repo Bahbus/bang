@@ -35,4 +35,3 @@ class KnifeCard(BaseCard):
         )
         if game and target.health < target.max_health:
             game.on_player_damaged(target, player)
-

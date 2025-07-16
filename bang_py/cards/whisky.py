@@ -37,4 +37,3 @@ class WhiskyCard(BaseCard):
         target.heal(2)
         if target.health > before:
             game.on_player_healed(target)
-

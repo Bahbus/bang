@@ -44,4 +44,3 @@ class RagTimeCard(BaseCard):
             card = next(iter(target.equipment.values()))
             target.unequip(card.card_name)
             player.hand.append(card)
-

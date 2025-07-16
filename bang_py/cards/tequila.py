@@ -37,4 +37,3 @@ class TequilaCard(BaseCard):
         target.heal(1)
         if target.health > before:
             game.on_player_healed(target)
-

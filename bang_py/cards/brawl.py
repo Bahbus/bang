@@ -46,5 +46,3 @@ class BrawlCard(BaseCard):
                 card = p.hand.pop(idx)
                 game.discard_pile.append(card)
                 handle_out_of_turn_discard(game, p, card)
-
-
