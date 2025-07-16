@@ -805,7 +805,17 @@ class GameManager:
 
     def _play_bang_card(self, player: Player, card: BangCard, target: Optional[Player]) -> None:
         ignore_eq = player.metadata.ignore_others_equipment
-        extra_bang_used = False
+        extra_bang = self._consume_sniper_extra(player, card)
+        need_two = player.metadata.double_miss or extra_bang
+        if target and need_two:
+            if not self._attempt_double_dodge(target):
+                card.play(target, self.deck, ignore_equipment=ignore_eq)
+        else:
+            if not (target and self._auto_miss(target)):
+                card.play(target, self.deck, ignore_equipment=ignore_eq)
+
+    def _consume_sniper_extra(self, player: Player, card: BangCard) -> bool:
+        """Handle Sniper event extra Bang! consumption."""
         if self.event_flags.get("sniper") and player.metadata.use_sniper:
             extra = next(
                 (c for c in player.hand if isinstance(c, BangCard) and c is not card),
@@ -815,22 +825,21 @@ class GameManager:
             if extra:
                 player.hand.remove(extra)
                 self._pass_left_or_discard(player, extra)
-                extra_bang_used = True
-        need_two = player.metadata.double_miss or extra_bang_used
-        if target and need_two:
-            misses = [c for c in target.hand if isinstance(c, MissedCard)]
-            if len(misses) >= 2:
-                for _ in range(2):
-                    mcard = misses.pop()
-                    target.hand.remove(mcard)
-                    self.discard_pile.append(mcard)
-                    handle_out_of_turn_discard(self, target, mcard)
-                target.metadata.dodged = True
-            else:
-                card.play(target, self.deck, ignore_equipment=ignore_eq)
-        else:
-            if not (target and self._auto_miss(target)):
-                card.play(target, self.deck, ignore_equipment=ignore_eq)
+                return True
+        return False
+
+    def _attempt_double_dodge(self, target: Player) -> bool:
+        """Let ``target`` discard two Missed! cards to avoid damage."""
+        misses = [c for c in target.hand if isinstance(c, MissedCard)]
+        if len(misses) >= 2:
+            for _ in range(2):
+                mcard = misses.pop()
+                target.hand.remove(mcard)
+                self.discard_pile.append(mcard)
+                handle_out_of_turn_discard(self, target, mcard)
+            target.metadata.dodged = True
+            return True
+        return False
 
     def _handler_self_game(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
         """Play the card on the acting player with game context."""
@@ -910,20 +919,39 @@ class GameManager:
         player.hand.remove(card)
         before = target.health if target else None
         self._dispatch_play(player, card, target)
+        self._notify_card_played(player, card, target)
+        self._apply_post_play(player, card, target, before, is_bang)
+
+    def _notify_card_played(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
+        """Call registered card played listeners."""
         for cb in self.card_played_listeners:
             cb(player, card, target)
+
+    def _apply_post_play(
+        self,
+        player: Player,
+        card: BaseCard,
+        target: Optional[Player],
+        before: Optional[int],
+        is_bang: bool,
+    ) -> None:
+        """Handle damage, discard and Bang! bookkeeping."""
         if target and before is not None and target.health < before:
             self.on_player_damaged(target, player)
         if target and before is not None and target.health > before:
             self.on_player_healed(target)
         self._pass_left_or_discard(player, card)
         if is_bang:
-            if player.metadata.doc_free_bang > 0:
-                player.metadata.doc_free_bang -= 1
-            else:
-                player.metadata.bangs_played += 1
+            self._update_bang_counters(player)
         if player.metadata.draw_when_empty and not player.hand:
             self.draw_card(player)
+
+    def _update_bang_counters(self, player: Player) -> None:
+        """Update Bang! play counters for ``player``."""
+        if player.metadata.doc_free_bang > 0:
+            player.metadata.doc_free_bang -= 1
+        else:
+            player.metadata.bangs_played += 1
 
     def discard_card(self, player: Player, card: BaseCard) -> None:
         if card in player.hand:
@@ -947,32 +975,50 @@ class GameManager:
         self.on_player_healed(player)
 
     def _auto_miss(self, target: Player) -> bool:
+        if not self._should_use_auto_miss(target):
+            return False
+        if self._use_miss_card(target):
+            return True
+        if self._use_bang_as_miss(target):
+            return True
+        if self._use_any_card_as_miss(target):
+            return True
+        return False
+
+    def _should_use_auto_miss(self, target: Player) -> bool:
+        """Return ``True`` if automatic Missed! can be used."""
         if self.event_flags.get("no_missed"):
             return False
-        if target.metadata.auto_miss is False:
-            return False
+        return target.metadata.auto_miss is not False
+
+    def _discard_and_record(self, player: Player, card: BaseCard) -> None:
+        self._pass_left_or_discard(player, card)
+        if not self.event_flags.get("river"):
+            handle_out_of_turn_discard(self, player, card)
+
+    def _use_miss_card(self, target: Player) -> bool:
         miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
         if miss:
             target.hand.remove(miss)
-            self._pass_left_or_discard(target, miss)
-            if not self.event_flags.get("river"):
-                handle_out_of_turn_discard(self, target, miss)
+            self._discard_and_record(target, miss)
             target.metadata.dodged = True
             return True
+        return False
+
+    def _use_bang_as_miss(self, target: Player) -> bool:
         if target.metadata.bang_as_missed:
             bang = next((c for c in target.hand if isinstance(c, BangCard)), None)
             if bang:
                 target.hand.remove(bang)
-                self._pass_left_or_discard(target, bang)
-                if not self.event_flags.get("river"):
-                    handle_out_of_turn_discard(self, target, bang)
+                self._discard_and_record(target, bang)
                 target.metadata.dodged = True
                 return True
+        return False
+
+    def _use_any_card_as_miss(self, target: Player) -> bool:
         if target.metadata.any_card_as_missed and target.hand:
             card = target.hand.pop()
-            self._pass_left_or_discard(target, card)
-            if not self.event_flags.get("river"):
-                handle_out_of_turn_discard(self, target, card)
+            self._discard_and_record(target, card)
             target.metadata.dodged = True
             return True
         return False
