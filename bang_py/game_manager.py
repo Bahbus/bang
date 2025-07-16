@@ -290,20 +290,12 @@ class GameManager:
             player.character.ability(self, player)
             player.metadata.game = self
 
-    def _begin_turn(self, *, blood_target: Player | None = None) -> None:
-        if not self.turn_order:
-            return
-        self.current_turn %= len(self.turn_order)
-        idx = self.turn_order[self.current_turn]
-        player = self.players[idx]
-        self.phase = "draw"
-        for eq in list(player.equipment.values()):
-            if eq.card_type == "green" and not getattr(eq, "active", True):
-                eq.active = True
-                modifier = int(getattr(eq, "max_health_modifier", 0))
-                if modifier:
-                    player._apply_health_modifier(modifier)
-        self.reset_turn_flags(player)
+    def _apply_event_start_effects(self, player: Player) -> Player | None:
+        """Handle start-of-turn event effects and return the active player.
+
+        If an effect eliminates or skips the player, the next turn is started
+        automatically and ``None`` is returned.
+        """
         pre_ghost = self.event_flags.get("ghost_town")
         if isinstance(player.role, SheriffRoleCard):
             self.sheriff_turns += 1
@@ -325,28 +317,21 @@ class GameManager:
         if self.event_flags.get("new_identity") and player.metadata.unused_character:
             if self.prompt_new_identity(player):
                 self.apply_new_identity(player)
-            # if the prompt returns False, do nothing
-        if self.event_flags.get("ghost_town") and not player.is_alive():
-            player.health = 1
-            player.metadata.ghost_revived = True
-            self.draw_card(player, 3)
-            player.metadata.bangs_played = 0
-            for cb in self.turn_started_listeners:
-                cb(player)
-            return
 
         if self.event_flags.get("skip_turn"):
             self.event_flags.pop("skip_turn")
             self.current_turn = (self.current_turn + 1) % len(self.turn_order)
             self._begin_turn()
-            return
+            return None
+
         dmg = self.event_flags.get("start_damage", 0)
         if dmg:
             player.take_damage(dmg)
             self.on_player_damaged(player)
             if not player.is_alive():
                 self._begin_turn()
-                return
+                return None
+
         if self.event_flags.get("fistful_of_cards"):
             for _ in range(len(player.hand)):
                 if not self._auto_miss(player):
@@ -354,8 +339,49 @@ class GameManager:
                     self.on_player_damaged(player)
                     if not player.is_alive():
                         self._begin_turn()
-                        return
-        # Handle start-of-turn equipment effects
+                        return None
+
+        if (
+            self.event_flags.get("dead_man")
+            and self.event_flags.get("dead_man_player") is player
+            and not player.is_alive()
+            and not self.event_flags.get("dead_man_used")
+        ):
+            player.health = 2
+            self.draw_card(player, 2)
+            self.event_flags["dead_man_used"] = True
+
+        return player
+
+    def _maybe_revive_ghost_town(self, player: Player) -> bool:
+        """Revive ``player`` if Ghost Town is active.
+
+        Returns ``True`` if the player was revived and no further start actions
+        should run this turn.
+        """
+        if self.event_flags.get("ghost_town") and not player.is_alive():
+            player.health = 1
+            player.metadata.ghost_revived = True
+            self.draw_card(player, 3)
+            player.metadata.bangs_played = 0
+            for cb in self.turn_started_listeners:
+                cb(player)
+            return True
+        return False
+
+    def _handle_equipment_start(self, player: Player) -> bool:
+        """Process start-of-turn equipment effects.
+
+        Reactivates green equipment, resolves Dynamite and Jail, and returns
+        ``True`` if the player's turn should continue.
+        """
+        for eq in list(player.equipment.values()):
+            if eq.card_type == "green" and not getattr(eq, "active", True):
+                eq.active = True
+                modifier = int(getattr(eq, "max_health_modifier", 0))
+                if modifier:
+                    player._apply_health_modifier(modifier)
+
         dyn = player.equipment.get("Dynamite")
         if dyn and getattr(dyn, "check_dynamite", None):
             next_idx = self.turn_order[(self.current_turn + 1) % len(self.turn_order)]
@@ -366,7 +392,8 @@ class GameManager:
                 self.on_player_damaged(player)
                 if not player.is_alive():
                     self._begin_turn()
-                    return
+                    return False
+
         jail = player.equipment.get("Jail")
         if jail:
             if self.event_flags.get("no_jail"):
@@ -378,9 +405,15 @@ class GameManager:
                 if skipped:
                     self.current_turn = (self.current_turn + 1) % len(self.turn_order)
                     self._begin_turn()
-                    return
+                    return False
 
+        return True
 
+    def _handle_character_draw_abilities(self, player: Player) -> bool:
+        """Trigger characters that modify the draw phase.
+
+        Returns ``True`` if the standard draw and play phases should be skipped.
+        """
         ability_chars = (
             JesseJones,
             KitCarlson,
@@ -389,15 +422,33 @@ class GameManager:
             PatBrennan,
         )
 
-        if self.event_flags.get("dead_man") and self.event_flags.get("dead_man_player") is player and not player.is_alive() and not self.event_flags.get("dead_man_used"):
-            player.health = 2
-            self.draw_card(player, 2)
-            self.event_flags["dead_man_used"] = True
-
         if isinstance(player.character, ability_chars):
             player.metadata.awaiting_draw = True
             for cb in self.turn_started_listeners:
                 cb(player)
+            return True
+        return False
+
+    def _begin_turn(self, *, blood_target: Player | None = None) -> None:
+        if not self.turn_order:
+            return
+        self.current_turn %= len(self.turn_order)
+        idx = self.turn_order[self.current_turn]
+        player = self.players[idx]
+        self.phase = "draw"
+        self.reset_turn_flags(player)
+
+        player = self._apply_event_start_effects(player)
+        if not player:
+            return
+
+        if self._maybe_revive_ghost_town(player):
+            return
+
+        if not self._handle_equipment_start(player):
+            return
+
+        if self._handle_character_draw_abilities(player):
             return
 
         self.draw_phase(player, blood_target=blood_target)
