@@ -50,7 +50,10 @@ def _peyote(game: GameManager) -> None:
 
 
 def _ricochet(game: GameManager) -> None:
-    """Each player may discard Bang! cards to target cards in play. The target card is discarded unless its owner plays a Missed!"""
+    """Allow players to discard Bang! cards to target cards in play.
+
+    Discard the target card unless its owner plays a Missed! card.
+    """
     RicochetEventCard().play(game=game)
 
 
@@ -94,12 +97,12 @@ def _fistful(game: GameManager) -> None:
 
 
 def _blessing(game: GameManager) -> None:
-    """The suit of all cards is hearts."""
+    """Treat the suit of all cards as hearts."""
     BlessingEventCard().play(game=game)
 
 
 def _gold_rush(game: GameManager) -> None:
-    """The game proceeds counter-clockwise, but card effects still proceed clockwise."""
+    """Make play proceed counter-clockwise while card effects remain clockwise."""
     GoldRushEventCard().play(game=game)
 
 
@@ -126,7 +129,10 @@ def _abandoned_mine(game: GameManager) -> None:
 
 
 def _ambush_event(game: GameManager) -> None:
-    """The distance between any two players is 1. Only other cards in play may modify this."""
+    """Set the distance between any two players to 1.
+
+    Only other cards in play may modify this distance.
+    """
     AmbushEventCard().play(game=game)
 
 
@@ -184,7 +190,7 @@ def _lasso_event(game: GameManager) -> None:
 
 
 def _sniper_event(game: GameManager) -> None:
-    """During their turn, a player may discard two Bang! cards as one attack that requires two Missed!"""
+    """Allow a player to discard two Bang! cards as one attack requiring two Missed! cards."""
     SniperEventCard().play(game=game)
 
 
@@ -208,6 +214,7 @@ class EventCard:
     rank: int | None = None
 
     def __post_init__(self) -> None:
+        """Set ``card_name`` to the event name."""
         self.card_name = self.name
 
     def apply(self, game: GameManager) -> None:
@@ -220,6 +227,7 @@ class EventCard:
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:  # pragma: no cover - simple passthrough
+        """Play this event card if a game is provided."""
         if game:
             self.apply(game)
 
