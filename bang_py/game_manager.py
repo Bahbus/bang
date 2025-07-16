@@ -115,30 +115,51 @@ class GameManager:
         self.current_event.apply(self)
 
     def __post_init__(self) -> None:
+        """Initialize decks and register card handlers."""
+        self._initialize_main_deck()
+        self._initialize_event_deck()
+        self._register_card_handlers()
+
+    # ------------------------------------------------------------------
+    # Initialization helpers
+    def _initialize_main_deck(self) -> None:
+        """Create the main deck if needed and ensure event flags exist."""
         if self.deck is None:
             if not self.expansions:
                 self.expansions.append("dodge_city")
             self.deck = create_standard_deck(self.expansions)
         self.event_flags = {}
+
+    def _initialize_event_deck(self) -> None:
+        """Build and shuffle the event deck based on active expansions."""
         if "high_noon" in self.expansions:
-            self.event_deck = create_high_noon_deck()
-            if self.event_deck:
-                final = next((c for c in self.event_deck if c.name == "High Noon"), None)
-                if final:
-                    self.event_deck.remove(final)
-                    random.shuffle(self.event_deck)
-                    self.event_deck.append(final)
+            self.event_deck = self._prepare_high_noon_deck()
         elif "fistful_of_cards" in self.expansions:
-            self.event_deck = create_fistful_deck()
-            if self.event_deck:
-                final = next((c for c in self.event_deck if c.name == "A Fistful of Cards"), None)
-                if final:
-                    self.event_deck.remove(final)
-                    random.shuffle(self.event_deck)
-                    self.event_deck.append(final)
+            self.event_deck = self._prepare_fistful_deck()
         elif self.event_deck:
             random.shuffle(self.event_deck)
-        self._register_card_handlers()
+
+    def _prepare_high_noon_deck(self) -> List[EventCard] | None:
+        """Create and shuffle the High Noon event deck."""
+        deck = create_high_noon_deck()
+        if deck:
+            final = next((c for c in deck if c.name == "High Noon"), None)
+            if final:
+                deck.remove(final)
+                random.shuffle(deck)
+                deck.append(final)
+        return deck
+
+    def _prepare_fistful_deck(self) -> List[EventCard] | None:
+        """Create and shuffle the Fistful of Cards event deck."""
+        deck = create_fistful_deck()
+        if deck:
+            final = next((c for c in deck if c.name == "A Fistful of Cards"), None)
+            if final:
+                deck.remove(final)
+                random.shuffle(deck)
+                deck.append(final)
+        return deck
 
     def add_player(self, player: Player) -> None:
         """Add a player to the game and record the game reference."""
@@ -317,21 +338,32 @@ class GameManager:
     def _sheriff_event_updates(self, player: Player, pre_ghost: bool) -> Player:
         """Update sheriff-related counters and Ghost Town clean up."""
         if isinstance(player.role, SheriffRoleCard):
-            self.sheriff_turns += 1
-            if self.event_deck and self.sheriff_turns >= 2:
-                self.draw_event_card()
+            self._increment_sheriff_turns()
             if pre_ghost and self.event_deck and self.sheriff_turns >= 2:
-                removed = False
-                for pl in self.players:
-                    if pl.metadata.ghost_revived and pl.is_alive():
-                        pl.health = 0
-                        pl.metadata.ghost_revived = False
-                        removed = True
-                if removed:
-                    self.turn_order = [i for i, pl in enumerate(self.players) if pl.is_alive()]
-                    self.current_turn = self.turn_order.index(self.players.index(player))
-                    idx = self.turn_order[self.current_turn]
-                    player = self.players[idx]
+                player = self._ghost_town_cleanup(player)
+        return player
+
+    # ------------------------------------------------------------------
+    # Sheriff helpers
+    def _increment_sheriff_turns(self) -> None:
+        """Increment sheriff turn count and draw events when eligible."""
+        self.sheriff_turns += 1
+        if self.event_deck and self.sheriff_turns >= 2:
+            self.draw_event_card()
+
+    def _ghost_town_cleanup(self, player: Player) -> Player:
+        """Remove revived ghosts once the sheriff has taken two turns."""
+        removed = False
+        for pl in self.players:
+            if pl.metadata.ghost_revived and pl.is_alive():
+                pl.health = 0
+                pl.metadata.ghost_revived = False
+                removed = True
+        if removed:
+            self.turn_order = [i for i, pl in enumerate(self.players) if pl.is_alive()]
+            self.current_turn = self.turn_order.index(self.players.index(player))
+            idx = self.turn_order[self.current_turn]
+            player = self.players[idx]
         return player
 
     def _process_new_identity(self, player: Player) -> None:
@@ -406,6 +438,15 @@ class GameManager:
         Reactivates green equipment, resolves Dynamite and Jail, and returns
         ``True`` if the player's turn should continue.
         """
+        self._reactivate_green_equipment(player)
+        if not self._resolve_dynamite(player):
+            return False
+        return self._process_jail(player)
+
+    # ------------------------------------------------------------------
+    # Equipment helpers
+    def _reactivate_green_equipment(self, player: Player) -> None:
+        """Refresh green equipment and reapply modifiers."""
         for eq in list(player.equipment.values()):
             if eq.card_type == "green" and not getattr(eq, "active", True):
                 eq.active = True
@@ -413,6 +454,8 @@ class GameManager:
                 if modifier:
                     player._apply_health_modifier(modifier)
 
+    def _resolve_dynamite(self, player: Player) -> bool:
+        """Handle Dynamite at turn start. Returns ``False`` if the player dies."""
         dyn = player.equipment.get("Dynamite")
         if dyn and getattr(dyn, "check_dynamite", None):
             next_idx = self.turn_order[(self.current_turn + 1) % len(self.turn_order)]
@@ -424,20 +467,24 @@ class GameManager:
                 if not player.is_alive():
                     self._begin_turn()
                     return False
+        return True
 
+    def _process_jail(self, player: Player) -> bool:
+        """Resolve Jail effects and return ``False`` if the turn is skipped."""
         jail = player.equipment.get("Jail")
-        if jail:
-            if self.event_flags.get("no_jail"):
-                player.equipment.pop("Jail", None)
-                self.discard_pile.append(jail)
-            elif getattr(jail, "check_turn", None):
-                skipped = jail.check_turn(player, self.deck)
-                self.discard_pile.append(jail)
-                if skipped:
-                    self.current_turn = (self.current_turn + 1) % len(self.turn_order)
-                    self._begin_turn()
-                    return False
-
+        if not jail:
+            return True
+        if self.event_flags.get("no_jail"):
+            player.equipment.pop("Jail", None)
+            self.discard_pile.append(jail)
+            return True
+        if getattr(jail, "check_turn", None):
+            skipped = jail.check_turn(player, self.deck)
+            self.discard_pile.append(jail)
+            if skipped:
+                self.current_turn = (self.current_turn + 1) % len(self.turn_order)
+                self._begin_turn()
+                return False
         return True
 
     def _handle_character_draw_abilities(self, player: Player) -> bool:
@@ -496,24 +543,45 @@ class GameManager:
         self.phase = "discard"
         self.discard_phase(player)
         self.event_flags.pop("turn_suit", None)
+        self._reset_green_equipment(player)
+        if self._handle_vendetta(player):
+            return
+        self._finish_ghost_town(player)
+        self._advance_turn()
+
+    # ------------------------------------------------------------------
+    # Turn end helpers
+    def _reset_green_equipment(self, player: Player) -> None:
+        """Reactivate green equipment at the end of the turn."""
         for eq in list(player.equipment.values()):
             if eq.card_type == "green" and not getattr(eq, "active", True):
                 eq.active = True
                 modifier = int(getattr(eq, "max_health_modifier", 0))
                 if modifier:
                     player._apply_health_modifier(modifier)
-        if self.event_flags.get("vendetta") and player not in self.event_flags.get("vendetta_used", set()):
-            card = self._draw_from_deck()
-            if card:
-                self.discard_pile.append(card)
-                if card.suit == "Hearts":
-                    self.event_flags.setdefault("vendetta_used", set()).add(player)
-                    self._begin_turn()
-                    return
+
+    def _handle_vendetta(self, player: Player) -> bool:
+        """Resolve the Vendetta event. Return ``True`` if an extra turn occurs."""
+        if not self.event_flags.get("vendetta") or player in self.event_flags.get("vendetta_used", set()):
+            return False
+        card = self._draw_from_deck()
+        if card:
+            self.discard_pile.append(card)
+            if card.suit == "Hearts":
+                self.event_flags.setdefault("vendetta_used", set()).add(player)
+                self._begin_turn()
+                return True
+        return False
+
+    def _finish_ghost_town(self, player: Player) -> None:
+        """Remove temporary Ghost Town revival at turn end."""
         if self.event_flags.get("ghost_town") and player.metadata.ghost_revived:
             player.health = 0
             player.metadata.ghost_revived = False
             self._check_win_conditions()
+
+    def _advance_turn(self) -> None:
+        """Move the turn pointer and start the next turn."""
         if self.event_flags.get("reverse_turn"):
             self.current_turn = (self.current_turn - 1) % len(self.turn_order)
         else:
@@ -742,15 +810,37 @@ class GameManager:
         self, player: Player, card: BaseCard, target: Optional[Player]
     ) -> bool:
         """Validate distance and target based limitations."""
-        if isinstance(card, BangCard) and target:
-            if player.distance_to(target) > player.attack_range:
-                return False
-            if self.event_flags.get("sniper") and player.metadata.use_sniper:
-                bang_count = sum(isinstance(c, BangCard) for c in player.hand)
-                if bang_count < 2:
-                    return False
-        if isinstance(card, PanicCard) and target and player.distance_to(target) > 1:
+        return (
+            self._bang_target_valid(player, card, target)
+            and self._panic_target_valid(player, card, target)
+            and self._jail_target_valid(card, target)
+        )
+
+    # ------------------------------------------------------------------
+    # Target restriction helpers
+    def _bang_target_valid(
+        self, player: Player, card: BaseCard, target: Optional[Player]
+    ) -> bool:
+        """Check range and sniper restrictions for Bang! cards."""
+        if not (isinstance(card, BangCard) and target):
+            return True
+        if player.distance_to(target) > player.attack_range:
             return False
+        if self.event_flags.get("sniper") and player.metadata.use_sniper:
+            bang_count = sum(isinstance(c, BangCard) for c in player.hand)
+            return bang_count >= 2
+        return True
+
+    def _panic_target_valid(
+        self, player: Player, card: BaseCard, target: Optional[Player]
+    ) -> bool:
+        """Panic can only target players within distance 1."""
+        if isinstance(card, PanicCard) and target:
+            return player.distance_to(target) <= 1
+        return True
+
+    def _jail_target_valid(self, card: BaseCard, target: Optional[Player]) -> bool:
+        """Jail cannot be played on the sheriff."""
         if isinstance(card, JailCard) and target and isinstance(target.role, SheriffRoleCard):
             return False
         return True
@@ -1246,25 +1336,34 @@ class GameManager:
 
     def _check_win_conditions(self) -> Optional[str]:
         alive = [p for p in self.players if p.is_alive()]
+        self._update_turn_order_post_death()
+        has_sheriff = any(isinstance(p.role, SheriffRoleCard) for p in self.players)
+        result = self._determine_winner(alive, has_sheriff)
+        if result:
+            for cb in self.game_over_listeners:
+                cb(result)
+        return result
+
+    # ------------------------------------------------------------------
+    # Win condition helpers
+    def _update_turn_order_post_death(self) -> None:
+        """Remove eliminated players from turn order and adjust the index."""
         self.turn_order = [i for i in self.turn_order if self.players[i].is_alive()]
         if self.turn_order:
             self.current_turn %= len(self.turn_order)
         else:
             self.current_turn = 0
-        result = None
-        has_sheriff = any(isinstance(p.role, SheriffRoleCard) for p in self.players)
+
+    def _determine_winner(self, alive: List[Player], has_sheriff: bool) -> Optional[str]:
+        """Return a victory message if a win condition is met."""
         if not has_sheriff and len(self.players) == 3:
             if len(alive) == 1:
-                result = alive[0].role.victory_message
-        else:
-            for player in alive:
-                if player.role.check_win(self, player):
-                    result = player.role.victory_message
-                    break
-        if result:
-            for cb in self.game_over_listeners:
-                cb(result)
-        return result
+                return alive[0].role.victory_message
+            return None
+        for player in alive:
+            if player.role.check_win(self, player):
+                return player.role.victory_message
+        return None
 
     def get_hand(self, viewer: Player, target: Player) -> list[str]:
         """Return the visible hand of ``target`` for ``viewer``."""
