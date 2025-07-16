@@ -16,4 +16,3 @@ def test_default_room_code_unique(monkeypatch) -> None:
     server1 = BangServer()
     server2 = BangServer()
     assert server1.room_code != server2.room_code
-

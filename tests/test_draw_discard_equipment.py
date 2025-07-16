@@ -5,7 +5,6 @@ from bang_py.cards.bang import BangCard
 from bang_py.cards.scope import ScopeCard
 from bang_py.cards.mustang import MustangCard
 from bang_py.cards.iron_plate import IronPlateCard
-from bang_py.cards.cat_balou import CatBalouCard
 from bang_py.characters.black_jack import BlackJack
 from bang_py.characters.sid_ketchum import SidKetchum
 

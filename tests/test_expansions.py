@@ -558,4 +558,3 @@ def test_ten_gallon_hat_is_missed():
     target = Player("T")
     TenGallonHatCard().play(target)
     assert target.metadata.dodged is True
-
