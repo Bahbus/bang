@@ -1,4 +1,4 @@
-"""Bang card game modules"""
+"""Bang card game modules."""
 
 from .game_manager import GameManager
 from .deck_factory import create_standard_deck

@@ -1,3 +1,5 @@
+"""Manage overall game state and turn progression for Bang."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -63,8 +65,10 @@ from .event_decks import (
 
 @dataclass
 class GameManager:
-    """Manage players, deck and discard pile while controlling turn order and
-    triggering game events."""
+    """Manage players, deck and discard pile.
+
+    Controls turn order and triggers game events.
+    """
 
     players: List[Player] = field(default_factory=list)
     deck: Deck | None = None
