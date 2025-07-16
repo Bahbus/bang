@@ -1,3 +1,5 @@
+"""Player representation and related helper data for Bang."""
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, List, TYPE_CHECKING
@@ -119,6 +121,7 @@ class Player:
 
     @property
     def gun_range(self) -> int:
+        """Return the base firing range provided by the equipped gun."""
         game = self.metadata.game
         if getattr(game, "event_flags", {}).get("lasso"):
             return 1
@@ -190,7 +193,6 @@ class Player:
     @staticmethod
     def _seated_distance(player: "Player", other: "Player", players: List["Player"]) -> int:
         """Return the seat distance between two players counting only the living."""
-
         alive = [p for p in players if p.is_alive()]
         p_index = alive.index(player)
         o_index = alive.index(other)
@@ -198,10 +200,13 @@ class Player:
         return min(diff, len(alive) - diff)
 
     def take_damage(self, amount: int) -> None:
+        """Decrease health but not below zero."""
         self.health = max(0, self.health - amount)
 
     def heal(self, amount: int) -> None:
+        """Restore health up to ``max_health``."""
         self.health = min(self.max_health, self.health + amount)
 
     def is_alive(self) -> bool:
+        """Return ``True`` if the player still has health remaining."""
         return self.health > 0
