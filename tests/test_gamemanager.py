@@ -57,3 +57,16 @@ def test_max_distance_with_seven_players():
 
     assert players[0].distance_to(players[3]) == 3
     assert players[0].distance_to(players[4]) == 3
+
+
+def test_get_player_by_index_returns_expected_player():
+    gm = GameManager()
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+
+    assert gm.get_player_by_index(0) is p1
+    assert gm.get_player_by_index(1) is p2
+    assert gm.get_player_by_index(2) is None
+    assert gm.get_player_by_index(-1) is None

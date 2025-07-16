@@ -1311,6 +1311,10 @@ class GameManager:
             return self.players[idx]
         return None
 
+    def get_player_by_index(self, idx: int) -> Optional[Player]:
+        """Return the player at ``idx`` if it exists."""
+        return self._get_player_by_index(idx)
+
     def on_player_damaged(self, player: Player, source: Optional[Player] = None) -> None:
         for cb in self.player_damaged_listeners:
             cb(player, source)
