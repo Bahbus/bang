@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
-    from ..deck import Deck
 
 from .bang import BangCard
 from ..helpers import handle_out_of_turn_discard

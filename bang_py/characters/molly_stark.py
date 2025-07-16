@@ -7,6 +7,7 @@ from .base import BaseCharacter
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
     from ..player import Player
+    from ..cards.card import BaseCard
 
 class MollyStark(BaseCharacter):
     name = "Molly Stark"

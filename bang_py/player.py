@@ -4,9 +4,7 @@ from typing import Dict, List, TYPE_CHECKING
 
 from .cards.roles import (
     BaseRole,
-    DeputyRoleCard,
     OutlawRoleCard,
-    RenegadeRoleCard,
     SheriffRoleCard,
 )
 
