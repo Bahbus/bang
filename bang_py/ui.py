@@ -148,6 +148,16 @@ class BangUI:
         self.current_character = ""
         self.auto_miss_var = tk.BooleanVar(value=True)
         self.hand_names: list[str] = []
+        self._prompt_handlers: dict[str, Callable[[dict], None]] = {
+            "vera": self._handle_vera_prompt,
+            "general_store": self._handle_general_store_prompt,
+            "jesse_jones": self._handle_jesse_jones_prompt,
+            "kit_carlson": self._handle_kit_carlson_prompt,
+            "pedro_ramirez": self._handle_pedro_ramirez_prompt,
+            "jose_delgado": self._handle_jose_delgado_prompt,
+            "pat_brennan": self._handle_pat_brennan_prompt,
+            "lucky_duke": self._handle_lucky_duke_prompt,
+        }
         self._build_start_menu()
 
     def _build_start_menu(self) -> None:
@@ -314,35 +324,58 @@ class BangUI:
                 self._append_message(msg)
                 continue
 
-            if isinstance(data, dict) and "players" in data:
-                self._update_players(data["players"])
-                self.current_character = data.get("character", self.current_character)
-                self._update_hand(data.get("hand", []))
-                self.event_var.set(data.get("event", ""))
-                if "message" in data:
-                    self._append_message(data["message"])
-                    if any(k in data["message"].lower() for k in ["win", "eliminated"]):
-                        messagebox.showinfo("Game Update", data["message"])
-            elif isinstance(data, dict) and data.get("prompt") == "vera":
-                self._prompt_vera(data.get("options", []))
-            elif isinstance(data, dict) and data.get("prompt") == "general_store":
-                self._prompt_general_store(data.get("cards", []))
-            elif isinstance(data, dict) and data.get("prompt") == "jesse_jones":
-                self._prompt_jesse_jones(data.get("targets", []))
-            elif isinstance(data, dict) and data.get("prompt") == "kit_carlson":
-                self._prompt_kit_carlson(data.get("cards", []))
-            elif isinstance(data, dict) and data.get("prompt") == "pedro_ramirez":
-                self._prompt_pedro_ramirez()
-            elif isinstance(data, dict) and data.get("prompt") == "jose_delgado":
-                self._prompt_jose_delgado(data.get("equipment", []))
-            elif isinstance(data, dict) and data.get("prompt") == "pat_brennan":
-                self._prompt_pat_brennan(data.get("targets", []))
-            elif isinstance(data, dict) and data.get("prompt") == "lucky_duke":
-                self._prompt_lucky_duke(data.get("cards", []))
-            else:
-                self._append_message(msg)
+            if isinstance(data, dict):
+                if "players" in data:
+                    self._handle_players_update(data)
+                    continue
+                if self._handle_prompt(data):
+                    continue
+            self._append_message(msg)
         if self.client and self.client.is_alive():
             self.root.after(100, self._process_queue)
+
+    def _handle_players_update(self, data: dict) -> None:
+        """Update UI elements based on player data."""
+        self._update_players(data["players"])
+        self.current_character = data.get("character", self.current_character)
+        self._update_hand(data.get("hand", []))
+        self.event_var.set(data.get("event", ""))
+        message = data.get("message")
+        if message:
+            self._append_message(message)
+            if any(k in message.lower() for k in ("win", "eliminated")):
+                messagebox.showinfo("Game Update", message)
+
+    def _handle_prompt(self, data: dict) -> bool:
+        handler = self._prompt_handlers.get(data.get("prompt", ""))
+        if handler:
+            handler(data)
+            return True
+        return False
+
+    def _handle_vera_prompt(self, data: dict) -> None:
+        self._prompt_vera(data.get("options", []))
+
+    def _handle_general_store_prompt(self, data: dict) -> None:
+        self._prompt_general_store(data.get("cards", []))
+
+    def _handle_jesse_jones_prompt(self, data: dict) -> None:
+        self._prompt_jesse_jones(data.get("targets", []))
+
+    def _handle_kit_carlson_prompt(self, data: dict) -> None:
+        self._prompt_kit_carlson(data.get("cards", []))
+
+    def _handle_pedro_ramirez_prompt(self, _data: dict) -> None:
+        self._prompt_pedro_ramirez()
+
+    def _handle_jose_delgado_prompt(self, data: dict) -> None:
+        self._prompt_jose_delgado(data.get("equipment", []))
+
+    def _handle_pat_brennan_prompt(self, data: dict) -> None:
+        self._prompt_pat_brennan(data.get("targets", []))
+
+    def _handle_lucky_duke_prompt(self, data: dict) -> None:
+        self._prompt_lucky_duke(data.get("cards", []))
 
     def _end_turn(self) -> None:
         if self.client:
