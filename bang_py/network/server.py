@@ -158,7 +158,7 @@ class BangServer:
 
         target = None
         if target_idx is not None:
-            target = self.game._get_player_by_index(target_idx)
+            target = self.game.get_player_by_index(target_idx)
 
         card = player.hand[idx]
         if isinstance(card, GeneralStoreCard):
@@ -230,7 +230,7 @@ class BangServer:
 
     async def _ability_vera_custer(self, player: Player, data: Dict[str, Any]) -> bool:
         idx = data.get("target")
-        target = self.game._get_player_by_index(idx) if idx is not None else None
+        target = self.game.get_player_by_index(idx) if idx is not None else None
         if target:
             self.game.vera_custer_copy(player, target)
         return False
@@ -238,7 +238,7 @@ class BangServer:
     async def _ability_jesse_jones(self, player: Player, data: Dict[str, Any]) -> bool:
         idx = data.get("target")
         card_idx = data.get("card_index")
-        target = self.game._get_player_by_index(idx) if idx is not None else None
+        target = self.game.get_player_by_index(idx) if idx is not None else None
         self.game.draw_phase(player, jesse_target=target, jesse_card=card_idx)
         return False
 
@@ -269,7 +269,7 @@ class BangServer:
     async def _ability_pat_brennan(self, player: Player, data: Dict[str, Any]) -> bool:
         idx = data.get("target")
         card = data.get("card")
-        target = self.game._get_player_by_index(idx) if idx is not None else None
+        target = self.game.get_player_by_index(idx) if idx is not None else None
         self.game.draw_phase(player, pat_target=target, pat_card=card)
         return False
 
