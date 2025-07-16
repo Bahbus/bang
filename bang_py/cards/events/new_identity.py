@@ -9,12 +9,15 @@ if TYPE_CHECKING:
 
 
 class NewIdentityEventCard(BaseEventCard):
-    """At the start of their turn, each player may look at their other face down character card
-    and switch to it with 2 life."""
+    """At the start of their turn, each player may look at their other face down
+    character card and switch to it with 2 life."""
 
     card_name = "New Identity"
     card_set = "high_noon"
-    description = "At the start of their turn, each player may look at their other face down character card and switch to it with 2 life."
+    description = (
+        "At the start of their turn, each player may look at their other face down "
+        "character card and switch to it with 2 life."
+    )
 
     def play(
         self,

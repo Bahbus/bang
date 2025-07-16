@@ -9,11 +9,15 @@ if TYPE_CHECKING:
 
 
 class DeadManEventCard(BaseEventCard):
-    """During his turn, the player that was eliminated first comes back with 2 life and 2 cards."""
+    """During his turn, the player that was eliminated first comes back with 2 life
+    and 2 cards."""
 
     card_name = "Dead Man"
     card_set = "fistful_of_cards"
-    description = "During his turn, the player that was eliminated first comes back with 2 life and 2 cards."
+    description = (
+        "During his turn, the player that was eliminated first comes back with 2 life "
+        "and 2 cards."
+    )
 
     def play(
         self,

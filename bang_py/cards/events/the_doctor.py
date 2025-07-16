@@ -13,7 +13,10 @@ class TheDoctorEventCard(BaseEventCard):
 
     card_name = "The Doctor"
     card_set = "high_noon"
-    description = "When The Doctor enters play, the player(s) still in the game with the fewest life points regain 1 life point."
+    description = (
+        "When The Doctor enters play, the player(s) still in the game with the fewest "
+        "life points regain 1 life point."
+    )
 
     def play(
         self,

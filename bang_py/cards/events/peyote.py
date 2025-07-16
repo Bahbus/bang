@@ -9,12 +9,15 @@ if TYPE_CHECKING:
 
 
 class PeyoteEventCard(BaseEventCard):
-    """During their draw phase, each player guesses red or black. They reveal the top card;
-    if correct they repeat until wrong."""
+    """During their draw phase, each player guesses red or black. They reveal the
+    top card; if correct they repeat until wrong."""
 
     card_name = "Peyote"
     card_set = "fistful_of_cards"
-    description = "During their draw phase, each player guesses red or black. They reveal the top card; if correct they repeat until wrong."
+    description = (
+        "During their draw phase, each player guesses red or black. They reveal the "
+        "top card; if correct they repeat until wrong."
+    )
 
     def play(
         self,

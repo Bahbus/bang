@@ -14,7 +14,10 @@ class LawOfTheWestEventCard(BaseEventCard):
 
     card_name = "Law of the West"
     card_set = "fistful_of_cards"
-    description = "During their draw phase, each player must reveal the second card they drew and play it immediately if possible."
+    description = (
+        "During their draw phase, each player must reveal the second card they drew "
+        "and play it immediately if possible."
+    )
 
     def play(
         self,
