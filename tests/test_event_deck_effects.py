@@ -59,7 +59,8 @@ def test_thirst_event_draw_one():
 
 
 def test_fistful_event_bangs_by_hand():
-    gm = GameManager()
+    deck = Deck([BangCard(), BangCard()])
+    gm = GameManager(deck=deck)
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     p.hand = [BangCard(), BangCard()]
@@ -67,7 +68,8 @@ def test_fistful_event_bangs_by_hand():
     gm.turn_order = [0]
     gm.current_turn = 0
     gm._begin_turn()
-    assert p.health == p.max_health - 2
+    gm.end_turn()
+    assert p.health == p.max_health - 4
 
 
 def _enable_no_bang(game: GameManager) -> None:
@@ -123,8 +125,10 @@ def test_ghost_town_revives_players():
     gm.event_deck = [EventCard("Ghost Town", _ghost_town, "")]
     gm.turn_order = [0, 1]
     gm.current_turn = 0
-    gm._begin_turn()  # sheriff turn -> draw event
-    gm.end_turn()  # end sheriff -> outlaw turn
+    gm._begin_turn()  # sheriff first turn
+    gm.end_turn()  # end sheriff -> outlaw first turn (still dead)
+    gm.end_turn()  # end outlaw -> sheriff second turn -> draw event
+    gm.end_turn()  # end sheriff -> outlaw revived turn
     assert outlaw.is_alive()
     assert len(outlaw.hand) == 3
 
@@ -142,11 +146,13 @@ def test_ghost_town_players_disappear_next_event():
     ]
     gm.turn_order = [0, 1]
     gm.current_turn = 0
-    gm._begin_turn()  # sheriff -> ghost town drawn
-    gm.end_turn()  # move to outlaw ghost turn
+    gm._begin_turn()  # sheriff first turn
+    gm.end_turn()  # outlaw first turn (dead)
+    gm.end_turn()  # sheriff second -> ghost town drawn
+    gm.end_turn()  # outlaw revived
     assert outlaw.is_alive()
-    gm.end_turn()  # finish outlaw turn -> back to sheriff
-    gm.end_turn()  # sheriff end triggers next event
+    gm.end_turn()  # end outlaw -> sheriff third -> next event
+    gm.end_turn()  # sheriff end -> outlaw disappears
     assert not outlaw.is_alive()
 
 
@@ -344,7 +350,7 @@ def test_event_deck_order_fistful():
     gm.add_player(sheriff)
     gm.add_player(outlaw)
     gm.start_game(deal_roles=False)
-    assert gm.current_event is not None
+    assert gm.current_event is None
     assert gm.event_deck[-1].name == "A Fistful of Cards"
 
 
@@ -501,7 +507,7 @@ def test_event_deck_order_high_noon():
     gm.add_player(sheriff)
     gm.add_player(outlaw)
     gm.start_game(deal_roles=False)
-    assert gm.current_event is not None
+    assert gm.current_event is None
     assert gm.event_deck[-1].name == "High Noon"
 
 
@@ -515,9 +521,12 @@ def test_event_sequence_progresses_each_sheriff_turn():
     gm.add_player(outlaw)
     gm.event_deck = [e1, e2]
     gm.start_game(deal_roles=False)
-    assert gm.current_event.name == "E1"
+    assert gm.current_event is None
     gm.end_turn()  # sheriff end -> outlaw turn
-    gm.end_turn()  # outlaw end -> sheriff turn, draw next
+    gm.end_turn()  # outlaw end -> sheriff second turn -> first event
+    assert gm.current_event.name == "E1"
+    gm.end_turn()  # sheriff end -> outlaw
+    gm.end_turn()  # outlaw end -> sheriff third turn -> next event
     assert gm.current_event.name == "E2"
 
 

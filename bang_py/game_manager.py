@@ -76,6 +76,8 @@ class GameManager:
     current_event: EventCard | None = None
     event_flags: dict = field(default_factory=dict)
     first_eliminated: Player | None = None
+    sheriff_turns: int = 0
+    phase: str = "draw"
 
     # General Store state
     general_store_cards: List[BaseCard] | None = None
@@ -97,6 +99,7 @@ class GameManager:
     game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
     card_play_checks: List[Callable[[Player, BaseCard, Optional[Player]], bool]] = field(default_factory=list)
     card_played_listeners: List[Callable[[Player, BaseCard, Optional[Player]], None]] = field(default_factory=list)
+    play_phase_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     _duel_counts: dict | None = field(default=None, init=False, repr=False)
 
     def prompt_new_identity(self, player: Player) -> bool:
@@ -293,6 +296,7 @@ class GameManager:
         self.current_turn %= len(self.turn_order)
         idx = self.turn_order[self.current_turn]
         player = self.players[idx]
+        self.phase = "draw"
         for eq in list(player.equipment.values()):
             if eq.card_type == "green" and not getattr(eq, "active", True):
                 eq.active = True
@@ -301,9 +305,11 @@ class GameManager:
                     player._apply_health_modifier(modifier)
         self.reset_turn_flags(player)
         pre_ghost = self.event_flags.get("ghost_town")
-        if self.event_deck and isinstance(player.role, SheriffRoleCard):
-            self.draw_event_card()
-            if pre_ghost:
+        if isinstance(player.role, SheriffRoleCard):
+            self.sheriff_turns += 1
+            if self.event_deck and self.sheriff_turns >= 2:
+                self.draw_event_card()
+            if pre_ghost and self.event_deck and self.sheriff_turns >= 2:
                 removed = False
                 for pl in self.players:
                     if pl.metadata.ghost_revived and pl.is_alive():
@@ -311,9 +317,7 @@ class GameManager:
                         pl.metadata.ghost_revived = False
                         removed = True
                 if removed:
-                    self.turn_order = [
-                        i for i, pl in enumerate(self.players) if pl.is_alive()
-                    ]
+                    self.turn_order = [i for i, pl in enumerate(self.players) if pl.is_alive()]
                     self.current_turn = self.turn_order.index(self.players.index(player))
                     idx = self.turn_order[self.current_turn]
                     player = self.players[idx]
@@ -397,6 +401,7 @@ class GameManager:
             return
 
         self.draw_phase(player, blood_target=blood_target)
+        self.play_phase(player)
         player.metadata.bangs_played = 0
         for cb in self.turn_started_listeners:
             cb(player)
@@ -406,6 +411,7 @@ class GameManager:
             return
         idx = self.turn_order[self.current_turn]
         player = self.players[idx]
+        self.phase = "discard"
         self.discard_phase(player)
         self.event_flags.pop("turn_suit", None)
         for eq in list(player.equipment.values()):
@@ -543,6 +549,12 @@ class GameManager:
 
         if self.event_flags.get("handcuffs"):
             self.event_flags["turn_suit"] = (handcuffs_suit or "Hearts")
+
+    def play_phase(self, player: Player) -> None:
+        """Signal the start of the play phase for ``player``."""
+        self.phase = "play"
+        for cb in self.play_phase_listeners:
+            cb(player)
 
     def discard_phase(self, player: Player) -> None:
         """Discard down to the player's hand limit at the end of their turn."""
