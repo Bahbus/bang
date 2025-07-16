@@ -1,6 +1,6 @@
 import asyncio
 import json
-import random
+import secrets
 from dataclasses import dataclass
 from typing import Any, Dict, List
 
@@ -55,7 +55,9 @@ class BangServer:
     ) -> None:
         self.host = host
         self.port = port
-        self.room_code = room_code or str(random.randint(1000, 9999))
+        # Generate a random 4-digit room code using a cryptographically
+        # secure RNG to avoid predictable codes.
+        self.room_code = room_code or f"{secrets.randbelow(9000) + 1000:04d}"
         self.game = GameManager(expansions=expansions or [])
         self.connections: Dict[WebSocketServerProtocol, Connection] = {}
         self.max_players = max_players
