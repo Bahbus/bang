@@ -21,4 +21,3 @@ class HideoutCard(BaseCard):
         if not target:
             return
         target.equip(self, active=self.active)
-
