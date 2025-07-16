@@ -58,7 +58,6 @@ def test_lasso_event_ignores_equipment():
     assert a.distance_to(b) == 1
 
 
-
 def test_sniper_event_allows_special_bang():
     gm = GameManager()
     p = Player("P", role=SheriffRoleCard())
@@ -153,4 +152,3 @@ def test_fistful_deck_contents():
         "The Judge",
         "Vendetta",
     }
-

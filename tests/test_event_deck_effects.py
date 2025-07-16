@@ -26,12 +26,9 @@ from bang_py.game_manager import GameManager
 from bang_py.player import Player
 from bang_py.cards.roles import (
     SheriffRoleCard,
-    DeputyRoleCard,
     OutlawRoleCard,
-    RenegadeRoleCard,
 )
 from bang_py.cards import BangCard, BeerCard, MissedCard, BarrelCard
-from bang_py.cards.jail import JailCard
 from bang_py.cards.events import (
     DeadManEventCard,
     BloodBrothersEventCard,
@@ -156,7 +153,6 @@ def test_ghost_town_players_disappear_next_event():
     assert not outlaw.is_alive()
 
 
-
 def test_blessing_overrides_suit():
     deck = Deck([BangCard(suit="Clubs"), BangCard(suit="Spades")])
     gm = GameManager(deck=deck)
@@ -184,8 +180,6 @@ def test_gold_rush_reverses_turn_order():
     assert gm.players[gm.turn_order[gm.current_turn]] is p3
 
 
-
-
 def test_vendetta_outlaw_range_bonus():
     gm = GameManager()
     outlaw = Player("Out", role=OutlawRoleCard())
@@ -209,8 +203,6 @@ def test_sermon_blocks_bang_real():
     gm.play_card(sheriff, sheriff.hand[0], outlaw)
     assert len(sheriff.hand) == 1
     assert outlaw.health == outlaw.max_health
-
-
 
 
 def test_ricochet_discards_equipment():
@@ -267,8 +259,6 @@ def test_ranch_discard_and_redraw():
     assert len(p1.hand) == 4
 
 
-
-
 def test_high_noon_start_damage():
     gm = GameManager()
     p = Player("Sheriff", role=SheriffRoleCard())
@@ -279,8 +269,6 @@ def test_high_noon_start_damage():
     gm.draw_event_card()
     gm._begin_turn()
     assert p.health == p.max_health - 1
-
-
 
 
 def test_blood_brothers_transfer_during_turn():
@@ -352,7 +340,6 @@ def test_event_deck_order_fistful():
     gm.start_game(deal_roles=False)
     assert gm.current_event is None
     assert gm.event_deck[-1].name == "A Fistful of Cards"
-
 
 
 def test_peyote_extra_draw():
@@ -461,8 +448,6 @@ def test_law_of_west_plays_second_card():
     gm.draw_event_card()
     gm.draw_phase(p)
     assert len(p.hand) == 1
-
-
 
 
 def test_shootout_allows_multiple_bangs():
@@ -585,6 +570,7 @@ def test_no_draw_skips_draw_phase():
     gm.draw_phase(p)
     assert not p.hand
 
+
 def test_new_identity_character_swap():
     gm = GameManager()
     p = Player("S", role=SheriffRoleCard(), character=PaulRegret())
@@ -597,4 +583,3 @@ def test_new_identity_character_swap():
     gm._begin_turn()
     assert isinstance(p.character, BlackJack)
     assert p.health == 2
-
