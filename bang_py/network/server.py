@@ -58,9 +58,9 @@ class BangServer:
     ) -> None:
         self.host = host
         self.port = port
-        # Generate a random 4-digit room code using a cryptographically
+        # Generate a random six-character room code using a cryptographically
         # secure RNG to avoid predictable codes.
-        self.room_code = room_code or f"{secrets.randbelow(9000) + 1000:04d}"
+        self.room_code = room_code or secrets.token_hex(3)
         self.game = GameManager(expansions=expansions or [])
         self.connections: Dict[WebSocketServerProtocol, Connection] = {}
         self.max_players = max_players

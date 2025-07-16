@@ -236,7 +236,7 @@ class BangUI:
     def _start_host(self) -> None:
         port = int(self.port_var.get())
         max_players = int(self.max_players_var.get())
-        room_code = str(secrets.randbelow(9000) + 1000)
+        room_code = secrets.token_hex(3)
         expansions = []
         if self.exp_dodge_city.get():
             expansions.append("dodge_city")
