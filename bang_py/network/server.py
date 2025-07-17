@@ -15,7 +15,6 @@ except ModuleNotFoundError:  # pragma: no cover - handled in start()
 
 from ..game_manager import GameManager
 from ..player import Player
-from ..cards.roles import OutlawRoleCard
 from ..characters.jesse_jones import JesseJones
 from ..characters.jose_delgado import JoseDelgado
 from ..characters.kit_carlson import KitCarlson
@@ -102,7 +101,7 @@ class BangServer:
             await websocket.send("Game full")
             return
 
-        player = Player(name, role=OutlawRoleCard())
+        player = Player(name)
         player.metadata.auto_miss = True
         self.game.add_player(player)
         self.connections[websocket] = Connection(websocket, player)

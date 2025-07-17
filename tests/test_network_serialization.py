@@ -39,3 +39,16 @@ def test_serialize_players_with_health_changes():
             "equipment": [],
         }
     ]
+
+
+def test_serialize_players_without_role():
+    player = Player("Alice")
+    data = _serialize_players([player])
+    assert data == [
+        {
+            "name": "Alice",
+            "health": player.health,
+            "role": "",
+            "equipment": [],
+        }
+    ]

@@ -31,6 +31,8 @@ def test_server_client_play_flow() -> None:
 
                 assert len(server.game.players) == 2
                 alice, bob = server.game.players[0], server.game.players[1]
+                assert alice.role is None
+                assert bob.role is None
                 alice.health = 1
                 bob.hand.append(BangCard())
 
