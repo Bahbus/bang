@@ -347,6 +347,16 @@ class BangUI:
         )
         self.board_canvas.grid(row=1, column=1, padx=10, pady=10)
 
+        # Draw a simple green table background
+        self.board_canvas.create_oval(5, 5, 295, 195, fill="forestgreen", outline="")
+
+        # Draw the draw deck and discard pile using the generated card image
+        self.board_canvas.create_image(90, 100, image=self.card_image)
+        self.board_canvas.create_text(90, 160, text="Draw", fill="white")
+
+        self.board_canvas.create_image(210, 100, image=self.card_image)
+        self.board_canvas.create_text(210, 160, text="Discard", fill="white")
+
         positions = [
             (0, 1),
             (1, 2),
