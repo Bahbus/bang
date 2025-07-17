@@ -142,9 +142,17 @@ class BangUI:
     """
     def __init__(self) -> None:
         self.root = tk.Tk()
-        self.root.geometry("1024x768")
+        try:
+            self.root.state("zoomed")
+        except tk.TclError:
+            width = self.root.winfo_screenwidth()
+            height = self.root.winfo_screenheight()
+            self.root.geometry(f"{width}x{height}")
         self.root.title("Bang!")
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        self.root.rowconfigure(1, weight=1)
+        self.root.columnconfigure(0, weight=1)
+        self.root.columnconfigure(1, weight=1)
         self.msg_queue: queue.Queue[str] = queue.Queue()
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
@@ -347,12 +355,13 @@ class BangUI:
         self.room_code_label.grid(row=0, column=0, columnspan=2)
 
         self.board_frame = ttk.Frame(self.root)
-        self.board_frame.grid(row=1, column=0, columnspan=2)
+        self.board_frame.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        for i in range(3):
+            self.board_frame.rowconfigure(i, weight=1)
+            self.board_frame.columnconfigure(i, weight=1)
 
-        self.board_canvas = tk.Canvas(
-            self.board_frame, width=300, height=200, bg="saddlebrown"
-        )
-        self.board_canvas.grid(row=1, column=1, padx=10, pady=10)
+        self.board_canvas = tk.Canvas(self.board_frame, bg="saddlebrown")
+        self.board_canvas.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
 
         # Draw a simple green table background
         self.board_canvas.create_oval(5, 5, 295, 195, fill="forestgreen", outline="")
