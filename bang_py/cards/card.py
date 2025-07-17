@@ -10,6 +10,9 @@ if TYPE_CHECKING:  # pragma: no cover - import for type checking only
 class BaseCard(ABC):
     """Abstract base class for all playing cards."""
 
+    # These metadata fields are accessed by the deck builder and UI via
+    # ``getattr``. They remain here even if not referenced within this module
+    # so Vulture may flag them as unused.
     card_name: str = "Card"
     card_type: str = "action"
     card_set: str = "base"
@@ -24,4 +27,6 @@ class BaseCard(ABC):
     @abstractmethod
     def play(self, target: Player | None, **kwargs) -> None:
         """Apply the card effect to the target."""
+        # ``**kwargs`` allows subclasses to accept extra parameters without
+        # changing the base class signature.
         raise NotImplementedError
