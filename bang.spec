@@ -1,12 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
 
 a = Analysis(
     ['pyinstaller_entry.py'],
     pathex=[],
-    binaries=[],
+    binaries=collect_dynamic_libs('PySide6'),
     datas=[],
-    hiddenimports=[],
+    hiddenimports=collect_submodules('PySide6'),
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
