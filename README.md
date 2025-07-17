@@ -4,7 +4,7 @@ This repository now contains a Python implementation of the Bang card game along
 
 ## Running the server
 
-Install the package (which automatically installs the `websockets` dependency):
+Install the package (which also installs `websockets` and the Qt bindings):
 
 ```bash
 pip install .
@@ -25,17 +25,28 @@ This networking layer is experimental and only demonstrates joining the game and
 
 ## Graphical Interface
 
-The project also provides a small Tkinter-based GUI for hosting or joining games. Tkinter comes with Python but may require the `python3-tk` package on some Linux systems. The window now launches full-screen (or maximized where supported) and adapts to the available space. Resize the window using standard OS controls or press `F11` to toggle full-screen mode. The game log floats above the board as a translucent overlay so it stays readable without blocking the table.
-Run the interface with:
+The original Tkinter UI has been replaced with a Qt interface written for
+PyQt/PySide. It offers smoother graphics using ``QGraphicsView`` and a flexible
+layout. The main window starts maximized and you can press ``F11`` to toggle
+true full-screen mode. The log now appears in a floating dock that can be
+dragged anywhere or docked to the sides of the window.
+
+Install the Qt requirements first:
+
+```bash
+pip install PySide6
+```
+
+Then run the interface with:
 
 ```bash
 bang-ui
 ```
 
-Enter your name and choose **Host Game** or **Join Game**. Hosting launches a local
-server and shows a room code to share with friends. The host screen now lets you
-set the maximum number of players and which expansions to enable. Joining requires
-the host address, port, and the room code.
+Enter your name and choose **Host Game** or **Join Game**. Hosting launches a
+local server and shows a room code to share with friends. The host screen lets
+you set the maximum number of players and which expansions to enable. Joining
+requires the host address, port and room code.
 
 Available expansions are `dodge_city`, `high_noon`, and `fistful_of_cards`.
 `dodge_city` adds extra playing cards and is enabled automatically when no
@@ -53,12 +64,11 @@ Use the **End Turn** button or press the configured key (default `e`) when you a
 finished. Win or elimination messages are shown both in the log and as a popup
 dialog.
 
-The card backs and small heart icons are generated at runtime so the GUI does not
-require any external image files.
-
-Two JPEGs, `example-bang-menu-ui.jpg` and `example_bang_ui.jpg`, live in the
-repository root. They are only screenshots demonstrating a possible layout and
-are **not** loaded by the program.
+The card backs and small heart icons are generated at runtime so the GUI does
+not require any external image files. Two JPEGs,
+``example-bang-menu-ui.jpg`` and ``example_bang_ui.jpg``, remain in the
+repository root only as reference screenshots and are **not** loaded by the
+program.
 
 ## Building a Windows Executable
 
