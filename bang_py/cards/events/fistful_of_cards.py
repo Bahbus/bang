@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class FistfulOfCardsEventCard(BaseEventCard):
-    """At the beginning of his turn, each player is the target of as many Bangs!
-    as cards in their hand."""
+    """Hit the active player with Bang! for each card in their hand."""
 
     card_name = "A Fistful of Cards"
     card_set = "fistful_of_cards"
@@ -25,5 +24,6 @@ class FistfulOfCardsEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Fistful of Cards event."""
         if game:
             game.event_flags["fistful_of_cards"] = True

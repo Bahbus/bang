@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class HandcuffsEventCard(BaseEventCard):
-    """After their draw phase, each player announces a suit and can only play that
-    suit for the rest of their turn."""
+    """Players choose one suit to play after drawing."""
 
     card_name = "Handcuffs"
     card_set = "high_noon"
@@ -25,5 +24,6 @@ class HandcuffsEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Handcuffs event."""
         if game:
             game.event_flags["handcuffs"] = True

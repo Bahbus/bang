@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class LawOfTheWestEventCard(BaseEventCard):
-    """During their draw phase, each player must reveal the second card they drew
-    and play it immediately if possible."""
+    """Players reveal and immediately play their second drawn card."""
 
     card_name = "Law of the West"
     card_set = "fistful_of_cards"
@@ -25,5 +24,6 @@ class LawOfTheWestEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Law of the West event."""
         if game:
             game.event_flags["law_of_the_west"] = True

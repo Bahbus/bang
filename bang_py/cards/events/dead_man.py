@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class DeadManEventCard(BaseEventCard):
-    """During his turn, the player that was eliminated first comes back with 2 life
-    and 2 cards."""
+    """Return the first eliminated player with two life and two cards."""
 
     card_name = "Dead Man"
     card_set = "fistful_of_cards"
@@ -25,6 +24,7 @@ class DeadManEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Dead Man event."""
         if game:
             game.event_flags["dead_man"] = True
             player_obj = game.first_eliminated

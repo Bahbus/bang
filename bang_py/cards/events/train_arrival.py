@@ -21,5 +21,6 @@ class TrainArrivalEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Train Arrival event."""
         if game:
             game.event_flags["draw_count"] = 3

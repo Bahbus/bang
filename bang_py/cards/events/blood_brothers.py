@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class BloodBrothersEventCard(BaseEventCard):
-    """At the beginning of his turn, each player may choose to lose 1 life
-    (but not their last life) to give 1 life point to any player."""
+    """Players may lose a life to heal another at the start of their turn."""
 
     card_name = "Blood Brothers"
     card_set = "fistful_of_cards"
@@ -25,5 +24,6 @@ class BloodBrothersEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Blood Brothers event."""
         if game:
             game.event_flags["blood_brothers"] = True

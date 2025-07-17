@@ -21,5 +21,6 @@ class ThirstEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Thirst event."""
         if game:
             game.event_flags["draw_count"] = 1

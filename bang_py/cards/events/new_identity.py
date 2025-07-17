@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class NewIdentityEventCard(BaseEventCard):
-    """At the start of their turn, each player may look at their other face down
-    character card and switch to it with 2 life."""
+    """Players may reveal and swap to their unused character with two life."""
 
     card_name = "New Identity"
     card_set = "high_noon"
@@ -25,5 +24,6 @@ class NewIdentityEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the New Identity event."""
         if game:
             game.event_flags["new_identity"] = True

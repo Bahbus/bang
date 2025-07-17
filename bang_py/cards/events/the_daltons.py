@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class TheDaltonsEventCard(BaseEventCard):
-    """When The Daltons enters play, each player that has any blue (equipment)
-    cards in front of them must choose one to discard."""
+    """Players with equipment must discard one when this enters play."""
 
     card_name = "The Daltons"
     card_set = "high_noon"
@@ -25,6 +24,7 @@ class TheDaltonsEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the The Daltons event."""
         if not game:
             return
         for p in game.players:

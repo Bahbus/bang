@@ -21,5 +21,6 @@ class BlessingEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Blessing event."""
         if game:
             game.event_flags["suit_override"] = "Hearts"

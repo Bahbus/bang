@@ -21,5 +21,6 @@ class RanchEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Ranch event."""
         if game:
             game.event_flags["ranch"] = True

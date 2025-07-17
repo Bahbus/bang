@@ -21,5 +21,6 @@ class HardLiquorEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Hard Liquor event."""
         if game:
             game.event_flags["hard_liquor"] = True

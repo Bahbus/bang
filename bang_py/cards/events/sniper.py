@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class SniperEventCard(BaseEventCard):
-    """During their turn, each player may discard 2 Bang! cards together against a
-    player. It counts as 1 Bang!, but can only be countered by 2 Missed!"""
+    """Discard two Bang! cards together as one attack requiring two Missed!."""
 
     card_name = "Sniper"
     card_set = "fistful_of_cards"
@@ -25,5 +24,6 @@ class SniperEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Sniper event."""
         if game:
             game.event_flags["sniper"] = True

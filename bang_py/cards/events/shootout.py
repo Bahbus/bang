@@ -21,5 +21,6 @@ class ShootoutEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Shootout event."""
         if game:
             game.event_flags["bang_limit"] = 2

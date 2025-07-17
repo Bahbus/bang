@@ -21,5 +21,6 @@ class HighNoonEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the High Noon event."""
         if game:
             game.event_flags["start_damage"] = 1

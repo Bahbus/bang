@@ -9,10 +9,7 @@ if TYPE_CHECKING:
 
 
 class PeyoteEventCard(BaseEventCard):
-    """During their draw phase, each player guesses red or black.
-
-    They reveal the top card; if correct they repeat until wrong.
-    """
+    """Players guess red or black before each draw, repeating while correct."""
 
     card_name = "Peyote"
     card_set = "fistful_of_cards"
@@ -27,5 +24,6 @@ class PeyoteEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Peyote event."""
         if game:
             game.event_flags["peyote"] = True

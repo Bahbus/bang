@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class GhostTownEventCard(BaseEventCard):
-    """During their turn, eliminated players come back as ghosts with 3 cards and
-    cannot die. At the end of their turn, they are eliminated again."""
+    """Eliminated players return as ghosts for one turn with three cards."""
 
     card_name = "Ghost Town"
     card_set = "high_noon"
@@ -25,6 +24,7 @@ class GhostTownEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Ghost Town event."""
         if game:
             game.event_flags["ghost_town"] = True
             game.turn_order = list(range(len(game.players)))

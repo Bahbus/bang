@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class GoldRushEventCard(BaseEventCard):
-    """The game proceeds counter-clockwise, but card effects still proceed clockwise."""
+    """Reverse player order while card effects remain clockwise."""
 
     card_name = "Gold Rush"
     card_set = "high_noon"
@@ -21,5 +21,6 @@ class GoldRushEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Gold Rush event."""
         if game:
             game.event_flags["reverse_turn"] = True

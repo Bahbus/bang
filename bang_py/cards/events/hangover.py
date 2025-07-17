@@ -21,5 +21,6 @@ class HangoverEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Hangover event."""
         if game:
             game.event_flags["no_abilities"] = True
