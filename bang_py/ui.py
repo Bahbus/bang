@@ -131,8 +131,14 @@ class GameBoard(QtWidgets.QGraphicsView):
         self.setRenderHint(QtGui.QPainter.Antialiasing)
         self._scene = QtWidgets.QGraphicsScene(self)
         self.setScene(self._scene)
-        self.max_width = 800
-        self.max_height = 600
+        screen = QtGui.QGuiApplication.primaryScreen()
+        if screen is not None:
+            geom = screen.availableGeometry()
+            self.max_width = geom.width()
+            self.max_height = geom.height()
+        else:
+            self.max_width = 800
+            self.max_height = 600
         self.card_width = 60
         self.card_height = 90
         self.card_pixmap = self._create_card_pixmap()
