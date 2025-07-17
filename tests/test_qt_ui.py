@@ -3,8 +3,8 @@ import json
 
 import pytest
 
-from bang_py.ui import BangUI
-from PySide6 import QtWidgets
+from bang_py.ui import BangUI, GameBoard
+from PySide6 import QtWidgets, QtCore, QtGui
 
 
 @pytest.fixture
@@ -41,3 +41,17 @@ def test_broadcast_state_updates_ui(qt_app):
     assert ui.board.players == state["players"]
     assert ui.hand_layout.count() == 2
     ui.close()
+
+
+def test_gameboard_uses_available_geometry(qt_app, monkeypatch):
+    rect = QtCore.QRect(0, 0, 1234, 987)
+
+    class DummyScreen:
+        def availableGeometry(self):
+            return rect
+
+    monkeypatch.setattr(QtGui.QGuiApplication, "primaryScreen", lambda: DummyScreen())
+    board = GameBoard()
+    assert board.max_width == rect.width()
+    assert board.max_height == rect.height()
+    board.close()
