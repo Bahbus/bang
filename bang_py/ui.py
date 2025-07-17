@@ -6,12 +6,12 @@ import queue
 import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Callable
+from pathlib import Path
 import logging
 import websockets
 from websockets import WebSocketException
 
 if __package__ in {None, ""}:
-    from pathlib import Path
     import sys
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -302,12 +302,64 @@ class BangUI:
         self._bind_keys()
         self.root.after(100, self._process_queue)
 
+    def _create_card_image(self, width: int = 60, height: int = 90) -> tk.PhotoImage:
+        """Generate a simple card back image."""
+        img = tk.PhotoImage(width=width, height=height)
+        img.put("#ddd", to=(0, 0, width, height))
+        border = "#222"
+        img.put(border, to=(0, 0, width, 1))
+        img.put(border, to=(0, height - 1, width, height))
+        img.put(border, to=(0, 0, 1, height))
+        img.put(border, to=(width - 1, 0, width, height))
+        return img
+
+    def _create_heart_image(self) -> tk.PhotoImage:
+        """Generate a small heart icon."""
+        pattern = [
+            "0110",
+            "1111",
+            "1111",
+            "0110",
+            "0010",
+        ]
+        h = len(pattern)
+        w = len(pattern[0])
+        img = tk.PhotoImage(width=w, height=h)
+        for y, row in enumerate(pattern):
+            for x, ch in enumerate(row):
+                color = "#d00" if ch == "1" else "white"
+                img.put(color, (x, y))
+        return img
+
     def _build_game_view(self) -> None:
         for widget in self.root.winfo_children():
             widget.destroy()
 
-        self.players_text = tk.Text(self.root, height=5, width=40, state="disabled")
-        self.players_text.grid(row=0, column=0, columnspan=2)
+        self.heart_image = self._create_heart_image()
+        self.card_image = self._create_card_image()
+
+        self.board_frame = ttk.Frame(self.root)
+        self.board_frame.grid(row=0, column=0, columnspan=2)
+
+        self.board_canvas = tk.Canvas(
+            self.board_frame, width=300, height=200, bg="saddlebrown"
+        )
+        self.board_canvas.grid(row=1, column=1, padx=10, pady=10)
+
+        positions = [
+            (0, 1),
+            (1, 2),
+            (2, 1),
+            (1, 0),
+            (0, 2),
+            (2, 2),
+            (2, 0),
+        ]
+        self.player_frames: list[ttk.Frame] = []
+        for r, c in positions:
+            frame = ttk.Frame(self.board_frame)
+            frame.grid(row=r, column=c, padx=5, pady=5)
+            self.player_frames.append(frame)
 
         self.event_var = tk.StringVar(value="")
         self.event_label = ttk.Label(self.root, textvariable=self.event_var)
@@ -454,9 +506,11 @@ class BangUI:
             return _handler
 
         for i, card in enumerate(cards):
-            btn = ttk.Button(
+            btn = tk.Button(
                 self.hand_frame,
+                image=self.card_image,
                 text=card,
+                compound="top",
                 command=_make_play_handler(i),
             )
             btn.grid(row=0, column=i, padx=2)
@@ -503,18 +557,23 @@ class BangUI:
                 ).grid(row=1, column=i, padx=2)
 
     def _update_players(self, players: list[dict]) -> None:
-        lines = []
-        for idx, p in enumerate(players):
-            equip = ", ".join(p.get("equipment", []))
-            line = f"{idx}: {p['name']} ({p['role']}) HP {p['health']}"
+        for i, frame in enumerate(self.player_frames):
+            for w in frame.winfo_children():
+                w.destroy()
+            if i >= len(players):
+                continue
+            p = players[i]
+            ttk.Label(frame, text=f"{p['name']} ({p['role']})").pack()
+            hearts = ttk.Frame(frame)
+            hearts.pack()
+            for _ in range(p.get("health", 0)):
+                ttk.Label(hearts, image=self.heart_image).pack(side="left")
+            equip = p.get("equipment", [])
             if equip:
-                line += f" [{equip}]"
-            lines.append(line)
-        text = "\n".join(lines)
-        self.players_text.configure(state="normal")
-        self.players_text.delete("1.0", tk.END)
-        self.players_text.insert(tk.END, text)
-        self.players_text.configure(state="disabled")
+                eq_frame = ttk.Frame(frame)
+                eq_frame.pack()
+                for e in equip:
+                    ttk.Label(eq_frame, text=e).pack(side="left")
 
     def _append_message(self, msg: str) -> None:
         self.text.configure(state="normal")
