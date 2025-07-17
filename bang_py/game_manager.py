@@ -522,17 +522,8 @@ class GameManager:
         self.phase = "draw"
         self.reset_turn_flags(player)
 
-        player = self._apply_event_start_effects(player)
+        player = self._run_start_turn_checks(player)
         if not player:
-            return
-
-        if self._maybe_revive_ghost_town(player):
-            return
-
-        if not self._handle_equipment_start(player):
-            return
-
-        if self._handle_character_draw_abilities(player):
             return
 
         self.draw_phase(player, blood_target=blood_target)
@@ -540,6 +531,19 @@ class GameManager:
         player.metadata.bangs_played = 0
         for cb in self.turn_started_listeners:
             cb(player)
+
+    def _run_start_turn_checks(self, player: Player) -> Player | None:
+        """Apply start-of-turn effects returning the acting player or ``None``."""
+        player = self._apply_event_start_effects(player)
+        if not player:
+            return None
+        if self._maybe_revive_ghost_town(player):
+            return None
+        if not self._handle_equipment_start(player):
+            return None
+        if self._handle_character_draw_abilities(player):
+            return None
+        return player
 
     def end_turn(self) -> None:
         if not self.turn_order:
@@ -891,16 +895,24 @@ class GameManager:
         return count < limit or unlimited
 
     def _dispatch_play(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
-        if player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target:
-            handler = self._card_handlers.get(BangCard)
-            if handler:
-                handler(player, BangCard(), target)
+        if self._handle_missed_as_bang(player, card, target):
             return
         handler = self._card_handlers.get(type(card))
         if handler:
             handler(player, card, target)
         else:
             card.play(target)
+
+    def _handle_missed_as_bang(
+        self, player: Player, card: BaseCard, target: Optional[Player]
+    ) -> bool:
+        """Treat a Missed! card as Bang! when allowed."""
+        if player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target:
+            handler = self._card_handlers.get(BangCard)
+            if handler:
+                handler(player, BangCard(), target)
+            return True
+        return False
 
     def _play_bang_card(self, player: Player, card: BangCard, target: Optional[Player]) -> None:
         ignore_eq = player.metadata.ignore_others_equipment
