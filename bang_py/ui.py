@@ -184,6 +184,11 @@ class BangUI:
             "players": self._handle_players_update,
             "prompt": self._handle_prompt,
         }
+        self.max_board_width = 0
+        self.max_board_height = 0
+        self.card_width = 0
+        self.card_height = 0
+        self.current_scale = 1.0
         self._build_start_menu()
 
     def _build_start_menu(self) -> None:
@@ -348,8 +353,15 @@ class BangUI:
         for widget in self.root.winfo_children():
             widget.destroy()
 
+        screen_w = self.root.winfo_screenwidth()
+        screen_h = self.root.winfo_screenheight()
+        self.max_board_width = int(screen_w * 0.6)
+        self.max_board_height = int(screen_h * 0.4)
+        self.card_width = self.max_board_width // 5
+        self.card_height = int(self.card_width * 1.5)
         self.heart_image = self._create_heart_image()
-        self.card_image = self._create_card_image()
+        self.card_image = self._create_card_image(self.card_width, self.card_height)
+        self.current_scale = 1.0
 
         self.room_code_label = ttk.Label(
             self.root, text=f"Room Code: {self.room_code}"
@@ -362,18 +374,14 @@ class BangUI:
             self.board_frame.rowconfigure(i, weight=1)
             self.board_frame.columnconfigure(i, weight=1)
 
-        self.board_canvas = tk.Canvas(self.board_frame, bg="saddlebrown")
+        self.board_canvas = tk.Canvas(
+            self.board_frame,
+            bg="saddlebrown",
+            width=self.max_board_width,
+            height=self.max_board_height,
+        )
         self.board_canvas.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
-
-        # Draw a simple green table background
-        self.board_canvas.create_oval(5, 5, 295, 195, fill="forestgreen", outline="")
-
-        # Draw the draw deck and discard pile using the generated card image
-        self.board_canvas.create_image(90, 100, image=self.card_image)
-        self.board_canvas.create_text(90, 160, text="Draw", fill="white")
-
-        self.board_canvas.create_image(210, 100, image=self.card_image)
-        self.board_canvas.create_text(210, 160, text="Discard", fill="white")
+        self._draw_board(self.current_scale)
 
         positions = [
             (0, 1),
@@ -403,17 +411,8 @@ class BangUI:
         self.log_overlay.lift(self.root)
         self.log_text = tk.Text(self.log_overlay, height=10, width=40, state="disabled")
         self.log_text.pack()
-        self.root.update_idletasks()
-        self.log_overlay.update_idletasks()
-        bx = self.board_canvas.winfo_rootx()
-        by = self.board_canvas.winfo_rooty()
-        bw = self.board_canvas.winfo_width()
-        bh = self.board_canvas.winfo_height()
-        lw = self.log_overlay.winfo_width()
-        lh = self.log_overlay.winfo_height()
-        x = bx + (bw - lw) // 2
-        y = by + (bh - lh) // 2
-        self.log_overlay.geometry(f"{lw}x{lh}+{x}+{y}")
+        self._position_log_overlay()
+        self.root.bind("<Configure>", self._on_resize)
 
         self.hand_frame = ttk.Frame(self.root)
         self.hand_frame.grid(row=4, column=0, columnspan=2, pady=5)
@@ -427,6 +426,63 @@ class BangUI:
             variable=self.auto_miss_var,
             command=self._send_auto_miss,
         ).grid(row=6, column=0, columnspan=2)
+
+    def _position_log_overlay(self) -> None:
+        """Center the log overlay over the board canvas."""
+        if not self.log_overlay:
+            return
+        self.root.update_idletasks()
+        self.log_overlay.update_idletasks()
+        bx = self.board_canvas.winfo_rootx()
+        by = self.board_canvas.winfo_rooty()
+        bw = self.board_canvas.winfo_width()
+        bh = self.board_canvas.winfo_height()
+        lw = self.log_overlay.winfo_width()
+        lh = self.log_overlay.winfo_height()
+        x = bx + (bw - lw) // 2
+        y = by + (bh - lh) // 2
+        self.log_overlay.geometry(f"{lw}x{lh}+{x}+{y}")
+
+    def _draw_board(self, scale: float) -> None:
+        """Draw the table and deck graphics scaled to the given factor."""
+        width = int(self.max_board_width * scale)
+        height = int(self.max_board_height * scale)
+        self.board_canvas.config(width=width, height=height)
+        self.board_canvas.delete("all")
+        pad = int(5 * scale)
+        self.board_canvas.create_oval(
+            pad,
+            pad,
+            width - pad,
+            height - pad,
+            fill="forestgreen",
+            outline="",
+        )
+        card_w = max(int(self.card_width * scale), 1)
+        card_h = max(int(self.card_height * scale), 1)
+        self.card_image = self._create_card_image(card_w, card_h)
+        draw_x = int(width * 0.3)
+        draw_y = int(height * 0.5)
+        text_y = int(height * 0.8)
+        self.board_canvas.create_image(draw_x, draw_y, image=self.card_image)
+        self.board_canvas.create_text(draw_x, text_y, text="Draw", fill="white")
+        discard_x = int(width * 0.7)
+        self.board_canvas.create_image(discard_x, draw_y, image=self.card_image)
+        self.board_canvas.create_text(discard_x, text_y, text="Discard", fill="white")
+
+    def _on_resize(self, _event: tk.Event) -> None:
+        """Redraw the board when the window size changes."""
+        if not hasattr(self, "board_frame"):
+            return
+        avail_w = self.board_frame.winfo_width()
+        avail_h = self.board_frame.winfo_height()
+        if self.max_board_width == 0 or self.max_board_height == 0:
+            return
+        scale = min(avail_w / self.max_board_width, avail_h / self.max_board_height, 1.0)
+        if abs(scale - self.current_scale) > 0.05:
+            self.current_scale = scale
+            self._draw_board(scale)
+            self._position_log_overlay()
 
     def _process_queue(self) -> None:
         while not self.msg_queue.empty():
