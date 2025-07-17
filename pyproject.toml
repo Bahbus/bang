@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bang-game"
-version = "0.1.0"
-description = "Bang card game with optional websocket server and Tkinter UI"
+version = "0.1.1"
+description = "Bang card game with optional websocket server and Qt UI"
 authors = [{name = "Unknown"}]
 readme = "README.md"
 license = {file = "LICENSE"}
