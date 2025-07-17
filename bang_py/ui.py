@@ -838,17 +838,20 @@ class BangUI:
 
     def _on_close(self) -> None:
         """Handle window close by shutting down threads."""
+        # Quit the mainloop first so no more events are processed
+        self.root.quit()
+
         if self.client:
             self.client.stop()
             self.client.join(timeout=1)
             self.client = None
+
         if self.server_thread:
             self.server_thread.stop()
             self.server_thread.join(timeout=1)
             self.server_thread = None
-        # Quit the mainloop before destroying the root window to ensure
-        # any pending events are processed and the application exits cleanly.
-        self.root.quit()
+
+        # Destroy the window after all threads have been cleaned up
         self.root.destroy()
 
     def run(self) -> None:
