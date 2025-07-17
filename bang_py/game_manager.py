@@ -1388,11 +1388,11 @@ class GameManager:
     def _determine_winner(self, alive: List[Player], has_sheriff: bool) -> Optional[str]:
         """Return a victory message if a win condition is met."""
         if not has_sheriff and len(self.players) == 3:
-            if len(alive) == 1:
+            if len(alive) == 1 and alive[0].role:
                 return alive[0].role.victory_message
             return None
         for player in alive:
-            if player.role.check_win(self, player):
+            if player.role and player.role.check_win(self, player):
                 return player.role.victory_message
         return None
 
