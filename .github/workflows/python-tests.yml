@@ -18,6 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install PySide6
+          pip install pyinstaller
           pip install -e .
           pip install pytest
       - name: Run tests
