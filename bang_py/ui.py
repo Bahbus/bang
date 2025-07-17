@@ -148,6 +148,7 @@ class BangUI:
         self.msg_queue: queue.Queue[str] = queue.Queue()
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
+        self.room_code: str = ""
         # basic settings
         self.audio_sound = tk.BooleanVar(value=True)
         self.graphics_quality = tk.BooleanVar(value=True)
@@ -263,7 +264,7 @@ class BangUI:
         self.server_thread.start()
         uri = f"ws://localhost:{port}"
         self._start_client(uri, room_code)
-        messagebox.showinfo("Room Code", f"Give this code to friends: {room_code}")
+        self.root.title(f"Bang! - {room_code}")
 
     def _join_menu(self) -> None:
         name = self.name_var.get().strip()
@@ -297,6 +298,7 @@ class BangUI:
 
     def _start_client(self, uri: str, code: str) -> None:
         name = self.name_var.get().strip()
+        self.room_code = code
         self.client = ClientThread(uri, code, name, self.msg_queue)
         self.client.start()
         self._build_game_view()
@@ -339,8 +341,13 @@ class BangUI:
         self.heart_image = self._create_heart_image()
         self.card_image = self._create_card_image()
 
+        self.room_code_label = ttk.Label(
+            self.root, text=f"Room Code: {self.room_code}"
+        )
+        self.room_code_label.grid(row=0, column=0, columnspan=2)
+
         self.board_frame = ttk.Frame(self.root)
-        self.board_frame.grid(row=0, column=0, columnspan=2)
+        self.board_frame.grid(row=1, column=0, columnspan=2)
 
         self.board_canvas = tk.Canvas(
             self.board_frame, width=300, height=200, bg="saddlebrown"
@@ -374,23 +381,23 @@ class BangUI:
 
         self.event_var = tk.StringVar(value="")
         self.event_label = ttk.Label(self.root, textvariable=self.event_var)
-        self.event_label.grid(row=1, column=0, columnspan=2)
+        self.event_label.grid(row=2, column=0, columnspan=2)
 
         self.text = tk.Text(self.root, height=10, width=40, state="disabled")
-        self.text.grid(row=2, column=0, columnspan=2)
+        self.text.grid(row=3, column=0, columnspan=2)
 
         self.hand_frame = ttk.Frame(self.root)
-        self.hand_frame.grid(row=3, column=0, columnspan=2, pady=5)
+        self.hand_frame.grid(row=4, column=0, columnspan=2, pady=5)
 
         end_btn = ttk.Button(self.root, text="End Turn", command=self._end_turn)
-        end_btn.grid(row=4, column=0, columnspan=2, pady=5)
+        end_btn.grid(row=5, column=0, columnspan=2, pady=5)
 
         ttk.Checkbutton(
             self.root,
             text="Auto Miss",
             variable=self.auto_miss_var,
             command=self._send_auto_miss,
-        ).grid(row=5, column=0, columnspan=2)
+        ).grid(row=6, column=0, columnspan=2)
 
     def _process_queue(self) -> None:
         while not self.msg_queue.empty():
