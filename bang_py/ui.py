@@ -10,6 +10,13 @@ import logging
 import websockets
 from websockets import WebSocketException
 
+if __package__ in {None, ""}:
+    from pathlib import Path
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    __package__ = "bang_py"
+
 from .network.server import BangServer
 
 
