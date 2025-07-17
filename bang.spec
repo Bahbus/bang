@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['bang_py/ui.py'],
+    ['pyinstaller_entry.py'],
     pathex=[],
     binaries=[],
     datas=[],
