@@ -47,10 +47,14 @@ Once connected you will see:
 1. A list of players with their current health and any equipped items.
 2. A log area for game messages.
 3. Buttons representing the cards in your hand that can be clicked to play them.
+4. A board canvas showing the draw deck and discard pile.
 
 Use the **End Turn** button or press the configured key (default `e`) when you are
 finished. Win or elimination messages are shown both in the log and as a popup
 dialog.
+
+The card backs and small heart icons are generated at runtime so the GUI does not
+require any external image files.
 
 ## Building a Windows Executable
 
