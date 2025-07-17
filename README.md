@@ -52,6 +52,23 @@ Use the **End Turn** button or press the configured key (default `e`) when you a
 finished. Win or elimination messages are shown both in the log and as a popup
 dialog.
 
+## Building a Windows Executable
+
+`pyinstaller` can bundle the UI into a standalone Windows executable. Install the
+build dependencies and run the target:
+
+```bash
+pip install -r requirements.txt
+make build-exe
+```
+
+The command produces `dist/bang.exe`. Launch it on Windows by double-clicking or
+from the command line:
+
+```cmd
+bang.exe
+```
+
 ## Characters
 
 Players can now be assigned one of the classic Bang characters. Each character has a unique ability that modifies the rules of play. The full roster from the base game is provided:
