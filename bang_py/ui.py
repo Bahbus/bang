@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import math
 import secrets
 from pathlib import Path
 
@@ -105,6 +106,12 @@ class ClientThread(QtCore.QThread):
         if self.loop.is_running():
             asyncio.run_coroutine_threadsafe(self._send("end_turn"), self.loop)
 
+    def send_json(self, payload: dict) -> None:
+        """Serialize ``payload`` and send it to the server."""
+        if self.loop.is_running():
+            msg = json.dumps(payload)
+            asyncio.run_coroutine_threadsafe(self._send(msg), self.loop)
+
     async def _send(self, msg: str) -> None:
         if not self.websocket or self.websocket.closed:
             self.message_received.emit("Send error: not connected")
@@ -129,6 +136,7 @@ class GameBoard(QtWidgets.QGraphicsView):
         self.card_width = 60
         self.card_height = 90
         self.card_pixmap = self._create_card_pixmap()
+        self.players: list[dict] = []
         self._draw_board()
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:  # noqa: D401
@@ -165,6 +173,47 @@ class GameBoard(QtWidgets.QGraphicsView):
         self._scene.addPixmap(self.card_pixmap).setPos(discard_x, draw_y)
         self._scene.addText("Discard").setPos(discard_x,
                                               draw_y + self.card_height)
+
+        if self.players:
+            angle_step = 360 / len(self.players)
+            center_x = self.max_width / 2
+            center_y = self.max_height / 2
+            radius = min(self.max_width, self.max_height) * 0.35
+            for i, pl in enumerate(self.players):
+                ang = math.radians(i * angle_step)
+                x = center_x + radius * math.cos(ang) - self.card_width / 2
+                y = center_y + radius * math.sin(ang) - self.card_height / 2
+                self._scene.addPixmap(self.card_pixmap).setPos(x, y)
+                text = f"{pl['name']} ({pl['health']})"
+                self._scene.addText(text).setPos(x, y + self.card_height)
+
+    def update_players(self, players: list[dict]) -> None:
+        """Redraw the board to show ``players``."""
+        self.players = players
+        self._draw_board()
+
+
+class CardButton(QtWidgets.QPushButton):
+    """Button widget representing a hand card."""
+
+    action_signal = QtCore.Signal(str, int)
+
+    def __init__(self, text: str, index: int) -> None:
+        super().__init__(text)
+        self.index = index
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._context_menu)
+        self.clicked.connect(self._play)
+
+    def _play(self) -> None:
+        self.action_signal.emit("play_card", self.index)
+
+    def _context_menu(self, pos: QtCore.QPoint) -> None:
+        menu = QtWidgets.QMenu(self)
+        discard = menu.addAction("Discard")
+        chosen = menu.exec(self.mapToGlobal(pos))
+        if chosen == discard:
+            self.action_signal.emit("discard", self.index)
 
 
 class BangUI(QtWidgets.QMainWindow):
@@ -245,8 +294,23 @@ class BangUI(QtWidgets.QMainWindow):
     def _build_game_view(self) -> None:
         widget = QtWidgets.QWidget()
         vbox = QtWidgets.QVBoxLayout(widget)
+
+        hbox = QtWidgets.QHBoxLayout()
         self.board = GameBoard()
-        vbox.addWidget(self.board, 1)
+        hbox.addWidget(self.board, 1)
+        self.player_list = QtWidgets.QListWidget()
+        self.player_list.setMaximumWidth(200)
+        hbox.addWidget(self.player_list)
+        vbox.addLayout(hbox, 1)
+
+        self.hand_widget = QtWidgets.QWidget()
+        self.hand_layout = QtWidgets.QHBoxLayout(self.hand_widget)
+        vbox.addWidget(self.hand_widget)
+
+        btn_draw = QtWidgets.QPushButton("Draw")
+        btn_draw.clicked.connect(lambda: self._send_action({"action": "draw"}))
+        vbox.addWidget(btn_draw)
+
         btn_end = QtWidgets.QPushButton("End Turn")
         btn_end.clicked.connect(self._end_turn)
         vbox.addWidget(btn_end)
@@ -299,11 +363,83 @@ class BangUI(QtWidgets.QMainWindow):
         self.log_dock.show()
 
     def _append_message(self, msg: str) -> None:
-        self.log_text.append(msg)
+        try:
+            data = json.loads(msg)
+        except json.JSONDecodeError:
+            self.log_text.append(msg)
+            return
+
+        if isinstance(data, dict):
+            if "message" in data:
+                self.log_text.append(data["message"])
+            if "players" in data:
+                self._update_players(data["players"])
+            if "hand" in data:
+                self._update_hand(data["hand"])
+            if "prompt" in data:
+                self._show_prompt(data["prompt"], data)
+        else:
+            self.log_text.append(str(data))
 
     def _end_turn(self) -> None:
         if self.client:
             self.client.send_end_turn()
+
+    def _send_action(self, payload: dict) -> None:
+        if self.client:
+            self.client.send_json(payload)
+
+    def _update_players(self, players: list[dict]) -> None:
+        if hasattr(self, "player_list"):
+            self.player_list.clear()
+            for p in players:
+                self.player_list.addItem(f"{p['name']} ({p['health']})")
+        if hasattr(self, "board"):
+            self.board.update_players(players)
+
+    def _update_hand(self, cards: list[str]) -> None:
+        if not hasattr(self, "hand_layout"):
+            return
+        while self.hand_layout.count():
+            item = self.hand_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        for idx, name in enumerate(cards):
+            btn = CardButton(name, idx)
+            btn.action_signal.connect(self._handle_card_action)
+            self.hand_layout.addWidget(btn)
+
+    def _handle_card_action(self, action: str, index: int) -> None:
+        if action == "play_card":
+            self._send_action({"action": "play_card", "card_index": index})
+        elif action == "discard":
+            self._send_action({"action": "discard", "card_index": index})
+
+    def _show_prompt(self, prompt: str, data: dict) -> None:
+        if prompt == "general_store":
+            cards = data.get("cards", [])
+            item, ok = QtWidgets.QInputDialog.getItem(
+                self, "General Store", "Pick a card:", cards, 0, False
+            )
+            if ok:
+                index = cards.index(item)
+                self._send_action({"action": "general_store_pick", "index": index})
+        elif "options" in data:
+            opts = [o.get("name", str(i)) for i, o in enumerate(data["options"])]
+            item, ok = QtWidgets.QInputDialog.getItem(
+                self, prompt.replace("_", " ").title(), "Choose:", opts, 0, False
+            )
+            if ok:
+                idx = opts.index(item)
+                self._send_action(
+                    {
+                        "action": "use_ability",
+                        "ability": prompt,
+                        "target": data["options"][idx]["index"],
+                    }
+                )
+        else:
+            self.log_text.append(f"Prompt: {prompt}")
 
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:  # noqa: D401
         """Handle window close and stop threads."""
