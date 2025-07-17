@@ -11,6 +11,10 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 class BaseCharacter(ABC):
     """Abstract base class for all Bang characters."""
 
+    # The following attributes are accessed by the game engine and UI to
+    # display character information and apply passive modifiers. They are not
+    # referenced within this module directly, which may lead Vulture to mark
+    # them as unused.
     name: str = "Character"
     description: str = ""
     range_modifier: int = 0
@@ -20,4 +24,6 @@ class BaseCharacter(ABC):
     @abstractmethod
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         """Perform the character's special ability."""
+        # ``**_`` allows subclasses to declare additional keyword arguments
+        # without breaking this abstract method's signature.
         raise NotImplementedError
