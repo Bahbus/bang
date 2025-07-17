@@ -56,7 +56,7 @@ class PlayerMetadata:
 @dataclass
 class Player:
     name: str
-    role: BaseRole = field(default_factory=OutlawRoleCard)
+    role: BaseRole | None = None
     character: "BaseCharacter | None" = None
     max_health: int = 4
     health: int = field(init=False)

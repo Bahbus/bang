@@ -40,7 +40,7 @@ def _serialize_players(players: List[Player]) -> List[dict]:
         {
             "name": p.name,
             "health": p.health,
-            "role": p.role.card_name,
+            "role": "" if p.role is None else p.role.card_name,
             "equipment": [eq.card_name for eq in p.equipment.values()],
         }
         for p in players
