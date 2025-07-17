@@ -4,6 +4,7 @@ import logging
 import math
 import secrets
 from pathlib import Path
+import os
 
 from PySide6 import QtCore, QtGui, QtWidgets
 import websockets
@@ -457,6 +458,7 @@ class BangUI(QtWidgets.QMainWindow):
             self.server_thread.stop()
             self.server_thread.wait(1000)
             self.server_thread = None
+        QtWidgets.QApplication.quit()
         super().closeEvent(event)
 
 
@@ -464,6 +466,8 @@ def main() -> None:
     app = QtWidgets.QApplication([])
     ui = BangUI()
     ui.show()
+    if os.getenv("BANG_AUTO_CLOSE"):
+        QtCore.QTimer.singleShot(100, ui.close)
     app.exec()
 
 
