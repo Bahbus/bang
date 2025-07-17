@@ -787,6 +787,9 @@ class BangUI:
             self.server_thread.stop()
             self.server_thread.join(timeout=1)
             self.server_thread = None
+        # Quit the mainloop before destroying the root window to ensure
+        # any pending events are processed and the application exits cleanly.
+        self.root.quit()
         self.root.destroy()
 
     def run(self) -> None:
