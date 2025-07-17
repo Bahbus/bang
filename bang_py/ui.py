@@ -1,37 +1,27 @@
 import asyncio
 import json
-import secrets
-import threading
-import queue
-import tkinter as tk
-from tkinter import ttk, messagebox
-from typing import Callable
-from pathlib import Path
 import logging
+import secrets
+from pathlib import Path
+
+from PySide6 import QtCore, QtGui, QtWidgets
 import websockets
 from websockets import WebSocketException
 
 if __package__ in {None, ""}:
     import sys
-
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     __package__ = "bang_py"
 
 from .network.server import BangServer
 
 
-class ServerThread(threading.Thread):
-    """Run a :class:`BangServer` in a daemon thread for the UI."""
+class ServerThread(QtCore.QThread):
+    """Run a :class:`BangServer` in a background thread."""
 
-    def __init__(
-        self,
-        host: str,
-        port: int,
-        room_code: str,
-        expansions: list[str],
-        max_players: int,
-    ) -> None:
-        super().__init__(daemon=True)
+    def __init__(self, host: str, port: int, room_code: str,
+                 expansions: list[str], max_players: int) -> None:
+        super().__init__()
         self.host = host
         self.port = port
         self.room_code = room_code
@@ -40,15 +30,10 @@ class ServerThread(threading.Thread):
         self.loop = asyncio.new_event_loop()
         self.server_task: asyncio.Task | None = None
 
-    def run(self) -> None:
+    def run(self) -> None:  # type: ignore[override]
         asyncio.set_event_loop(self.loop)
-        server = BangServer(
-            self.host,
-            self.port,
-            self.room_code,
-            self.expansions,
-            self.max_players,
-        )
+        server = BangServer(self.host, self.port, self.room_code,
+                            self.expansions, self.max_players)
         self.server_task = self.loop.create_task(server.start())
         try:
             self.loop.run_until_complete(self.server_task)
@@ -59,36 +44,37 @@ class ServerThread(threading.Thread):
             self.loop.close()
 
     def stop(self) -> None:
-        """Request the server loop shut down."""
         if self.server_task and not self.server_task.done():
             self.loop.call_soon_threadsafe(self.server_task.cancel)
         if self.loop.is_running():
             self.loop.call_soon_threadsafe(self.loop.stop)
 
 
-class ClientThread(threading.Thread):
+class ClientThread(QtCore.QThread):
     """Manage a websocket client connection in a background thread."""
-    def __init__(self, uri: str, room_code: str, name: str, msg_queue: queue.Queue):
-        super().__init__(daemon=True)
+
+    message_received = QtCore.Signal(str)
+
+    def __init__(self, uri: str, room_code: str, name: str) -> None:
+        super().__init__()
         self.uri = uri
         self.room_code = room_code
         self.name = name
-        self.msg_queue = msg_queue
         self.loop = asyncio.new_event_loop()
         self.websocket: websockets.WebSocketClientProtocol | None = None
 
-    def run(self) -> None:
+    def run(self) -> None:  # type: ignore[override]
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self._run())
         self.loop.close()
 
     def stop(self) -> None:
-        """Close the websocket and stop the event loop."""
         if self.websocket and not self.websocket.closed:
-            fut = asyncio.run_coroutine_threadsafe(self.websocket.close(), self.loop)
+            fut = asyncio.run_coroutine_threadsafe(self.websocket.close(),
+                                                   self.loop)
             try:
                 fut.result(timeout=1)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001
                 logging.exception("Failed to close websocket: %s", exc)
         if self.loop.is_running():
             self.loop.call_soon_threadsafe(self.loop.stop)
@@ -96,24 +82,20 @@ class ClientThread(threading.Thread):
     async def _run(self) -> None:
         try:
             self.websocket = await websockets.connect(self.uri)
-            await self.websocket.recv()  # prompt for code
+            await self.websocket.recv()
             await self.websocket.send(self.room_code)
             response = await self.websocket.recv()
             if response != "Enter your name:":
-                self.msg_queue.put(response)
+                self.message_received.emit(response)
                 return
             await self.websocket.send(self.name)
             join_msg = await self.websocket.recv()
-            self.msg_queue.put(join_msg)
+            self.message_received.emit(join_msg)
             async for message in self.websocket:
-                try:
-                    data = json.loads(message)
-                except json.JSONDecodeError:
-                    data = message
-                self.msg_queue.put(str(data))
+                self.message_received.emit(message)
         except (OSError, WebSocketException) as exc:
             logging.exception("Connection error: %s", exc)
-            self.msg_queue.put(f"Connection error: {exc}")
+            self.message_received.emit(f"Connection error: {exc}")
         finally:
             if self.websocket:
                 await self.websocket.close()
@@ -125,968 +107,224 @@ class ClientThread(threading.Thread):
 
     async def _send(self, msg: str) -> None:
         if not self.websocket or self.websocket.closed:
-            self.msg_queue.put("Send error: not connected")
+            self.message_received.emit("Send error: not connected")
             return
         try:
             await self.websocket.send(msg)
         except WebSocketException as exc:
             logging.exception("Send error: %s", exc)
-            self.msg_queue.put(f"Send error: {exc}")
+            self.message_received.emit(f"Send error: {exc}")
 
 
-class BangUI:
-    """Tkinter interface used to host, join and play a Bang game.
+class GameBoard(QtWidgets.QGraphicsView):
+    """Simple board rendering using QGraphicsView."""
 
-    It starts server and client threads as needed and displays game updates in
-    a simple window.
-    """
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setRenderHint(QtGui.QPainter.Antialiasing)
+        self._scene = QtWidgets.QGraphicsScene(self)
+        self.setScene(self._scene)
+        self.max_width = 800
+        self.max_height = 600
+        self.card_width = 60
+        self.card_height = 90
+        self.card_pixmap = self._create_card_pixmap()
+        self._draw_board()
+
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:  # noqa: D401
+        """Handle widget resize and scale contents."""
+        super().resizeEvent(event)
+        self.fitInView(self._scene.sceneRect(), QtCore.Qt.KeepAspectRatio)
+
+    def _create_card_pixmap(self, width: int | None = None,
+                             height: int | None = None) -> QtGui.QPixmap:
+        w = width or self.card_width
+        h = height or self.card_height
+        pix = QtGui.QPixmap(w, h)
+        pix.fill(QtGui.QColor("#ddd"))
+        painter = QtGui.QPainter(pix)
+        pen = QtGui.QPen(QtGui.QColor("#222"))
+        painter.setPen(pen)
+        painter.drawRect(0, 0, w - 1, h - 1)
+        painter.end()
+        return pix
+
+    def _draw_board(self) -> None:
+        self._scene.clear()
+        self._scene.setSceneRect(0, 0, self.max_width, self.max_height)
+        table = self._scene.addEllipse(5, 5, self.max_width - 10,
+                                       self.max_height - 10,
+                                       QtGui.QPen(),
+                                       QtGui.QBrush(QtGui.QColor("forestgreen")))
+        table.setZValue(-1)
+        draw_x = self.max_width * 0.3
+        draw_y = self.max_height * 0.5
+        discard_x = self.max_width * 0.7
+        self._scene.addPixmap(self.card_pixmap).setPos(draw_x, draw_y)
+        self._scene.addText("Draw").setPos(draw_x, draw_y + self.card_height)
+        self._scene.addPixmap(self.card_pixmap).setPos(discard_x, draw_y)
+        self._scene.addText("Discard").setPos(discard_x,
+                                              draw_y + self.card_height)
+
+
+class BangUI(QtWidgets.QMainWindow):
+    """Qt GUI for hosting, joining and playing a Bang game."""
+
     def __init__(self) -> None:
-        self.root = tk.Tk()
-        try:
-            self.root.state("zoomed")
-        except tk.TclError:
-            width = self.root.winfo_screenwidth()
-            height = self.root.winfo_screenheight()
-            self.root.geometry(f"{width}x{height}")
-        self.root.title("Bang!")
-        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
-        self.root.rowconfigure(1, weight=1)
-        self.root.columnconfigure(0, weight=1)
-        self.root.columnconfigure(1, weight=1)
+        super().__init__()
+        self.setWindowTitle("Bang!")
+        self.resize(1024, 768)
+        self.stack = QtWidgets.QStackedWidget()
+        self.setCentralWidget(self.stack)
 
-        self.style = ttk.Style(self.root)
-        self.style.theme_use("clam")
-        default_font = ("Helvetica", 12)
-        self.style.configure("TButton", font=default_font)
-        self.style.configure("TLabel", font=default_font)
-        self.style.configure("Menu.TFrame", background="#deb887")
-        self.style.configure("Menu.TLabel", background="#deb887", font=default_font)
-        self.style.configure("Menu.TButton", font=default_font)
-
-        self.menu_bg_image = self._create_menu_background(800, 600)
-        self.msg_queue: queue.Queue[str] = queue.Queue()
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
-        self.room_code: str = ""
-        self.log_overlay: tk.Toplevel | None = None
-        self.log_text: tk.Text | None = None
-        self._overlay_drag_start: tuple[int, int] | None = None
-        self._overlay_moved = False
-        # basic settings
-        self.audio_sound = tk.BooleanVar(value=True)
-        self.graphics_quality = tk.BooleanVar(value=True)
-        self.exp_dodge_city = tk.BooleanVar(value=False)
-        self.exp_high_noon = tk.BooleanVar(value=False)
-        self.exp_fistful = tk.BooleanVar(value=False)
-        self.keybindings: dict[str, str] = {"end_turn": "e"}
-        self._bound_key = ""
-        self.current_character = ""
-        self.auto_miss_var = tk.BooleanVar(value=True)
-        self.hand_names: list[str] = []
-        self._prompt_handlers: dict[str, Callable[[dict], None]] = {
-            "vera": self._handle_vera_prompt,
-            "general_store": self._handle_general_store_prompt,
-            "jesse_jones": self._handle_jesse_jones_prompt,
-            "kit_carlson": self._handle_kit_carlson_prompt,
-            "pedro_ramirez": self._handle_pedro_ramirez_prompt,
-            "jose_delgado": self._handle_jose_delgado_prompt,
-            "pat_brennan": self._handle_pat_brennan_prompt,
-            "lucky_duke": self._handle_lucky_duke_prompt,
-        }
-        self._queue_handlers: dict[str, Callable[[dict], None]] = {
-            "players": self._handle_players_update,
-            "prompt": self._handle_prompt,
-        }
-        self.max_board_width = 0
-        self.max_board_height = 0
-        self.card_width = 0
-        self.card_height = 0
-        self.current_scale = 1.0
+        self.room_code = ""
+
         self._build_start_menu()
+        self._create_log_dock()
 
-    def _create_menu_background(self, width: int, height: int) -> tk.PhotoImage:
-        """Return a simple gradient background image."""
-        img = tk.PhotoImage(width=width, height=height)
-        start = (222, 184, 135)  # #deb887
-        end = (205, 133, 63)    # #cd853f
-        for y in range(height):
-            r = int(start[0] + (end[0] - start[0]) * y / height)
-            g = int(start[1] + (end[1] - start[1]) * y / height)
-            b = int(start[2] + (end[2] - start[2]) * y / height)
-            img.put(f"#{r:02x}{g:02x}{b:02x}", to=(0, y, width, y + 1))
-        return img
-
-    def _apply_menu_background(self, frame: tk.Widget) -> None:
-        """Add the menu background image to the given frame."""
-        if self.menu_bg_image:
-            lbl = ttk.Label(frame, image=self.menu_bg_image, style="Menu.TLabel")
-            lbl.place(relx=0, rely=0, relwidth=1, relheight=1)
-            lbl.lower()
-
-    def _add_tooltip(self, widget: tk.Widget, text: str) -> None:
-        """Create a small tooltip for the widget."""
-        tip: tk.Toplevel | None = None
-
-        def _show(_e: tk.Event) -> None:
-            nonlocal tip
-            if tip:
-                return
-            x = widget.winfo_rootx() + 20
-            y = widget.winfo_rooty() + widget.winfo_height() + 10
-            tip = tk.Toplevel(widget)
-            tip.wm_overrideredirect(True)
-            tip.geometry(f"+{x}+{y}")
-            ttk.Label(tip, text=text, background="lightyellow", relief="solid").pack()
-
-        def _hide(_e: tk.Event) -> None:
-            nonlocal tip
-            if tip:
-                tip.destroy()
-                tip = None
-
-        widget.bind("<Enter>", _show)
-        widget.bind("<Leave>", _hide)
-
+    # Menu screens -----------------------------------------------------
     def _build_start_menu(self) -> None:
-        for widget in self.root.winfo_children():
-            widget.destroy()
-        frame = ttk.Frame(self.root, style="Menu.TFrame")
-        frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
-        frame.columnconfigure(0, weight=1)
-        frame.columnconfigure(1, weight=1)
-        self._apply_menu_background(frame)
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QVBoxLayout(widget)
 
-        ttk.Label(frame, text="Name:", style="Menu.TLabel").grid(row=0, column=0, sticky="e")
-        self.name_var = tk.StringVar()
-        ttk.Entry(frame, textvariable=self.name_var).grid(row=0, column=1)
+        form = QtWidgets.QFormLayout()
+        self.name_edit = QtWidgets.QLineEdit()
+        form.addRow("Name:", self.name_edit)
+        layout.addLayout(form)
 
-        host_btn = ttk.Button(
-            frame, text="Host Game", style="Menu.TButton", command=self._host_menu
-        )
-        host_btn.grid(row=1, column=0, pady=5)
-        self._add_tooltip(host_btn, "Create a new room")
-        join_btn = ttk.Button(
-            frame, text="Join Game", style="Menu.TButton", command=self._join_menu
-        )
-        join_btn.grid(row=1, column=1, pady=5)
-        self._add_tooltip(join_btn, "Connect to a room")
-        settings_btn = ttk.Button(
-            frame, text="Settings", style="Menu.TButton", command=self._settings_window
-        )
-        settings_btn.grid(row=2, column=0, columnspan=2, pady=5)
-        self._add_tooltip(settings_btn, "Configure options")
+        host_btn = QtWidgets.QPushButton("Host Game")
+        host_btn.clicked.connect(self._host_menu)
+        join_btn = QtWidgets.QPushButton("Join Game")
+        join_btn.clicked.connect(self._join_menu)
+        settings_btn = QtWidgets.QPushButton("Settings")
+        settings_btn.clicked.connect(self._settings_dialog)
 
-    def _settings_window(self) -> None:
-        win = tk.Toplevel(self.root)
-        win.title("Settings")
+        layout.addWidget(host_btn)
+        layout.addWidget(join_btn)
+        layout.addWidget(settings_btn)
+        layout.addStretch(1)
 
-        ttk.Label(win, text="Audio").grid(row=0, column=0, sticky="w")
-        cb_sound = ttk.Checkbutton(win, text="Sound", variable=self.audio_sound)
-        cb_sound.grid(row=0, column=1, sticky="w")
-
-        ttk.Label(win, text="Graphics").grid(row=1, column=0, sticky="w")
-        cb_quality = ttk.Checkbutton(win, text="High Quality", variable=self.graphics_quality)
-        cb_quality.grid(row=1, column=1, sticky="w")
-
-        ttk.Label(win, text="Expansions").grid(row=2, column=0, sticky="w")
-        cb_dodge = ttk.Checkbutton(win, text="Dodge City", variable=self.exp_dodge_city)
-        cb_dodge.grid(row=2, column=1, sticky="w")
-        cb_noon = ttk.Checkbutton(win, text="High Noon", variable=self.exp_high_noon)
-        cb_noon.grid(row=3, column=1, sticky="w")
-        cb_fistful = ttk.Checkbutton(win, text="Fistful of Cards", variable=self.exp_fistful)
-        cb_fistful.grid(row=4, column=1, sticky="w")
-        ttk.Label(win, text="End Turn Key").grid(row=5, column=0, sticky="w")
-        self.end_turn_key_var = tk.StringVar(value=self.keybindings.get("end_turn", "e"))
-        entry_key = ttk.Entry(win, textvariable=self.end_turn_key_var, width=5)
-        entry_key.grid(row=5, column=1, sticky="w")
-
-        def save_and_close() -> None:
-            self.keybindings["end_turn"] = self.end_turn_key_var.get().strip() or "e"
-            win.destroy()
-
-        btn_save = ttk.Button(win, text="Save", command=save_and_close)
-        btn_save.grid(row=6, column=0, columnspan=2, pady=5)
+        self.stack.addWidget(widget)
+        self.stack.setCurrentWidget(widget)
 
     def _host_menu(self) -> None:
-        name = self.name_var.get().strip()
-        if not name:
-            messagebox.showerror("Error", "Please enter your name")
-            return
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QFormLayout(widget)
+        self.port_edit = QtWidgets.QLineEdit("8765")
+        self.max_players_edit = QtWidgets.QLineEdit("7")
+        layout.addRow("Host Port:", self.port_edit)
+        layout.addRow("Max Players:", self.max_players_edit)
+        start_btn = QtWidgets.QPushButton("Start")
+        start_btn.clicked.connect(self._start_host)
+        layout.addRow(start_btn)
+        self.stack.addWidget(widget)
+        self.stack.setCurrentWidget(widget)
 
-        for widget in self.root.winfo_children():
-            widget.destroy()
+    def _join_menu(self) -> None:
+        widget = QtWidgets.QWidget()
+        layout = QtWidgets.QFormLayout(widget)
+        self.addr_edit = QtWidgets.QLineEdit("localhost")
+        self.join_port_edit = QtWidgets.QLineEdit("8765")
+        self.code_edit = QtWidgets.QLineEdit()
+        layout.addRow("Host Address:", self.addr_edit)
+        layout.addRow("Port:", self.join_port_edit)
+        layout.addRow("Room Code:", self.code_edit)
+        join_btn = QtWidgets.QPushButton("Join")
+        join_btn.clicked.connect(self._start_join)
+        layout.addRow(join_btn)
+        self.stack.addWidget(widget)
+        self.stack.setCurrentWidget(widget)
 
-        frame = ttk.Frame(self.root, style="Menu.TFrame")
-        frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
-        frame.columnconfigure(0, weight=1)
-        frame.columnconfigure(1, weight=1)
-        self._apply_menu_background(frame)
+    def _settings_dialog(self) -> None:
+        QtWidgets.QMessageBox.information(self, "Settings",
+                                          "Settings dialog placeholder")
 
-        self.port_var = tk.StringVar(value="8765")
-        self.max_players_var = tk.StringVar(value="7")
-        ttk.Label(frame, text="Host Port:", style="Menu.TLabel").grid(row=0, column=0, sticky="e")
-        ttk.Entry(frame, textvariable=self.port_var).grid(row=0, column=1)
-        ttk.Label(frame, text="Max Players:", style="Menu.TLabel").grid(row=1, column=0, sticky="e")
-        ttk.Entry(frame, textvariable=self.max_players_var).grid(row=1, column=1)
+    # Game view --------------------------------------------------------
+    def _build_game_view(self) -> None:
+        widget = QtWidgets.QWidget()
+        vbox = QtWidgets.QVBoxLayout(widget)
+        self.board = GameBoard()
+        vbox.addWidget(self.board, 1)
+        btn_end = QtWidgets.QPushButton("End Turn")
+        btn_end.clicked.connect(self._end_turn)
+        vbox.addWidget(btn_end)
+        self.stack.addWidget(widget)
+        self.stack.setCurrentWidget(widget)
 
-        ttk.Label(frame, text="Expansions:", style="Menu.TLabel").grid(row=2, column=0, sticky="w")
-        cb_dodge = ttk.Checkbutton(frame, text="Dodge City", variable=self.exp_dodge_city)
-        cb_dodge.grid(row=2, column=1, sticky="w")
-        cb_noon = ttk.Checkbutton(frame, text="High Noon", variable=self.exp_high_noon)
-        cb_noon.grid(row=3, column=1, sticky="w")
-        cb_fistful = ttk.Checkbutton(frame, text="Fistful of Cards", variable=self.exp_fistful)
-        cb_fistful.grid(row=4, column=1, sticky="w")
+    def _create_log_dock(self) -> None:
+        self.log_dock = QtWidgets.QDockWidget("Log", self)
+        self.log_dock.setFloating(True)
+        self.log_text = QtWidgets.QTextEdit()
+        self.log_text.setReadOnly(True)
+        self.log_dock.setWidget(self.log_text)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.log_dock)
+        self.log_dock.hide()
 
-        start_btn = ttk.Button(frame, text="Start", style="Menu.TButton", command=self._start_host)
-        start_btn.grid(row=5, column=0, columnspan=2, pady=5)
-        self._add_tooltip(start_btn, "Launch server and join")
-
+    # Networking -------------------------------------------------------
     def _start_host(self) -> None:
-        port = int(self.port_var.get())
-        max_players = int(self.max_players_var.get())
+        name = self.name_edit.text().strip()
+        if not name:
+            QtWidgets.QMessageBox.critical(self, "Error",
+                                           "Please enter your name")
+            return
+        port = int(self.port_edit.text())
+        max_players = int(self.max_players_edit.text())
         room_code = secrets.token_hex(3)
-        expansions = []
-        if self.exp_dodge_city.get():
-            expansions.append("dodge_city")
-        if self.exp_high_noon.get():
-            expansions.append("high_noon")
-        if self.exp_fistful.get():
-            expansions.append("fistful_of_cards")
-        self.server_thread = ServerThread("", port, room_code, expansions, max_players)
+        self.server_thread = ServerThread("", port, room_code, [], max_players)
         self.server_thread.start()
         uri = f"ws://localhost:{port}"
         self._start_client(uri, room_code)
-        self.root.title(f"Bang! - {room_code}")
-
-    def _join_menu(self) -> None:
-        name = self.name_var.get().strip()
-        if not name:
-            messagebox.showerror("Error", "Please enter your name")
-            return
-
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
-        frame = ttk.Frame(self.root, style="Menu.TFrame")
-        frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
-        frame.columnconfigure(0, weight=1)
-        frame.columnconfigure(1, weight=1)
-        self._apply_menu_background(frame)
-
-        self.addr_var = tk.StringVar(value="localhost")
-        self.port_var = tk.StringVar(value="8765")
-        self.code_var = tk.StringVar()
-
-        ttk.Label(
-            frame, text="Host Address:", style="Menu.TLabel"
-        ).grid(row=0, column=0, sticky="e")
-        ttk.Entry(frame, textvariable=self.addr_var).grid(row=0, column=1)
-        ttk.Label(frame, text="Port:", style="Menu.TLabel").grid(row=1, column=0, sticky="e")
-        ttk.Entry(frame, textvariable=self.port_var).grid(row=1, column=1)
-        ttk.Label(
-            frame, text="Room Code:", style="Menu.TLabel"
-        ).grid(row=2, column=0, sticky="e")
-        ttk.Entry(frame, textvariable=self.code_var).grid(row=2, column=1)
-
-        join_btn = ttk.Button(
-            frame, text="Join", style="Menu.TButton", command=self._start_join
-        )
-        join_btn.grid(row=3, column=0, columnspan=2, pady=5)
-        self._add_tooltip(join_btn, "Connect to the host")
+        self.setWindowTitle(f"Bang! - {room_code}")
 
     def _start_join(self) -> None:
-        addr = self.addr_var.get().strip()
-        port = int(self.port_var.get())
-        code = self.code_var.get().strip()
+        name = self.name_edit.text().strip()
+        if not name:
+            QtWidgets.QMessageBox.critical(self, "Error",
+                                           "Please enter your name")
+            return
+        addr = self.addr_edit.text().strip()
+        port = int(self.join_port_edit.text())
+        code = self.code_edit.text().strip()
         uri = f"ws://{addr}:{port}"
         self._start_client(uri, code)
 
     def _start_client(self, uri: str, code: str) -> None:
-        name = self.name_var.get().strip()
         self.room_code = code
-        self.client = ClientThread(uri, code, name, self.msg_queue)
+        self.client = ClientThread(uri, code, self.name_edit.text().strip())
+        self.client.message_received.connect(self._append_message)
         self.client.start()
         self._build_game_view()
-        self._bind_keys()
-        self.root.after(100, self._process_queue)
+        self.log_dock.show()
 
-    def _create_card_image(self, width: int = 60, height: int = 90) -> tk.PhotoImage:
-        """Generate a simple card back image."""
-        img = tk.PhotoImage(width=width, height=height)
-        img.put("#ddd", to=(0, 0, width, height))
-        border = "#222"
-        img.put(border, to=(0, 0, width, 1))
-        img.put(border, to=(0, height - 1, width, height))
-        img.put(border, to=(0, 0, 1, height))
-        img.put(border, to=(width - 1, 0, width, height))
-        return img
-
-    def _create_heart_image(self) -> tk.PhotoImage:
-        """Generate a small heart icon."""
-        pattern = [
-            "0110",
-            "1111",
-            "1111",
-            "0110",
-            "0010",
-        ]
-        h = len(pattern)
-        w = len(pattern[0])
-        img = tk.PhotoImage(width=w, height=h)
-        for y, row in enumerate(pattern):
-            for x, ch in enumerate(row):
-                color = "#d00" if ch == "1" else "white"
-                img.put(color, (x, y))
-        return img
-
-    def _build_game_view(self) -> None:
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
-        screen_w = self.root.winfo_screenwidth()
-        screen_h = self.root.winfo_screenheight()
-        self.max_board_width = int(screen_w * 0.6)
-        self.max_board_height = int(screen_h * 0.4)
-        self.card_width = self.max_board_width // 5
-        self.card_height = int(self.card_width * 1.5)
-        self.heart_image = self._create_heart_image()
-        self.card_image = self._create_card_image(self.card_width, self.card_height)
-        self.current_scale = 1.0
-
-        self.room_code_label = ttk.Label(
-            self.root, text=f"Room Code: {self.room_code}"
-        )
-        self.room_code_label.grid(row=0, column=0, columnspan=2)
-
-        self.board_frame = ttk.Frame(self.root)
-        self.board_frame.grid(row=1, column=0, columnspan=2, sticky="nsew")
-        for i in range(3):
-            self.board_frame.rowconfigure(i, weight=1)
-            self.board_frame.columnconfigure(i, weight=1)
-
-        self.board_canvas = tk.Canvas(
-            self.board_frame,
-            bg="saddlebrown",
-            width=self.max_board_width,
-            height=self.max_board_height,
-        )
-        self.board_canvas.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
-        self._draw_board(self.current_scale)
-
-        positions = [
-            (0, 1),
-            (1, 2),
-            (2, 1),
-            (1, 0),
-            (0, 2),
-            (2, 2),
-            (2, 0),
-        ]
-        self.player_frames: list[ttk.Frame] = []
-        for r, c in positions:
-            frame = ttk.Frame(self.board_frame)
-            frame.grid(row=r, column=c, padx=5, pady=5)
-            self.player_frames.append(frame)
-
-        self.event_var = tk.StringVar(value="")
-        self.event_label = ttk.Label(self.root, textvariable=self.event_var)
-        self.event_label.grid(row=2, column=0, columnspan=2)
-
-        if self.log_overlay:
-            self.log_overlay.destroy()
-        self.log_overlay = tk.Toplevel(self.root)
-        self.log_overlay.wm_overrideredirect(True)
-        self.log_overlay.attributes("-alpha", 0.5)
-        self.log_overlay.transient(self.root)
-        self.log_overlay.lift(self.root)
-
-        frame = ttk.Frame(self.log_overlay)
-        frame.pack(fill="both", expand=True)
-        grip = ttk.Label(frame, text="Log", background="gray", foreground="white")
-        grip.pack(fill="x")
-        self.log_text = tk.Text(frame, height=10, width=40, state="disabled")
-        self.log_text.pack()
-        grip.bind("<ButtonPress-1>", self._on_overlay_press)
-        grip.bind("<B1-Motion>", self._on_overlay_drag)
-        self.log_text.bind("<ButtonPress-1>", self._on_overlay_press)
-        self.log_text.bind("<B1-Motion>", self._on_overlay_drag)
-        self._position_log_overlay()
-        self.root.bind("<Configure>", self._on_resize)
-
-        self.hand_frame = ttk.Frame(self.root)
-        self.hand_frame.grid(row=4, column=0, columnspan=2, pady=5)
-
-        end_btn = ttk.Button(self.root, text="End Turn", command=self._end_turn)
-        end_btn.grid(row=5, column=0, columnspan=2, pady=5)
-
-        ttk.Checkbutton(
-            self.root,
-            text="Auto Miss",
-            variable=self.auto_miss_var,
-            command=self._send_auto_miss,
-        ).grid(row=6, column=0, columnspan=2)
-
-    def _position_log_overlay(self) -> None:
-        """Center the log overlay over the board canvas."""
-        if not self.log_overlay or self._overlay_moved:
-            return
-        self.root.update_idletasks()
-        self.log_overlay.update_idletasks()
-        bx = self.board_canvas.winfo_rootx()
-        by = self.board_canvas.winfo_rooty()
-        bw = self.board_canvas.winfo_width()
-        bh = self.board_canvas.winfo_height()
-        lw = self.log_overlay.winfo_width()
-        lh = self.log_overlay.winfo_height()
-        x = bx + (bw - lw) // 2
-        y = by + (bh - lh) // 2
-        self.log_overlay.geometry(f"{lw}x{lh}+{x}+{y}")
-
-    def _on_overlay_press(self, event: tk.Event) -> None:
-        """Record the starting position of a drag gesture."""
-        self._overlay_drag_start = (event.x_root, event.y_root)
-
-    def _on_overlay_drag(self, event: tk.Event) -> None:
-        """Move the overlay based on mouse motion."""
-        if not self.log_overlay or self._overlay_drag_start is None:
-            return
-        dx = event.x_root - self._overlay_drag_start[0]
-        dy = event.y_root - self._overlay_drag_start[1]
-        x = self.log_overlay.winfo_x() + dx
-        y = self.log_overlay.winfo_y() + dy
-        self.log_overlay.geometry(f"+{x}+{y}")
-        self._overlay_drag_start = (event.x_root, event.y_root)
-        self._overlay_moved = True
-
-    def _draw_board(self, scale: float) -> None:
-        """Draw the table and deck graphics scaled to the given factor."""
-        width = int(self.max_board_width * scale)
-        height = int(self.max_board_height * scale)
-        self.board_canvas.config(width=width, height=height)
-        self.board_canvas.delete("all")
-        pad = int(5 * scale)
-        self.board_canvas.create_oval(
-            pad,
-            pad,
-            width - pad,
-            height - pad,
-            fill="forestgreen",
-            outline="",
-        )
-        card_w = max(int(self.card_width * scale), 1)
-        card_h = max(int(self.card_height * scale), 1)
-        self.card_image = self._create_card_image(card_w, card_h)
-        draw_x = int(width * 0.3)
-        draw_y = int(height * 0.5)
-        text_y = int(height * 0.8)
-        self.board_canvas.create_image(draw_x, draw_y, image=self.card_image)
-        self.board_canvas.create_text(draw_x, text_y, text="Draw", fill="white")
-        discard_x = int(width * 0.7)
-        self.board_canvas.create_image(discard_x, draw_y, image=self.card_image)
-        self.board_canvas.create_text(discard_x, text_y, text="Discard", fill="white")
-
-    def _on_resize(self, _event: tk.Event) -> None:
-        """Redraw the board when the window size changes."""
-        if not hasattr(self, "board_frame"):
-            return
-        avail_w = self.board_frame.winfo_width()
-        avail_h = self.board_frame.winfo_height()
-        if self.max_board_width == 0 or self.max_board_height == 0:
-            return
-        scale = min(avail_w / self.max_board_width, avail_h / self.max_board_height, 1.0)
-        if abs(scale - self.current_scale) > 0.05:
-            self.current_scale = scale
-            self._draw_board(scale)
-            self._position_log_overlay()
-
-    def _process_queue(self) -> None:
-        while not self.msg_queue.empty():
-            msg = self.msg_queue.get()
-            try:
-                data = json.loads(msg)
-            except json.JSONDecodeError:
-                self._append_message(msg)
-                continue
-
-            if isinstance(data, dict):
-                for key, handler in self._queue_handlers.items():
-                    if key in data:
-                        handler(data)
-                        break
-                else:
-                    self._append_message(msg)
-                continue
-            self._append_message(msg)
-        if self.client and self.client.is_alive():
-            self.root.after(100, self._process_queue)
-
-    def _handle_players_update(self, data: dict) -> None:
-        """Update UI elements based on player data."""
-        self._update_players(data["players"])
-        self.current_character = data.get("character", self.current_character)
-        self._update_hand(data.get("hand", []))
-        self.event_var.set(data.get("event", ""))
-        message = data.get("message")
-        if message:
-            self._append_message(message)
-            if any(k in message.lower() for k in ("win", "eliminated")):
-                messagebox.showinfo("Game Update", message)
-
-    def _handle_prompt(self, data: dict) -> bool:
-        handler = self._prompt_handlers.get(data.get("prompt", ""))
-        if handler:
-            handler(data)
-            return True
-        return False
-
-    def _handle_vera_prompt(self, data: dict) -> None:
-        self._prompt_vera(data.get("options", []))
-
-    def _handle_general_store_prompt(self, data: dict) -> None:
-        self._prompt_general_store(data.get("cards", []))
-
-    def _handle_jesse_jones_prompt(self, data: dict) -> None:
-        self._prompt_jesse_jones(data.get("targets", []))
-
-    def _handle_kit_carlson_prompt(self, data: dict) -> None:
-        self._prompt_kit_carlson(data.get("cards", []))
-
-    def _handle_pedro_ramirez_prompt(self, _data: dict) -> None:
-        self._prompt_pedro_ramirez()
-
-    def _handle_jose_delgado_prompt(self, data: dict) -> None:
-        self._prompt_jose_delgado(data.get("equipment", []))
-
-    def _handle_pat_brennan_prompt(self, data: dict) -> None:
-        self._prompt_pat_brennan(data.get("targets", []))
-
-    def _handle_lucky_duke_prompt(self, data: dict) -> None:
-        self._prompt_lucky_duke(data.get("cards", []))
+    def _append_message(self, msg: str) -> None:
+        self.log_text.append(msg)
 
     def _end_turn(self) -> None:
         if self.client:
             self.client.send_end_turn()
 
-    def _play_card(self, index: int) -> None:
-        if self.client and self.client.websocket:
-            payload = json.dumps({"action": "play_card", "card_index": index})
-            asyncio.run_coroutine_threadsafe(self.client.websocket.send(payload), self.client.loop)
-
-    def _send_auto_miss(self) -> None:
-        if self.client and self.client.websocket:
-            payload = json.dumps({
-                "action": "set_auto_miss",
-                "enabled": self.auto_miss_var.get(),
-            })
-            asyncio.run_coroutine_threadsafe(
-                self.client.websocket.send(payload), self.client.loop
-            )
-
-    def _use_ability(
-        self,
-        ability: str,
-        target: int | None = None,
-        card_index: int | None = None,
-        card: str | None = None,
-        indices: list[int] | None = None,
-    ) -> None:
-        if self.client and self.client.websocket:
-            payload = {"action": "use_ability", "ability": ability}
-            if target is not None:
-                if ability == "jose_delgado":
-                    payload["equipment"] = target
-                else:
-                    payload["target"] = target
-            if card_index is not None:
-                if ability == "kit_carlson":
-                    payload["discard"] = card_index
-                elif ability == "pedro_ramirez":
-                    payload["use_discard"] = bool(card_index)
-                else:
-                    payload["card_index"] = card_index
-            if card is not None:
-                payload["card"] = card
-            if indices is not None:
-                payload["indices"] = indices
-            asyncio.run_coroutine_threadsafe(
-                self.client.websocket.send(json.dumps(payload)), self.client.loop
-            )
-
-    def _update_hand(self, cards: list[str]) -> None:
-        for widget in self.hand_frame.winfo_children():
-            widget.destroy()
-        self.hand_names = cards
-
-        def _make_play_handler(idx: int) -> Callable[[], None]:
-
-            def _handler() -> None:
-                self._play_card(idx)
-            return _handler
-
-        for i, card in enumerate(cards):
-            btn = tk.Button(
-                self.hand_frame,
-                image=self.card_image,
-                text=card,
-                compound="top",
-                command=_make_play_handler(i),
-            )
-            btn.grid(row=0, column=i, padx=2)
-        if self.current_character == "Sid Ketchum":
-            ttk.Button(
-                self.hand_frame,
-                text="Use Ability",
-                command=self._prompt_sid_ketchum,
-            ).grid(row=1, column=0, columnspan=len(cards), pady=2)
-        elif self.current_character == "Doc Holyday":
-            ttk.Button(
-                self.hand_frame,
-                text="Use Ability",
-                command=self._prompt_doc_holyday,
-            ).grid(row=1, column=0, columnspan=len(cards), pady=2)
-        elif self.current_character in {
-            "Chuck Wengam",
-            "Jesse Jones",
-            "Kit Carlson",
-            "Pedro Ramirez",
-            "Jose Delgado",
-            "Pat Brennan",
-            "Lucky Duke",
-        }:
-            def _use_current_ability() -> None:
-                self._use_ability(self.current_character.lower().replace(" ", "_"))
-
-            ttk.Button(
-                self.hand_frame,
-                text="Use Ability",
-                command=_use_current_ability,
-            ).grid(row=1, column=0, columnspan=len(cards), pady=2)
-        elif self.current_character == "Uncle Will":
-            def _make_store_handler(idx: int) -> Callable[[], None]:
-                def _handler() -> None:
-                    self._use_ability("uncle_will", card_index=idx)
-                return _handler
-
-            for i, _ in enumerate(cards):
-                ttk.Button(
-                    self.hand_frame,
-                    text="Store",
-                    command=_make_store_handler(i),
-                ).grid(row=1, column=i, padx=2)
-
-    def _update_players(self, players: list[dict]) -> None:
-        for i, frame in enumerate(self.player_frames):
-            for w in frame.winfo_children():
-                w.destroy()
-            if i >= len(players):
-                continue
-            p = players[i]
-            ttk.Label(frame, text=f"{p['name']} ({p['role']})").pack()
-            hearts = ttk.Frame(frame)
-            hearts.pack()
-            for _ in range(p.get("health", 0)):
-                ttk.Label(hearts, image=self.heart_image).pack(side="left")
-            equip = p.get("equipment", [])
-            if equip:
-                eq_frame = ttk.Frame(frame)
-                eq_frame.pack()
-                for e in equip:
-                    ttk.Label(eq_frame, text=e).pack(side="left")
-
-    def _append_message(self, msg: str) -> None:
-        if not self.log_text:
-            return
-        self.log_text.configure(state="normal")
-        self.log_text.insert(tk.END, msg + "\n")
-        self.log_text.configure(state="disabled")
-
-    def _prompt_vera(self, options: list[dict]) -> None:
-        """Ask Vera Custer which ability to copy."""
-        win = tk.Toplevel(self.root)
-        win.title("Vera Custer")
-        ttk.Label(win, text="Choose ability to copy:").pack()
-
-        def _make_handler(idx: int) -> Callable[[], None]:
-            def _handler() -> None:
-                self._use_ability("vera_custer", target=idx)
-                win.destroy()
-
-            return _handler
-
-        for opt in options:
-            btn = ttk.Button(
-                win,
-                text=opt.get("name", ""),
-                command=_make_handler(opt.get("index")),
-            )
-            btn.pack(fill="x")
-
-    def _prompt_general_store(self, cards: list[str]) -> None:
-        """Prompt players to pick a card from the general store."""
-        win = tk.Toplevel(self.root)
-        win.title("General Store")
-        ttk.Label(win, text="Choose a card:").pack()
-
-        def _make_handler(idx: int) -> Callable[[], None]:
-            def _handler() -> None:
-                self._pick_general_store(idx)
-                win.destroy()
-
-            return _handler
-
-        for i, card in enumerate(cards):
-            btn = ttk.Button(
-                win,
-                text=card,
-                command=_make_handler(i),
-            )
-            btn.pack(fill="x")
-
-    def _prompt_jesse_jones(self, targets: list[dict]) -> None:
-        """Prompt Jesse Jones to steal a card from another player."""
-        win = tk.Toplevel(self.root)
-        win.title("Jesse Jones")
-        ttk.Label(win, text="Draw first card from:").pack()
-
-        def _pick(idx: int) -> None:
-            """Use Jesse Jones on the selected target."""
-            self._use_ability("jesse_jones", target=idx)
-            win.destroy()
-
-        def _skip() -> None:
-            """Skip using Jesse Jones's ability."""
-            self._use_ability("jesse_jones")
-            win.destroy()
-
-        def _make_handler(idx: int) -> Callable[[], None]:
-            def _handler() -> None:
-                _pick(idx)
-            return _handler
-
-        for t in targets:
-            ttk.Button(
-                win,
-                text=t.get("name", ""),
-                command=_make_handler(t.get("index")),
-            ).pack(fill="x")
-
-        ttk.Button(win, text="Skip", command=_skip).pack(fill="x")
-
-    def _prompt_kit_carlson(self, cards: list[str]) -> None:
-        """Prompt Kit Carlson to discard one of three drawn cards."""
-        win = tk.Toplevel(self.root)
-        win.title("Kit Carlson")
-        ttk.Label(win, text="Discard one card:").pack()
-
-        def _discard(idx: int) -> None:
-            """Discard the chosen card."""
-            self._use_ability("kit_carlson", target=None, card_index=idx)
-            win.destroy()
-
-        def _make_handler(idx: int) -> Callable[[], None]:
-            def _handler() -> None:
-                _discard(idx)
-            return _handler
-
-        for i, card in enumerate(cards):
-            ttk.Button(
-                win,
-                text=card,
-                command=_make_handler(i),
-            ).pack(fill="x")
-
-    def _prompt_pedro_ramirez(self) -> None:
-        """Ask Pedro Ramirez whether to draw from the discard pile."""
-
-        win = tk.Toplevel(self.root)
-        win.title("Pedro Ramirez")
-        ttk.Label(win, text="Take top discard instead of draw?").pack()
-
-        def _choose(use_discard: bool) -> None:
-            idx = 1 if use_discard else 0
-            self._use_ability("pedro_ramirez", card_index=idx)
-            win.destroy()
-
-        def _take_discard() -> None:
-            _choose(True)
-
-        def _draw_deck() -> None:
-            _choose(False)
-
-        ttk.Button(win, text="Yes", command=_take_discard).pack(fill="x")
-        ttk.Button(win, text="No", command=_draw_deck).pack(fill="x")
-
-    def _prompt_jose_delgado(self, equipment: list[dict]) -> None:
-
-        """Prompt Jose Delgado to discard equipment for two cards."""
-        win = tk.Toplevel(self.root)
-        win.title("Jose Delgado")
-        ttk.Label(win, text="Discard equipment to draw two?").pack()
-
-        def _discard_equipment(idx: int) -> None:
-            """Discard the selected equipment and close the prompt."""
-            self._use_ability("jose_delgado", target=idx)
-            win.destroy()
-
-        def _skip() -> None:
-
-            """Skip discarding equipment and close the prompt."""
-            self._use_ability("jose_delgado")
-            win.destroy()
-
-        def _make_eq_handler(idx: int) -> Callable[[], None]:
-
-            def _handler() -> None:
-                _discard_equipment(idx)
-            return _handler
-
-        for eq in equipment:
-            ttk.Button(
-                win,
-                text=eq.get("name", ""),
-                command=_make_eq_handler(eq.get("index")),
-            ).pack(fill="x")
-
-        ttk.Button(win, text="Skip", command=_skip).pack(fill="x")
-
-    def _prompt_pat_brennan(self, targets: list[dict]) -> None:
-        """Prompt Pat Brennan to take a card in play."""
-        win = tk.Toplevel(self.root)
-        win.title("Pat Brennan")
-        ttk.Label(win, text="Draw a card in play:").pack()
-
-        def _take_card(idx: int, card: str) -> None:
-            self._use_ability("pat_brennan", target=idx, card=card)
-            win.destroy()
-
-        def _skip() -> None:
-            self._use_ability("pat_brennan")
-            win.destroy()
-
-        def _make_handler(idx: int, card: str) -> Callable[[], None]:
-            def _handler() -> None:
-                _take_card(idx, card)
-            return _handler
-
-        for t in targets:
-            for card in t.get("cards", []):
-                ttk.Button(
-                    win,
-                    text=f"{t.get('index')}: {card}",
-                    command=_make_handler(t.get("index"), card),
-                ).pack(fill="x")
-
-        ttk.Button(win, text="Skip", command=_skip).pack(fill="x")
-
-    def _prompt_lucky_duke(self, cards: list[str]) -> None:
-        """Prompt Lucky Duke to choose a draw! result."""
-        if not cards:
-            return
-        win = tk.Toplevel(self.root)
-        win.title("Lucky Duke")
-        ttk.Label(win, text="Choose draw! result:").pack()
-
-        def _pick(idx: int) -> None:
-            self._use_ability("lucky_duke", card_index=idx)
-            win.destroy()
-
-        def _make_handler(idx: int) -> Callable[[], None]:
-            def _handler() -> None:
-                _pick(idx)
-            return _handler
-
-        for i, card in enumerate(cards):
-            ttk.Button(
-                win,
-                text=card,
-                command=_make_handler(i),
-            ).pack(fill="x")
-
-    def _prompt_sid_ketchum(self) -> None:
-        """Allow Sid Ketchum to discard cards for health."""
-        if not self.hand_names:
-            return
-
-        win = tk.Toplevel(self.root)
-        win.title("Sid Ketchum")
-        lb = tk.Listbox(win, selectmode="multiple")
-        for card in self.hand_names:
-            lb.insert(tk.END, card)
-        lb.pack()
-
-        def _discard() -> None:
-            self._use_ability("sid_ketchum", indices=list(lb.curselection()))
-            win.destroy()
-
-        ttk.Button(win, text="Discard", command=_discard).pack(fill="x")
-
-    def _prompt_doc_holyday(self) -> None:
-        """Allow Doc Holyday to discard cards for a draw."""
-        if not self.hand_names:
-
-            return
-        win = tk.Toplevel(self.root)
-        win.title("Doc Holyday")
-        lb = tk.Listbox(win, selectmode="multiple")
-        for card in self.hand_names:
-            lb.insert(tk.END, card)
-        lb.pack()
-
-        def _discard() -> None:
-            self._use_ability("doc_holyday", indices=list(lb.curselection()))
-            win.destroy()
-
-        ttk.Button(win, text="Discard", command=_discard).pack(fill="x")
-
-    def _pick_general_store(self, index: int) -> None:
-        if self.client and self.client.websocket:
-            payload = json.dumps({"action": "general_store_pick", "index": index})
-            asyncio.run_coroutine_threadsafe(
-                self.client.websocket.send(payload), self.client.loop
-            )
-
-    def _bind_keys(self) -> None:
-        if self._bound_key:
-            self.root.unbind_all(f"<{self._bound_key}>")
-        key = self.keybindings.get("end_turn", "e")
-
-        def _handle_end(_e: tk.Event) -> None:
-            self._end_turn()
-
-        self.root.bind_all(f"<{key}>", _handle_end)
-        self._bound_key = key
-
-    def _on_close(self) -> None:
-        """Handle window close by shutting down threads."""
-        # Quit the mainloop first so no more events are processed
-        self.root.quit()
-
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:  # noqa: D401
+        """Handle window close and stop threads."""
         if self.client:
             self.client.stop()
-            self.client.join(timeout=1)
+            self.client.wait(1000)
             self.client = None
-
         if self.server_thread:
             self.server_thread.stop()
-            self.server_thread.join(timeout=1)
+            self.server_thread.wait(1000)
             self.server_thread = None
-
-        if self.log_overlay:
-            self.log_overlay.destroy()
-            self.log_overlay = None
-            self.log_text = None
-
-        # Destroy the window after all threads have been cleaned up
-        self.root.destroy()
-
-    def run(self) -> None:
-        self.root.mainloop()
+        super().closeEvent(event)
 
 
 def main() -> None:
+    app = QtWidgets.QApplication([])
     ui = BangUI()
-    ui.run()
+    ui.show()
+    app.exec()
 
 
 if __name__ == "__main__":
     main()
+
