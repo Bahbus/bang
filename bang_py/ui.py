@@ -142,6 +142,7 @@ class BangUI:
     """
     def __init__(self) -> None:
         self.root = tk.Tk()
+        self.root.geometry("1024x768")
         self.root.title("Bang!")
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
         self.msg_queue: queue.Queue[str] = queue.Queue()
