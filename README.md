@@ -25,7 +25,7 @@ This networking layer is experimental and only demonstrates joining the game and
 
 ## Graphical Interface
 
-The project also provides a small Tkinter-based GUI for hosting or joining games. Tkinter comes with Python but may require the `python3-tk` package on some Linux systems. The main window opens at a fixed size of **1024x768** so everything fits comfortably on screen.
+The project also provides a small Tkinter-based GUI for hosting or joining games. Tkinter comes with Python but may require the `python3-tk` package on some Linux systems. The window now launches full-screen (or maximized where supported) and adapts to the available space. Resize the window using standard OS controls or press `F11` to toggle full-screen mode. The game log floats above the board as a translucent overlay so it stays readable without blocking the table.
 Run the interface with:
 
 ```bash
