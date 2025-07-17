@@ -153,6 +153,17 @@ class BangUI:
         self.root.rowconfigure(1, weight=1)
         self.root.columnconfigure(0, weight=1)
         self.root.columnconfigure(1, weight=1)
+
+        self.style = ttk.Style(self.root)
+        self.style.theme_use("clam")
+        default_font = ("Helvetica", 12)
+        self.style.configure("TButton", font=default_font)
+        self.style.configure("TLabel", font=default_font)
+        self.style.configure("Menu.TFrame", background="#deb887")
+        self.style.configure("Menu.TLabel", background="#deb887", font=default_font)
+        self.style.configure("Menu.TButton", font=default_font)
+
+        self.menu_bg_image = self._create_menu_background(800, 600)
         self.msg_queue: queue.Queue[str] = queue.Queue()
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
@@ -193,20 +204,77 @@ class BangUI:
         self.current_scale = 1.0
         self._build_start_menu()
 
+    def _create_menu_background(self, width: int, height: int) -> tk.PhotoImage:
+        """Return a simple gradient background image."""
+        img = tk.PhotoImage(width=width, height=height)
+        start = (222, 184, 135)  # #deb887
+        end = (205, 133, 63)    # #cd853f
+        for y in range(height):
+            r = int(start[0] + (end[0] - start[0]) * y / height)
+            g = int(start[1] + (end[1] - start[1]) * y / height)
+            b = int(start[2] + (end[2] - start[2]) * y / height)
+            img.put(f"#{r:02x}{g:02x}{b:02x}", to=(0, y, width, y + 1))
+        return img
+
+    def _apply_menu_background(self, frame: tk.Widget) -> None:
+        """Add the menu background image to the given frame."""
+        if self.menu_bg_image:
+            lbl = ttk.Label(frame, image=self.menu_bg_image, style="Menu.TLabel")
+            lbl.place(relx=0, rely=0, relwidth=1, relheight=1)
+            lbl.lower()
+
+    def _add_tooltip(self, widget: tk.Widget, text: str) -> None:
+        """Create a small tooltip for the widget."""
+        tip: tk.Toplevel | None = None
+
+        def _show(_e: tk.Event) -> None:
+            nonlocal tip
+            if tip:
+                return
+            x = widget.winfo_rootx() + 20
+            y = widget.winfo_rooty() + widget.winfo_height() + 10
+            tip = tk.Toplevel(widget)
+            tip.wm_overrideredirect(True)
+            tip.geometry(f"+{x}+{y}")
+            ttk.Label(tip, text=text, background="lightyellow", relief="solid").pack()
+
+        def _hide(_e: tk.Event) -> None:
+            nonlocal tip
+            if tip:
+                tip.destroy()
+                tip = None
+
+        widget.bind("<Enter>", _show)
+        widget.bind("<Leave>", _hide)
+
     def _build_start_menu(self) -> None:
         for widget in self.root.winfo_children():
             widget.destroy()
+        frame = ttk.Frame(self.root, style="Menu.TFrame")
+        frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        frame.columnconfigure(0, weight=1)
+        frame.columnconfigure(1, weight=1)
+        self._apply_menu_background(frame)
 
-        ttk.Label(self.root, text="Name:").grid(row=0, column=0, sticky="e")
+        ttk.Label(frame, text="Name:", style="Menu.TLabel").grid(row=0, column=0, sticky="e")
         self.name_var = tk.StringVar()
-        ttk.Entry(self.root, textvariable=self.name_var).grid(row=0, column=1)
+        ttk.Entry(frame, textvariable=self.name_var).grid(row=0, column=1)
 
-        host_btn = ttk.Button(self.root, text="Host Game", command=self._host_menu)
+        host_btn = ttk.Button(
+            frame, text="Host Game", style="Menu.TButton", command=self._host_menu
+        )
         host_btn.grid(row=1, column=0, pady=5)
-        join_btn = ttk.Button(self.root, text="Join Game", command=self._join_menu)
+        self._add_tooltip(host_btn, "Create a new room")
+        join_btn = ttk.Button(
+            frame, text="Join Game", style="Menu.TButton", command=self._join_menu
+        )
         join_btn.grid(row=1, column=1, pady=5)
-        settings_btn = ttk.Button(self.root, text="Settings", command=self._settings_window)
+        self._add_tooltip(join_btn, "Connect to a room")
+        settings_btn = ttk.Button(
+            frame, text="Settings", style="Menu.TButton", command=self._settings_window
+        )
         settings_btn.grid(row=2, column=0, columnspan=2, pady=5)
+        self._add_tooltip(settings_btn, "Configure options")
 
     def _settings_window(self) -> None:
         win = tk.Toplevel(self.root)
@@ -248,23 +316,30 @@ class BangUI:
         for widget in self.root.winfo_children():
             widget.destroy()
 
+        frame = ttk.Frame(self.root, style="Menu.TFrame")
+        frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        frame.columnconfigure(0, weight=1)
+        frame.columnconfigure(1, weight=1)
+        self._apply_menu_background(frame)
+
         self.port_var = tk.StringVar(value="8765")
         self.max_players_var = tk.StringVar(value="7")
-        ttk.Label(self.root, text="Host Port:").grid(row=0, column=0, sticky="e")
-        ttk.Entry(self.root, textvariable=self.port_var).grid(row=0, column=1)
-        ttk.Label(self.root, text="Max Players:").grid(row=1, column=0, sticky="e")
-        ttk.Entry(self.root, textvariable=self.max_players_var).grid(row=1, column=1)
+        ttk.Label(frame, text="Host Port:", style="Menu.TLabel").grid(row=0, column=0, sticky="e")
+        ttk.Entry(frame, textvariable=self.port_var).grid(row=0, column=1)
+        ttk.Label(frame, text="Max Players:", style="Menu.TLabel").grid(row=1, column=0, sticky="e")
+        ttk.Entry(frame, textvariable=self.max_players_var).grid(row=1, column=1)
 
-        ttk.Label(self.root, text="Expansions:").grid(row=2, column=0, sticky="w")
-        cb_dodge = ttk.Checkbutton(self.root, text="Dodge City", variable=self.exp_dodge_city)
+        ttk.Label(frame, text="Expansions:", style="Menu.TLabel").grid(row=2, column=0, sticky="w")
+        cb_dodge = ttk.Checkbutton(frame, text="Dodge City", variable=self.exp_dodge_city)
         cb_dodge.grid(row=2, column=1, sticky="w")
-        cb_noon = ttk.Checkbutton(self.root, text="High Noon", variable=self.exp_high_noon)
+        cb_noon = ttk.Checkbutton(frame, text="High Noon", variable=self.exp_high_noon)
         cb_noon.grid(row=3, column=1, sticky="w")
-        cb_fistful = ttk.Checkbutton(self.root, text="Fistful of Cards", variable=self.exp_fistful)
+        cb_fistful = ttk.Checkbutton(frame, text="Fistful of Cards", variable=self.exp_fistful)
         cb_fistful.grid(row=4, column=1, sticky="w")
 
-        start_btn = ttk.Button(self.root, text="Start", command=self._start_host)
+        start_btn = ttk.Button(frame, text="Start", style="Menu.TButton", command=self._start_host)
         start_btn.grid(row=5, column=0, columnspan=2, pady=5)
+        self._add_tooltip(start_btn, "Launch server and join")
 
     def _start_host(self) -> None:
         port = int(self.port_var.get())
@@ -292,19 +367,32 @@ class BangUI:
         for widget in self.root.winfo_children():
             widget.destroy()
 
+        frame = ttk.Frame(self.root, style="Menu.TFrame")
+        frame.grid(row=0, column=0, columnspan=2, sticky="nsew")
+        frame.columnconfigure(0, weight=1)
+        frame.columnconfigure(1, weight=1)
+        self._apply_menu_background(frame)
+
         self.addr_var = tk.StringVar(value="localhost")
         self.port_var = tk.StringVar(value="8765")
         self.code_var = tk.StringVar()
 
-        ttk.Label(self.root, text="Host Address:").grid(row=0, column=0, sticky="e")
-        ttk.Entry(self.root, textvariable=self.addr_var).grid(row=0, column=1)
-        ttk.Label(self.root, text="Port:").grid(row=1, column=0, sticky="e")
-        ttk.Entry(self.root, textvariable=self.port_var).grid(row=1, column=1)
-        ttk.Label(self.root, text="Room Code:").grid(row=2, column=0, sticky="e")
-        ttk.Entry(self.root, textvariable=self.code_var).grid(row=2, column=1)
+        ttk.Label(
+            frame, text="Host Address:", style="Menu.TLabel"
+        ).grid(row=0, column=0, sticky="e")
+        ttk.Entry(frame, textvariable=self.addr_var).grid(row=0, column=1)
+        ttk.Label(frame, text="Port:", style="Menu.TLabel").grid(row=1, column=0, sticky="e")
+        ttk.Entry(frame, textvariable=self.port_var).grid(row=1, column=1)
+        ttk.Label(
+            frame, text="Room Code:", style="Menu.TLabel"
+        ).grid(row=2, column=0, sticky="e")
+        ttk.Entry(frame, textvariable=self.code_var).grid(row=2, column=1)
 
-        join_btn = ttk.Button(self.root, text="Join", command=self._start_join)
+        join_btn = ttk.Button(
+            frame, text="Join", style="Menu.TButton", command=self._start_join
+        )
         join_btn.grid(row=3, column=0, columnspan=2, pady=5)
+        self._add_tooltip(join_btn, "Connect to the host")
 
     def _start_join(self) -> None:
         addr = self.addr_var.get().strip()
