@@ -157,6 +157,8 @@ class BangUI:
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
         self.room_code: str = ""
+        self.log_overlay: tk.Toplevel | None = None
+        self.log_text: tk.Text | None = None
         # basic settings
         self.audio_sound = tk.BooleanVar(value=True)
         self.graphics_quality = tk.BooleanVar(value=True)
@@ -392,8 +394,26 @@ class BangUI:
         self.event_label = ttk.Label(self.root, textvariable=self.event_var)
         self.event_label.grid(row=2, column=0, columnspan=2)
 
-        self.text = tk.Text(self.root, height=10, width=40, state="disabled")
-        self.text.grid(row=3, column=0, columnspan=2)
+        if self.log_overlay:
+            self.log_overlay.destroy()
+        self.log_overlay = tk.Toplevel(self.root)
+        self.log_overlay.wm_overrideredirect(True)
+        self.log_overlay.attributes("-alpha", 0.5)
+        self.log_overlay.transient(self.root)
+        self.log_overlay.lift(self.root)
+        self.log_text = tk.Text(self.log_overlay, height=10, width=40, state="disabled")
+        self.log_text.pack()
+        self.root.update_idletasks()
+        self.log_overlay.update_idletasks()
+        bx = self.board_canvas.winfo_rootx()
+        by = self.board_canvas.winfo_rooty()
+        bw = self.board_canvas.winfo_width()
+        bh = self.board_canvas.winfo_height()
+        lw = self.log_overlay.winfo_width()
+        lh = self.log_overlay.winfo_height()
+        x = bx + (bw - lw) // 2
+        y = by + (bh - lh) // 2
+        self.log_overlay.geometry(f"{lw}x{lh}+{x}+{y}")
 
         self.hand_frame = ttk.Frame(self.root)
         self.hand_frame.grid(row=4, column=0, columnspan=2, pady=5)
@@ -603,9 +623,11 @@ class BangUI:
                     ttk.Label(eq_frame, text=e).pack(side="left")
 
     def _append_message(self, msg: str) -> None:
-        self.text.configure(state="normal")
-        self.text.insert(tk.END, msg + "\n")
-        self.text.configure(state="disabled")
+        if not self.log_text:
+            return
+        self.log_text.configure(state="normal")
+        self.log_text.insert(tk.END, msg + "\n")
+        self.log_text.configure(state="disabled")
 
     def _prompt_vera(self, options: list[dict]) -> None:
         """Ask Vera Custer which ability to copy."""
@@ -877,6 +899,11 @@ class BangUI:
             self.server_thread.stop()
             self.server_thread.join(timeout=1)
             self.server_thread = None
+
+        if self.log_overlay:
+            self.log_overlay.destroy()
+            self.log_overlay = None
+            self.log_text = None
 
         # Destroy the window after all threads have been cleaned up
         self.root.destroy()
