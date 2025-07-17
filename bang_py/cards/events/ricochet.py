@@ -21,5 +21,6 @@ class RicochetEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Ricochet event."""
         if game:
             game.event_flags["ricochet"] = True

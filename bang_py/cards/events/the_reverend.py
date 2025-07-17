@@ -21,5 +21,6 @@ class TheReverendEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Reverend event."""
         if game:
             game.event_flags["no_beer_play"] = True

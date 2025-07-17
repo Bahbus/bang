@@ -214,6 +214,8 @@ class GameManager:
         self.current_turn %= len(self.turn_order)
 
     def start_game(self, deal_roles: bool = True) -> None:
+        """Begin the game and deal starting hands."""
+
         if deal_roles:
             self._deal_roles_and_characters()
         self.turn_order = list(range(len(self.players)))
@@ -612,6 +614,8 @@ class GameManager:
         return card
 
     def draw_card(self, player: Player, num: int = 1) -> None:
+        """Draw ``num`` cards for ``player`` applying active event effects."""
+
         bonus = int(self.event_flags.get("peyote_bonus", 0))
         for _ in range(num + bonus):
             card: BaseCard | None

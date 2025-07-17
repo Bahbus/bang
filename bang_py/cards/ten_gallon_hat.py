@@ -5,7 +5,7 @@ from ..player import Player
 
 
 class TenGallonHatCard(MissedCard):
-    """Simple green-bordered Missed!"""
+    """Simple green-bordered Missed card."""
 
     card_name = "Ten Gallon Hat"
     card_type = "green"

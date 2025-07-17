@@ -21,5 +21,6 @@ class CurseEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Curse event."""
         if game:
             game.event_flags["suit_override"] = "Spades"

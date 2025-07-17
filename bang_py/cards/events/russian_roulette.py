@@ -11,8 +11,7 @@ if TYPE_CHECKING:
 
 
 class RussianRouletteEventCard(BaseEventCard):
-    """When Russian Roulette enters play, starting with the Sheriff each player
-    discards a Missed! The first not to do so loses 2 life points."""
+    """Players discard Missed! in order; the first unable loses two life."""
 
     card_name = "Russian Roulette"
     card_set = "fistful_of_cards"
@@ -27,6 +26,7 @@ class RussianRouletteEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Russian Roulette event."""
         if not game:
             return
         players = [p for p in game.players if p.is_alive()]

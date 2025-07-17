@@ -24,6 +24,7 @@ class TheDoctorEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the The Doctor event."""
         if not game:
             return
         alive = [p for p in game.players if p.is_alive()]

@@ -21,5 +21,6 @@ class TheJudgeEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Judge event."""
         if game:
             game.event_flags["judge"] = True

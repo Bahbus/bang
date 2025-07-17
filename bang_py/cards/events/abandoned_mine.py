@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class AbandonedMineEventCard(BaseEventCard):
-    """During draw, draw from discard pile if possible.
-    Discards go face down on top of the deck."""
+    """Let players draw from the discard pile during the draw phase."""
 
     card_name = "Abandoned Mine"
     card_set = "fistful_of_cards"
@@ -25,5 +24,6 @@ class AbandonedMineEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Abandoned Mine event."""
         if game:
             game.event_flags["abandoned_mine"] = True

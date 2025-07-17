@@ -11,7 +11,7 @@ from .bang import BangCard
 
 
 class KnifeCard(BaseCard):
-    """Close range attack that can be dodged like a Bang!"""
+    """Close range attack that can be dodged like a Bang."""
 
     card_name = "Knife"
     card_type = "green"

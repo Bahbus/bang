@@ -21,5 +21,6 @@ class TheSermonEventCard(BaseEventCard):
         player: Player | None = None,
         game: GameManager | None = None,
     ) -> None:
+        """Activate the Sermon event."""
         if game:
             game.event_flags["no_bang"] = True
