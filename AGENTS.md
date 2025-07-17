@@ -17,3 +17,7 @@ when making changes.
 
 ## Pull Requests
 - Summarize key changes and mention test results in the PR body.
+
+The JPEG files `example-bang-menu-ui.jpg` and `example_bang_ui.jpg` located in
+the repository root are provided only as reference screenshots. They should not
+be loaded or otherwise used by the application code.

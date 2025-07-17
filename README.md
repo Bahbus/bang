@@ -56,6 +56,10 @@ dialog.
 The card backs and small heart icons are generated at runtime so the GUI does not
 require any external image files.
 
+Two JPEGs, `example-bang-menu-ui.jpg` and `example_bang_ui.jpg`, live in the
+repository root. They are only screenshots demonstrating a possible layout and
+are **not** loaded by the program.
+
 ## Building a Windows Executable
 
 `pyinstaller` can bundle the UI into a standalone Windows executable. Install the
