@@ -159,6 +159,8 @@ class BangUI:
         self.room_code: str = ""
         self.log_overlay: tk.Toplevel | None = None
         self.log_text: tk.Text | None = None
+        self._overlay_drag_start: tuple[int, int] | None = None
+        self._overlay_moved = False
         # basic settings
         self.audio_sound = tk.BooleanVar(value=True)
         self.graphics_quality = tk.BooleanVar(value=True)
@@ -409,8 +411,17 @@ class BangUI:
         self.log_overlay.attributes("-alpha", 0.5)
         self.log_overlay.transient(self.root)
         self.log_overlay.lift(self.root)
-        self.log_text = tk.Text(self.log_overlay, height=10, width=40, state="disabled")
+
+        frame = ttk.Frame(self.log_overlay)
+        frame.pack(fill="both", expand=True)
+        grip = ttk.Label(frame, text="Log", background="gray", foreground="white")
+        grip.pack(fill="x")
+        self.log_text = tk.Text(frame, height=10, width=40, state="disabled")
         self.log_text.pack()
+        grip.bind("<ButtonPress-1>", self._on_overlay_press)
+        grip.bind("<B1-Motion>", self._on_overlay_drag)
+        self.log_text.bind("<ButtonPress-1>", self._on_overlay_press)
+        self.log_text.bind("<B1-Motion>", self._on_overlay_drag)
         self._position_log_overlay()
         self.root.bind("<Configure>", self._on_resize)
 
@@ -429,7 +440,7 @@ class BangUI:
 
     def _position_log_overlay(self) -> None:
         """Center the log overlay over the board canvas."""
-        if not self.log_overlay:
+        if not self.log_overlay or self._overlay_moved:
             return
         self.root.update_idletasks()
         self.log_overlay.update_idletasks()
@@ -442,6 +453,22 @@ class BangUI:
         x = bx + (bw - lw) // 2
         y = by + (bh - lh) // 2
         self.log_overlay.geometry(f"{lw}x{lh}+{x}+{y}")
+
+    def _on_overlay_press(self, event: tk.Event) -> None:
+        """Record the starting position of a drag gesture."""
+        self._overlay_drag_start = (event.x_root, event.y_root)
+
+    def _on_overlay_drag(self, event: tk.Event) -> None:
+        """Move the overlay based on mouse motion."""
+        if not self.log_overlay or self._overlay_drag_start is None:
+            return
+        dx = event.x_root - self._overlay_drag_start[0]
+        dy = event.y_root - self._overlay_drag_start[1]
+        x = self.log_overlay.winfo_x() + dx
+        y = self.log_overlay.winfo_y() + dy
+        self.log_overlay.geometry(f"+{x}+{y}")
+        self._overlay_drag_start = (event.x_root, event.y_root)
+        self._overlay_moved = True
 
     def _draw_board(self, scale: float) -> None:
         """Draw the table and deck graphics scaled to the given factor."""
