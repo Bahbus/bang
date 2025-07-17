@@ -448,6 +448,17 @@ class BangUI(QtWidgets.QMainWindow):
         else:
             self.log_text.append(f"Prompt: {prompt}")
 
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        """Toggle full-screen mode when F11 is pressed."""
+        if event.key() == QtCore.Qt.Key_F11:
+            fs = QtCore.Qt.WindowFullScreen
+            if self.windowState() & fs:
+                self.setWindowState(self.windowState() & ~fs)
+            else:
+                self.setWindowState(self.windowState() | fs)
+        else:
+            super().keyPressEvent(event)
+
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:  # noqa: D401
         """Handle window close and stop threads."""
         if self.client:
@@ -463,9 +474,10 @@ class BangUI(QtWidgets.QMainWindow):
 
 
 def main() -> None:
+    """Start the Qt interface."""
     app = QtWidgets.QApplication([])
     ui = BangUI()
-    ui.show()
+    ui.showMaximized()
     if os.getenv("BANG_AUTO_CLOSE"):
         QtCore.QTimer.singleShot(100, ui.close)
     app.exec()
