@@ -69,7 +69,8 @@ from the command line:
 bang.exe
 ```
 A GitHub Actions workflow builds this executable for each tagged release and
-automatically attaches `bang.exe` to the release as a downloadable asset.
+automatically attaches `bang.exe` to the release as a downloadable asset. The workflow
+needs the `contents: write` permission (or a PAT) to upload the file.
 
 
 ## Characters
