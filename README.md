@@ -69,7 +69,7 @@ from the command line:
 bang.exe
 ```
 A GitHub Actions workflow builds this executable for each tagged release and
-provides `bang.exe` as a download artifact.
+automatically attaches `bang.exe` to the release as a downloadable asset.
 
 
 ## Characters
