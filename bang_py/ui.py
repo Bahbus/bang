@@ -144,6 +144,7 @@ class GameBoard(QtWidgets.QGraphicsView):
         self.card_height = 90
         self.card_pixmap = self._create_card_pixmap()
         self.players: list[dict] = []
+        self.self_name: str | None = None
         self._draw_board()
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:  # noqa: D401
@@ -156,9 +157,9 @@ class GameBoard(QtWidgets.QGraphicsView):
         w = width or self.card_width
         h = height or self.card_height
         pix = QtGui.QPixmap(w, h)
-        pix.fill(QtGui.QColor("#ddd"))
+        pix.fill(QtGui.QColor("#f4e1b5"))
         painter = QtGui.QPainter(pix)
-        pen = QtGui.QPen(QtGui.QColor("#222"))
+        pen = QtGui.QPen(QtGui.QColor("#8b4513"))
         painter.setPen(pen)
         painter.drawRect(0, 0, w - 1, h - 1)
         painter.end()
@@ -167,36 +168,60 @@ class GameBoard(QtWidgets.QGraphicsView):
     def _draw_board(self) -> None:
         self._scene.clear()
         self._scene.setSceneRect(0, 0, self.max_width, self.max_height)
-        table = self._scene.addEllipse(5, 5, self.max_width - 10,
-                                       self.max_height - 10,
-                                       QtGui.QPen(),
-                                       QtGui.QBrush(QtGui.QColor("forestgreen")))
+        table = self._scene.addEllipse(
+            5,
+            5,
+            self.max_width - 10,
+            self.max_height - 10,
+            QtGui.QPen(),
+            QtGui.QBrush(QtGui.QColor("saddlebrown")),
+        )
         table.setZValue(-1)
-        draw_x = self.max_width * 0.3
+        center_x = self.max_width / 2
+        draw_x = center_x - self.card_width * 1.5
         draw_y = self.max_height * 0.5
-        discard_x = self.max_width * 0.7
+        discard_x = center_x + self.card_width * 0.5
         self._scene.addPixmap(self.card_pixmap).setPos(draw_x, draw_y)
         self._scene.addText("Draw").setPos(draw_x, draw_y + self.card_height)
         self._scene.addPixmap(self.card_pixmap).setPos(discard_x, draw_y)
         self._scene.addText("Discard").setPos(discard_x,
                                               draw_y + self.card_height)
 
+        # Star emblem at the center of the table
+        star = QtGui.QPolygonF()
+        outer = 15
+        inner = 6
+        for i in range(10):
+            angle = math.radians(i * 36 - 90)
+            r = outer if i % 2 == 0 else inner
+            star.append(QtCore.QPointF(r * math.cos(angle), r * math.sin(angle)))
+        item = self._scene.addPolygon(
+            star,
+            QtGui.QPen(QtGui.QColor("gold")),
+            QtGui.QBrush(QtGui.QColor("gold")),
+        )
+        item.setPos(center_x, self.max_height / 2)
+
         if self.players:
             angle_step = 360 / len(self.players)
-            center_x = self.max_width / 2
             center_y = self.max_height / 2
             radius = min(self.max_width, self.max_height) * 0.35
+            idx = next(
+                (i for i, pl in enumerate(self.players) if pl["name"] == self.self_name),
+                0,
+            )
             for i, pl in enumerate(self.players):
-                ang = math.radians(i * angle_step)
+                ang = math.radians((i - idx) * angle_step - 90)
                 x = center_x + radius * math.cos(ang) - self.card_width / 2
                 y = center_y + radius * math.sin(ang) - self.card_height / 2
                 self._scene.addPixmap(self.card_pixmap).setPos(x, y)
                 text = f"{pl['name']} ({pl['health']})"
                 self._scene.addText(text).setPos(x, y + self.card_height)
 
-    def update_players(self, players: list[dict]) -> None:
-        """Redraw the board to show ``players``."""
+    def update_players(self, players: list[dict], self_name: str | None = None) -> None:
+        """Redraw the board to show ``players`` with ``self_name`` at the bottom."""
         self.players = players
+        self.self_name = self_name
         self._draw_board()
 
 
@@ -232,10 +257,18 @@ class BangUI(QtWidgets.QMainWindow):
         self.resize(1024, 768)
         self.stack = QtWidgets.QStackedWidget()
         self.setCentralWidget(self.stack)
+        self.setStyleSheet(
+            """
+            QWidget { background-color: #deb887; font-family: 'Courier New'; }
+            QPushButton { background-color: #f4a460; border: 2px solid #8b4513; }
+            QLineEdit { background-color: #fff8dc; }
+            """
+        )
 
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
         self.room_code = ""
+        self.local_name = ""
 
         self._build_start_menu()
         self._create_log_dock()
@@ -244,6 +277,8 @@ class BangUI(QtWidgets.QMainWindow):
     def _build_start_menu(self) -> None:
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QVBoxLayout(widget)
+        layout.setAlignment(QtCore.Qt.AlignCenter)
+        layout.setContentsMargins(200, 100, 200, 100)
 
         form = QtWidgets.QFormLayout()
         self.name_edit = QtWidgets.QLineEdit()
@@ -268,6 +303,8 @@ class BangUI(QtWidgets.QMainWindow):
     def _host_menu(self) -> None:
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QFormLayout(widget)
+        layout.setContentsMargins(200, 100, 200, 100)
+        layout.setAlignment(QtCore.Qt.AlignCenter)
         self.port_edit = QtWidgets.QLineEdit("8765")
         self.max_players_edit = QtWidgets.QLineEdit("7")
         layout.addRow("Host Port:", self.port_edit)
@@ -281,6 +318,8 @@ class BangUI(QtWidgets.QMainWindow):
     def _join_menu(self) -> None:
         widget = QtWidgets.QWidget()
         layout = QtWidgets.QFormLayout(widget)
+        layout.setContentsMargins(200, 100, 200, 100)
+        layout.setAlignment(QtCore.Qt.AlignCenter)
         self.addr_edit = QtWidgets.QLineEdit("localhost")
         self.join_port_edit = QtWidgets.QLineEdit("8765")
         self.code_edit = QtWidgets.QLineEdit()
@@ -366,6 +405,7 @@ class BangUI(QtWidgets.QMainWindow):
         self.client = ClientThread(uri, code, self.name_edit.text().strip())
         self.client.message_received.connect(self._append_message)
         self.client.start()
+        self.local_name = self.name_edit.text().strip()
         self._build_game_view()
         self.log_dock.show()
 
@@ -402,7 +442,7 @@ class BangUI(QtWidgets.QMainWindow):
             for p in players:
                 self.player_list.addItem(f"{p['name']} ({p['health']})")
         if hasattr(self, "board"):
-            self.board.update_players(players)
+            self.board.update_players(players, self.local_name)
 
     def _update_hand(self, cards: list[str]) -> None:
         if not hasattr(self, "hand_layout"):
