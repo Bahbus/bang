@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import math
 import secrets
 from pathlib import Path
 import os
@@ -16,6 +15,13 @@ if __package__ in {None, ""}:
     __package__ = "bang_py"
 
 from .network.server import BangServer
+from .ui_components import (
+    StartMenu,
+    HostJoinDialog,
+    GameView,
+    GameBoard,
+    CardButton,
+)
 
 
 class ServerThread(QtCore.QThread):
@@ -124,129 +130,6 @@ class ClientThread(QtCore.QThread):
             self.message_received.emit(f"Send error: {exc}")
 
 
-class GameBoard(QtWidgets.QGraphicsView):
-    """Simple board rendering using QGraphicsView."""
-
-    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-        super().__init__(parent)
-        self.setRenderHint(QtGui.QPainter.Antialiasing)
-        self._scene = QtWidgets.QGraphicsScene(self)
-        self.setScene(self._scene)
-        screen = QtGui.QGuiApplication.primaryScreen()
-        if screen is not None:
-            geom = screen.availableGeometry()
-            self.max_width = geom.width()
-            self.max_height = geom.height()
-        else:
-            self.max_width = 800
-            self.max_height = 600
-        self.card_width = 60
-        self.card_height = 90
-        self.card_pixmap = self._create_card_pixmap()
-        self.players: list[dict] = []
-        self.self_name: str | None = None
-        self._draw_board()
-
-    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:  # noqa: D401
-        """Handle widget resize and scale contents."""
-        super().resizeEvent(event)
-        self.fitInView(self._scene.sceneRect(), QtCore.Qt.KeepAspectRatio)
-
-    def _create_card_pixmap(self, width: int | None = None,
-                             height: int | None = None) -> QtGui.QPixmap:
-        w = width or self.card_width
-        h = height or self.card_height
-        pix = QtGui.QPixmap(w, h)
-        pix.fill(QtGui.QColor("#f4e1b5"))
-        painter = QtGui.QPainter(pix)
-        pen = QtGui.QPen(QtGui.QColor("#8b4513"))
-        painter.setPen(pen)
-        painter.drawRect(0, 0, w - 1, h - 1)
-        painter.end()
-        return pix
-
-    def _draw_board(self) -> None:
-        self._scene.clear()
-        self._scene.setSceneRect(0, 0, self.max_width, self.max_height)
-        table = self._scene.addEllipse(
-            5,
-            5,
-            self.max_width - 10,
-            self.max_height - 10,
-            QtGui.QPen(),
-            QtGui.QBrush(QtGui.QColor("saddlebrown")),
-        )
-        table.setZValue(-1)
-        center_x = self.max_width / 2
-        draw_x = center_x - self.card_width * 1.5
-        draw_y = self.max_height * 0.5
-        discard_x = center_x + self.card_width * 0.5
-        self._scene.addPixmap(self.card_pixmap).setPos(draw_x, draw_y)
-        self._scene.addText("Draw").setPos(draw_x, draw_y + self.card_height)
-        self._scene.addPixmap(self.card_pixmap).setPos(discard_x, draw_y)
-        self._scene.addText("Discard").setPos(
-            discard_x, draw_y + self.card_height
-        )
-
-        # Star emblem at the center of the table
-        star = QtGui.QPolygonF()
-        outer = 15
-        inner = 6
-        for i in range(10):
-            angle = math.radians(i * 36 - 90)
-            r = outer if i % 2 == 0 else inner
-            star.append(QtCore.QPointF(r * math.cos(angle), r * math.sin(angle)))
-        item = self._scene.addPolygon(
-            star,
-            QtGui.QPen(QtGui.QColor("gold")),
-            QtGui.QBrush(QtGui.QColor("gold")),
-        )
-        item.setPos(center_x, self.max_height / 2)
-
-        if self.players:
-            angle_step = 360 / len(self.players)
-            center_y = self.max_height / 2
-            radius = min(self.max_width, self.max_height) * 0.35
-            idx = next(
-                (i for i, pl in enumerate(self.players) if pl["name"] == self.self_name),
-                0,
-            )
-            for i, pl in enumerate(self.players):
-                ang = math.radians((i - idx) * angle_step + 90)
-                x = center_x + radius * math.cos(ang) - self.card_width / 2
-                y = center_y + radius * math.sin(ang) - self.card_height / 2
-                self._scene.addPixmap(self.card_pixmap).setPos(x, y)
-                text = f"{pl['name']} ({pl['health']})"
-                self._scene.addText(text).setPos(x, y + self.card_height)
-
-    def update_players(self, players: list[dict], self_name: str | None = None) -> None:
-        """Redraw the board to show ``players`` with ``self_name`` at the bottom."""
-        self.players = players
-        self.self_name = self_name
-        self._draw_board()
-
-
-class CardButton(QtWidgets.QPushButton):
-    """Button widget representing a hand card."""
-
-    action_signal = QtCore.Signal(str, int)
-
-    def __init__(self, text: str, index: int) -> None:
-        super().__init__(text)
-        self.index = index
-        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self._context_menu)
-        self.clicked.connect(self._play)
-
-    def _play(self) -> None:
-        self.action_signal.emit("play_card", self.index)
-
-    def _context_menu(self, pos: QtCore.QPoint) -> None:
-        menu = QtWidgets.QMenu(self)
-        discard = menu.addAction("Discard")
-        chosen = menu.exec(self.mapToGlobal(pos))
-        if chosen == discard:
-            self.action_signal.emit("discard", self.index)
 
 
 class BangUI(QtWidgets.QMainWindow):
@@ -288,62 +171,35 @@ class BangUI(QtWidgets.QMainWindow):
 
     # Menu screens -----------------------------------------------------
     def _build_start_menu(self) -> None:
-        widget = QtWidgets.QWidget()
-        layout = QtWidgets.QVBoxLayout(widget)
-        layout.setAlignment(QtCore.Qt.AlignCenter)
-        layout.setContentsMargins(200, 100, 200, 100)
-
-        form = QtWidgets.QFormLayout()
-        self.name_edit = QtWidgets.QLineEdit()
-        form.addRow("Name:", self.name_edit)
-        layout.addLayout(form)
-
-        host_btn = QtWidgets.QPushButton("Host Game")
-        host_btn.clicked.connect(self._host_menu)
-        join_btn = QtWidgets.QPushButton("Join Game")
-        join_btn.clicked.connect(self._join_menu)
-        settings_btn = QtWidgets.QPushButton("Settings")
-        settings_btn.clicked.connect(self._settings_dialog)
-
-        layout.addWidget(host_btn)
-        layout.addWidget(join_btn)
-        layout.addWidget(settings_btn)
-        layout.addStretch(1)
-
-        self.stack.addWidget(widget)
-        self.stack.setCurrentWidget(widget)
+        self.start_menu = StartMenu()
+        self.start_menu.host_clicked.connect(self._host_menu)
+        self.start_menu.join_clicked.connect(self._join_menu)
+        self.start_menu.settings_clicked.connect(self._settings_dialog)
+        self.stack.addWidget(self.start_menu)
+        self.stack.setCurrentWidget(self.start_menu)
 
     def _host_menu(self) -> None:
-        widget = QtWidgets.QWidget()
-        layout = QtWidgets.QFormLayout(widget)
-        layout.setContentsMargins(200, 100, 200, 100)
-        layout.setAlignment(QtCore.Qt.AlignCenter)
-        self.port_edit = QtWidgets.QLineEdit("8765")
-        self.max_players_edit = QtWidgets.QLineEdit("7")
-        layout.addRow("Host Port:", self.port_edit)
-        layout.addRow("Max Players:", self.max_players_edit)
-        start_btn = QtWidgets.QPushButton("Start")
-        start_btn.clicked.connect(self._start_host)
-        layout.addRow(start_btn)
-        self.stack.addWidget(widget)
-        self.stack.setCurrentWidget(widget)
+        dialog = HostJoinDialog("host", self)
+        if dialog.exec() == QtWidgets.QDialog.Accepted:
+            try:
+                port = int(dialog.port_edit.text())
+                max_players = int(dialog.max_players_edit.text())
+            except ValueError:
+                QtWidgets.QMessageBox.critical(self, "Error", "Invalid settings")
+                return
+            self._start_host(port, max_players)
 
     def _join_menu(self) -> None:
-        widget = QtWidgets.QWidget()
-        layout = QtWidgets.QFormLayout(widget)
-        layout.setContentsMargins(200, 100, 200, 100)
-        layout.setAlignment(QtCore.Qt.AlignCenter)
-        self.addr_edit = QtWidgets.QLineEdit("localhost")
-        self.join_port_edit = QtWidgets.QLineEdit("8765")
-        self.code_edit = QtWidgets.QLineEdit()
-        layout.addRow("Host Address:", self.addr_edit)
-        layout.addRow("Port:", self.join_port_edit)
-        layout.addRow("Room Code:", self.code_edit)
-        join_btn = QtWidgets.QPushButton("Join")
-        join_btn.clicked.connect(self._start_join)
-        layout.addRow(join_btn)
-        self.stack.addWidget(widget)
-        self.stack.setCurrentWidget(widget)
+        dialog = HostJoinDialog("join", self)
+        if dialog.exec() == QtWidgets.QDialog.Accepted:
+            addr = dialog.addr_edit.text().strip()
+            code = dialog.code_edit.text().strip()
+            try:
+                port = int(dialog.port_edit.text())
+            except ValueError:
+                QtWidgets.QMessageBox.critical(self, "Error", "Invalid port")
+                return
+            self._start_join(addr, port, code)
 
     def _settings_dialog(self) -> None:
         QtWidgets.QMessageBox.information(self, "Settings",
@@ -351,30 +207,14 @@ class BangUI(QtWidgets.QMainWindow):
 
     # Game view --------------------------------------------------------
     def _build_game_view(self) -> None:
-        widget = QtWidgets.QWidget()
-        vbox = QtWidgets.QVBoxLayout(widget)
-
-        hbox = QtWidgets.QHBoxLayout()
-        self.board = GameBoard()
-        hbox.addWidget(self.board, 1)
-        self.player_list = QtWidgets.QListWidget()
-        self.player_list.setMaximumWidth(200)
-        hbox.addWidget(self.player_list)
-        vbox.addLayout(hbox, 1)
-
-        self.hand_widget = QtWidgets.QWidget()
-        self.hand_layout = QtWidgets.QHBoxLayout(self.hand_widget)
-        vbox.addWidget(self.hand_widget)
-
-        btn_draw = QtWidgets.QPushButton("Draw")
-        btn_draw.clicked.connect(lambda: self._send_action({"action": "draw"}))
-        vbox.addWidget(btn_draw)
-
-        btn_end = QtWidgets.QPushButton("End Turn")
-        btn_end.clicked.connect(self._end_turn)
-        vbox.addWidget(btn_end)
-        self.stack.addWidget(widget)
-        self.stack.setCurrentWidget(widget)
+        self.game_view = GameView()
+        self.game_view.action_signal.connect(self._send_action)
+        self.game_view.end_turn_signal.connect(self._end_turn)
+        self.board = self.game_view.board
+        self.player_list = self.game_view.player_list
+        self.hand_layout = self.game_view.hand_layout
+        self.stack.addWidget(self.game_view)
+        self.stack.setCurrentWidget(self.game_view)
 
     def _create_log_dock(self) -> None:
         self.log_dock = QtWidgets.QDockWidget("Log", self)
@@ -393,14 +233,12 @@ class BangUI(QtWidgets.QMainWindow):
         self.log_dock.show()
 
     # Networking -------------------------------------------------------
-    def _start_host(self) -> None:
-        name = self.name_edit.text().strip()
+    def _start_host(self, port: int, max_players: int) -> None:
+        name = self.start_menu.name_edit.text().strip()
         if not name:
             QtWidgets.QMessageBox.critical(self, "Error",
                                            "Please enter your name")
             return
-        port = int(self.port_edit.text())
-        max_players = int(self.max_players_edit.text())
         room_code = secrets.token_hex(3)
         self.server_thread = ServerThread("", port, room_code, [], max_players)
         self.server_thread.start()
@@ -408,24 +246,21 @@ class BangUI(QtWidgets.QMainWindow):
         self._start_client(uri, room_code)
         self.setWindowTitle(f"Bang! - {room_code}")
 
-    def _start_join(self) -> None:
-        name = self.name_edit.text().strip()
+    def _start_join(self, addr: str, port: int, code: str) -> None:
+        name = self.start_menu.name_edit.text().strip()
         if not name:
             QtWidgets.QMessageBox.critical(self, "Error",
                                            "Please enter your name")
             return
-        addr = self.addr_edit.text().strip()
-        port = int(self.join_port_edit.text())
-        code = self.code_edit.text().strip()
         uri = f"ws://{addr}:{port}"
         self._start_client(uri, code)
 
     def _start_client(self, uri: str, code: str) -> None:
         self.room_code = code
-        self.client = ClientThread(uri, code, self.name_edit.text().strip())
+        self.client = ClientThread(uri, code, self.start_menu.name_edit.text().strip())
         self.client.message_received.connect(self._append_message)
         self.client.start()
-        self.local_name = self.name_edit.text().strip()
+        self.local_name = self.start_menu.name_edit.text().strip()
         self._build_game_view()
         self.log_dock.show()
 
@@ -457,30 +292,12 @@ class BangUI(QtWidgets.QMainWindow):
             self.client.send_json(payload)
 
     def _update_players(self, players: list[dict]) -> None:
-        if hasattr(self, "player_list"):
-            self.player_list.clear()
-            for p in players:
-                self.player_list.addItem(f"{p['name']} ({p['health']})")
-        if hasattr(self, "board"):
-            self.board.update_players(players, self.local_name)
+        if hasattr(self, "game_view"):
+            self.game_view.update_players(players, self.local_name)
 
     def _update_hand(self, cards: list[str]) -> None:
-        if not hasattr(self, "hand_layout"):
-            return
-        while self.hand_layout.count():
-            item = self.hand_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-        for idx, name in enumerate(cards):
-            btn = CardButton(name, idx)
-            btn.action_signal.connect(self._handle_card_action)
-            self.hand_layout.addWidget(btn)
-
-    def _handle_card_action(self, action: str, index: int) -> None:
-        if action == "play_card":
-            self._send_action({"action": "play_card", "card_index": index})
-        elif action == "discard":
-            self._send_action({"action": "discard", "card_index": index})
+        if hasattr(self, "game_view"):
+            self.game_view.update_hand(cards)
 
     def _show_prompt(self, prompt: str, data: dict) -> None:
         if prompt == "general_store":
