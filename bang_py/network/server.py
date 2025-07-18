@@ -6,11 +6,11 @@ from typing import Any, Dict, List
 import logging
 
 try:  # Optional websockets import for test environments
-    from websockets.server import serve, WebSocketServerProtocol
-    from websockets import WebSocketException
+    from websockets.asyncio.server import serve, ServerConnection
+    from websockets.exceptions import WebSocketException
 except ModuleNotFoundError:  # pragma: no cover - handled in start()
     serve = None  # type: ignore[assignment]
-    WebSocketServerProtocol = Any  # type: ignore[assignment]
+    ServerConnection = Any  # type: ignore[assignment]
     WebSocketException = Exception  # type: ignore[assignment]
 
 from ..game_manager import GameManager
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Connection:
-    websocket: WebSocketServerProtocol
+    websocket: ServerConnection
     player: Player
 
 
@@ -63,7 +63,7 @@ class BangServer:
         # secure RNG to avoid predictable codes.
         self.room_code = room_code or secrets.token_hex(3)
         self.game = GameManager(expansions=expansions or [])
-        self.connections: Dict[WebSocketServerProtocol, Connection] = {}
+        self.connections: Dict[ServerConnection, Connection] = {}
         self.max_players = max_players
         self.game.player_damaged_listeners.append(self._on_player_damaged)
         self.game.player_healed_listeners.append(self._on_player_healed)
@@ -87,7 +87,7 @@ class BangServer:
 
         asyncio.create_task(_send())
 
-    async def handler(self, websocket: WebSocketServerProtocol) -> None:
+    async def handler(self, websocket: ServerConnection) -> None:
         """Register a new client and process game commands sent over the socket."""
         await websocket.send("Enter room code:")
         code = await websocket.recv()
@@ -117,7 +117,7 @@ class BangServer:
             await self.broadcast_state()
 
     async def _process_message(
-        self, websocket: WebSocketServerProtocol, message: str | bytes
+        self, websocket: ServerConnection, message: str | bytes
     ) -> None:
         """Parse and route a single message from ``websocket``."""
         try:
@@ -148,7 +148,7 @@ class BangServer:
             await self._handle_set_auto_miss(websocket, data)
 
     async def _handle_draw(
-        self, websocket: WebSocketServerProtocol, data: Dict[str, Any]
+        self, websocket: ServerConnection, data: Dict[str, Any]
     ) -> None:
         num = int(data.get("num", 1))
         player = self.connections[websocket].player
@@ -156,7 +156,7 @@ class BangServer:
         await self.broadcast_state()
 
     async def _handle_discard(
-        self, websocket: WebSocketServerProtocol, data: Dict[str, Any]
+        self, websocket: ServerConnection, data: Dict[str, Any]
     ) -> None:
         idx = data.get("card_index")
         player = self.connections[websocket].player
@@ -166,7 +166,7 @@ class BangServer:
             await self.broadcast_state()
 
     async def _handle_play_card(
-        self, websocket: WebSocketServerProtocol, data: Dict[str, Any]
+        self, websocket: ServerConnection, data: Dict[str, Any]
     ) -> None:
         idx = data.get("card_index")
         target_idx = data.get("target")
@@ -201,7 +201,7 @@ class BangServer:
             await self.broadcast_state(desc)
 
     async def _handle_general_store_pick(
-        self, websocket: WebSocketServerProtocol, data: Dict[str, Any]
+        self, websocket: ServerConnection, data: Dict[str, Any]
     ) -> None:
         idx = data.get("index")
         player = self.connections[websocket].player
@@ -221,7 +221,7 @@ class BangServer:
                     self._create_send_task(conn, payload)
 
     async def _handle_use_ability(
-        self, websocket: WebSocketServerProtocol, data: Dict[str, Any]
+        self, websocket: ServerConnection, data: Dict[str, Any]
     ) -> None:
         ability = data.get("ability")
         player = self.connections[websocket].player
@@ -316,7 +316,7 @@ class BangServer:
         return False
 
     async def _handle_set_auto_miss(
-        self, websocket: WebSocketServerProtocol, data: Dict[str, Any]
+        self, websocket: ServerConnection, data: Dict[str, Any]
     ) -> None:
         enabled = bool(data.get("enabled", True))
         self.connections[websocket].player.metadata.auto_miss = enabled
@@ -325,7 +325,7 @@ class BangServer:
     async def broadcast_state(self, message: str | None = None) -> None:
         """Send updated game state to all connected clients."""
         async def send_payload(
-            websocket: WebSocketServerProtocol, conn: Connection, payload: dict
+            websocket: ServerConnection, conn: Connection, payload: dict
         ) -> None:
             try:
                 await conn.websocket.send(json.dumps(payload))
