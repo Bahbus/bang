@@ -70,7 +70,7 @@ class GameManager:
     Controls turn order and triggers game events.
     """
 
-    players: List[Player] = field(default_factory=list)
+    _players: List[Player] = field(default_factory=list)
     deck: Deck | None = None
     expansions: List[str] = field(default_factory=list)
     discard_pile: List[BaseCard] = field(default_factory=list)
@@ -109,6 +109,11 @@ class GameManager:
     ] = field(default_factory=list)
     play_phase_listeners: List[Callable[[Player], None]] = field(default_factory=list)
     _duel_counts: dict | None = field(default=None, init=False, repr=False)
+
+    @property
+    def players(self) -> List[Player]:
+        """List of players in turn order."""
+        return self._players
 
     def prompt_new_identity(self, player: Player) -> bool:
         """Return True if the player opts to switch characters."""
@@ -172,38 +177,36 @@ class GameManager:
     def add_player(self, player: Player) -> None:
         """Add a player to the game and record the game reference."""
         player.metadata.game = self
-        self.players.append(player)
+        self._players.append(player)
         if player.character is not None:
             player.character.ability(self, player)
 
     def remove_player(self, player: Player) -> None:
         """Remove ``player`` from the game and update turn order."""
-        if player not in self.players:
+        if player not in self._players:
             return
 
         current_obj = self._current_player_obj() if self.turn_order else None
 
-        idx = self.players.index(player)
-        self.players.pop(idx)
+        idx = self._players.index(player)
+        self._players.pop(idx)
         player.metadata.game = None
         self._reindex_turn_order(idx)
         if not self.turn_order:
             self.current_turn = 0
             return
-
         self._reset_current_turn(current_obj)
-
 
     def start_game(self, deal_roles: bool = True) -> None:
         """Begin the game and deal starting hands."""
 
         if deal_roles:
             self._deal_roles_and_characters()
-        self.turn_order = list(range(len(self.players)))
+        self.turn_order = list(range(len(self._players)))
         self.current_turn = 0
         # Deal initial hands
         for _ in range(2):
-            for player in self.players:
+            for player in self._players:
                 self.draw_card(player)
         self._begin_turn()
 
@@ -248,7 +251,7 @@ class GameManager:
                 OutlawRoleCard,
             ],
         }
-        classes = role_map.get(len(self.players))
+        classes = role_map.get(len(self._players))
         if not classes:
             raise ValueError("Unsupported player count")
         return [cls() for cls in classes]
@@ -289,7 +292,7 @@ class GameManager:
         char_deck = [cls() for cls in self._build_character_deck()]
         random.shuffle(char_deck)
 
-        for player in self.players:
+        for player in self._players:
             player.role = role_deck.pop()
             choices = [char_deck.pop(), char_deck.pop()]
             chosen = self.choose_character(player, choices)
@@ -344,16 +347,16 @@ class GameManager:
     def _ghost_town_cleanup(self, player: Player) -> Player:
         """Remove revived ghosts once the sheriff has taken two turns."""
         removed = False
-        for pl in self.players:
+        for pl in self._players:
             if pl.metadata.ghost_revived and pl.is_alive():
                 pl.health = 0
                 pl.metadata.ghost_revived = False
                 removed = True
         if removed:
-            self.turn_order = [i for i, pl in enumerate(self.players) if pl.is_alive()]
-            self.current_turn = self.turn_order.index(self.players.index(player))
+            self.turn_order = [i for i, pl in enumerate(self._players) if pl.is_alive()]
+            self.current_turn = self.turn_order.index(self._players.index(player))
             idx = self.turn_order[self.current_turn]
-            player = self.players[idx]
+            player = self._players[idx]
         return player
 
     def _process_new_identity(self, player: Player) -> None:
@@ -448,7 +451,7 @@ class GameManager:
         dyn = player.equipment.get("Dynamite")
         if dyn and getattr(dyn, "check_dynamite", None):
             next_idx = self.turn_order[(self.current_turn + 1) % len(self.turn_order)]
-            next_player = self.players[next_idx]
+            next_player = self._players[next_idx]
             exploded = dyn.check_dynamite(player, next_player, self.deck)
             if exploded:
                 self.discard_pile.append(dyn)
@@ -501,7 +504,7 @@ class GameManager:
             return
         self.current_turn %= len(self.turn_order)
         idx = self.turn_order[self.current_turn]
-        player = self.players[idx]
+        player = self._players[idx]
         self.phase = "draw"
         self.reset_turn_flags(player)
 
@@ -532,7 +535,7 @@ class GameManager:
         if not self.turn_order:
             return
         idx = self.turn_order[self.current_turn]
-        player = self.players[idx]
+        player = self._players[idx]
         self.phase = "discard"
         self.discard_phase(player)
         self.event_flags.pop("turn_suit", None)
@@ -778,13 +781,22 @@ class GameManager:
 
     def discard_phase(self, player: Player) -> None:
         """Discard down to the player's hand limit at the end of their turn."""
+        limit = self._hand_limit(player)
+        self._discard_to_limit(player, limit)
+
+    def _hand_limit(self, player: Player) -> int:
+        """Return the maximum cards ``player`` can hold."""
         limit = player.health
         if player.metadata.hand_limit is not None:
             limit = max(limit, player.metadata.hand_limit)
         if player.metadata.no_hand_limit:
-            limit = 99
+            return 99
         if "reverend_limit" in self.event_flags:
             limit = min(limit, int(self.event_flags["reverend_limit"]))
+        return limit
+
+    def _discard_to_limit(self, player: Player, limit: int) -> None:
+        """Discard or pass cards until ``player`` meets ``limit``."""
         while len(player.hand) > limit:
             card = player.hand.pop()
             if self.event_flags.get("abandoned_mine"):
@@ -876,7 +888,7 @@ class GameManager:
         """Return ``True`` if Handcuffs restricts ``player`` from playing ``card``."""
         if not self.event_flags.get("handcuffs") or not self.event_flags.get("turn_suit"):
             return False
-        active = self.players[self.turn_order[self.current_turn]]
+        active = self._players[self.turn_order[self.current_turn]]
         return player is active and getattr(card, "suit", None) != self.event_flags["turn_suit"]
 
     def _is_bang(self, player: Player, card: BaseCard, target: Optional[Player]) -> bool:
@@ -1182,7 +1194,7 @@ class GameManager:
         card_name: str | None = None,
     ) -> bool:
         """During draw phase, draw a card in play instead of from deck."""
-        targets = [t for t in self.players if t is not player]
+        targets = [t for t in self._players if t is not player]
         if target in targets and card_name and card_name in target.equipment:
             card = target.unequip(card_name)
             if card:
@@ -1259,7 +1271,7 @@ class GameManager:
 
     def _deal_general_store_cards(self) -> List[BaseCard]:
         """Draw one card per living player for General Store."""
-        alive = [p for p in self.players if p.is_alive()]
+        alive = [p for p in self._players if p.is_alive()]
         cards: List[BaseCard] = []
         for _ in range(len(alive)):
             card = self._draw_from_deck()
@@ -1269,10 +1281,10 @@ class GameManager:
 
     def _set_general_store_order(self, player: Player) -> None:
         """Determine the order of selection for General Store."""
-        start_idx = self.players.index(player)
+        start_idx = self._players.index(player)
         order: List[Player] = []
-        for i in range(len(self.players)):
-            p = self.players[(start_idx + i) % len(self.players)]
+        for i in range(len(self._players)):
+            p = self._players[(start_idx + i) % len(self._players)]
             if p.is_alive():
                 order.append(p)
         self.general_store_order = order
@@ -1331,11 +1343,11 @@ class GameManager:
 
     def _next_alive_player(self, player: Player) -> Optional[Player]:
         """Return the next living player to the left."""
-        if player not in self.players:
+        if player not in self._players:
             return None
-        idx = self.players.index(player)
-        for i in range(1, len(self.players)):
-            nxt = self.players[(idx + i) % len(self.players)]
+        idx = self._players.index(player)
+        for i in range(1, len(self._players)):
+            nxt = self._players[(idx + i) % len(self._players)]
             if nxt.is_alive():
                 return nxt
         return None
@@ -1353,7 +1365,7 @@ class GameManager:
     # Turn management helpers
     def _current_player_obj(self) -> Player:
         """Return the Player instance whose turn it currently is."""
-        return self.players[self.turn_order[self.current_turn]]
+        return self._players[self.turn_order[self.current_turn]]
 
     def _reindex_turn_order(self, removed_idx: int) -> None:
         """Remove ``removed_idx`` from turn order and shift indices."""
@@ -1363,16 +1375,16 @@ class GameManager:
 
     def _reset_current_turn(self, current_obj: Player | None) -> None:
         """Update ``current_turn`` after player removal."""
-        if current_obj and current_obj in self.players:
-            cur_idx = self.players.index(current_obj)
+        if current_obj and current_obj in self._players:
+            cur_idx = self._players.index(current_obj)
             if cur_idx in self.turn_order:
                 self.current_turn = self.turn_order.index(cur_idx)
                 return
         self.current_turn %= len(self.turn_order)
 
     def _get_player_by_index(self, idx: int) -> Optional[Player]:
-        if 0 <= idx < len(self.players):
-            return self.players[idx]
+        if 0 <= idx < len(self._players):
+            return self._players[idx]
         return None
 
     def get_player_by_index(self, idx: int) -> Optional[Player]:
@@ -1421,7 +1433,7 @@ class GameManager:
         """Transfer one life from ``donor`` to ``target`` if allowed."""
         if not self.event_flags.get("blood_brothers"):
             return False
-        if donor.health <= 1 or donor not in self.players or target not in self.players:
+        if donor.health <= 1 or donor not in self._players or target not in self._players:
             return False
         donor.take_damage(1)
         self.on_player_damaged(donor)
@@ -1432,9 +1444,9 @@ class GameManager:
         return True
 
     def _check_win_conditions(self) -> Optional[str]:
-        alive = [p for p in self.players if p.is_alive()]
+        alive = [p for p in self._players if p.is_alive()]
         self._update_turn_order_post_death()
-        has_sheriff = any(isinstance(p.role, SheriffRoleCard) for p in self.players)
+        has_sheriff = any(isinstance(p.role, SheriffRoleCard) for p in self._players)
         result = self._determine_winner(alive, has_sheriff)
         if result:
             for cb in self.game_over_listeners:
@@ -1445,7 +1457,7 @@ class GameManager:
     # Win condition helpers
     def _update_turn_order_post_death(self) -> None:
         """Remove eliminated players from turn order and adjust the index."""
-        self.turn_order = [i for i in self.turn_order if self.players[i].is_alive()]
+        self.turn_order = [i for i in self.turn_order if self._players[i].is_alive()]
         if self.turn_order:
             self.current_turn %= len(self.turn_order)
         else:
@@ -1453,7 +1465,7 @@ class GameManager:
 
     def _determine_winner(self, alive: List[Player], has_sheriff: bool) -> Optional[str]:
         """Return a victory message if a win condition is met."""
-        if not has_sheriff and len(self.players) == 3:
+        if not has_sheriff and len(self._players) == 3:
             if len(alive) == 1 and alive[0].role:
                 return alive[0].role.victory_message
             return None

@@ -32,4 +32,3 @@ class StartMenu(QtWidgets.QWidget):
         layout.addWidget(join_btn)
         layout.addWidget(settings_btn)
         layout.addStretch(1)
-
