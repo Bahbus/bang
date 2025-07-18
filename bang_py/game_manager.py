@@ -464,7 +464,7 @@ class GameManager:
         if not jail:
             return True
         if self.event_flags.get("no_jail"):
-            player.equipment.pop("Jail", None)
+            player.unequip("Jail")
             self.discard_pile.append(jail)
             return True
         if getattr(jail, "check_turn", None):

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Dict, List, TYPE_CHECKING
 
 from .cards.roles import (
@@ -59,14 +60,33 @@ class Player:
     role: BaseRole | None = None
     character: "BaseCharacter | None" = None
     max_health: int = 4
-    health: int = field(init=False)
-    metadata: PlayerMetadata = field(default_factory=PlayerMetadata)
-    equipment: Dict[str, "BaseCard"] = field(default_factory=dict)
+    _health: int = field(init=False, repr=False)
+    _metadata: PlayerMetadata = field(default_factory=PlayerMetadata, init=False, repr=False)
+    _equipment: Dict[str, "BaseCard"] = field(default_factory=dict, init=False, repr=False)
     hand: List["BaseCard"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Initialize max health from role and character."""
         self.reset_stats()
+
+    @property
+    def metadata(self) -> PlayerMetadata:
+        """Player metadata (read-only reference)."""
+        return self._metadata
+
+    @property
+    def equipment(self) -> Dict[str, "BaseCard"]:
+        """Mapping of currently equipped cards (read-only)."""
+        return MappingProxyType(self._equipment)
+
+    @property
+    def health(self) -> int:
+        """Current health points."""
+        return self._health
+
+    @health.setter
+    def health(self, value: int) -> None:
+        self._health = max(0, min(value, self.max_health))
 
     def reset_stats(self) -> None:
         """Recalculate health and abilities after assigning role or character."""
@@ -93,11 +113,11 @@ class Player:
         """Add equipment to the player, respecting slot rules."""
         existing = None
         if getattr(card, "slot", None) == "Gun":
-            existing = self.equipment.pop("Gun", None)
-            self.equipment["Gun"] = card
+            existing = self._equipment.pop("Gun", None)
+            self._equipment["Gun"] = card
         else:
-            existing = self.equipment.pop(card.card_name, None)
-            self.equipment[card.card_name] = card
+            existing = self._equipment.pop(card.card_name, None)
+            self._equipment[card.card_name] = card
 
         if existing:
             modifier = int(getattr(existing, "max_health_modifier", 0))
@@ -112,7 +132,7 @@ class Player:
 
     def unequip(self, card_name: str) -> "BaseCard | None":
         """Remove equipment by name and adjust health if needed."""
-        card = self.equipment.pop(card_name, None)
+        card = self._equipment.pop(card_name, None)
         if card:
             modifier = int(getattr(card, "max_health_modifier", 0))
             if modifier and getattr(card, "active", True):
@@ -125,7 +145,7 @@ class Player:
         game = self.metadata.game
         if getattr(game, "event_flags", {}).get("lasso"):
             return 1
-        gun = self.equipment.get("Gun")
+        gun = self._equipment.get("Gun")
         if gun and hasattr(gun, "range") and getattr(gun, "active", True):
             return int(getattr(gun, "range"))
         return 1
@@ -136,7 +156,7 @@ class Player:
         bonus = 0
         game = self.metadata.game
         ignore = getattr(game, "event_flags", {}).get("lasso")
-        for eq in self.equipment.values():
+        for eq in self._equipment.values():
             if not ignore and getattr(eq, "active", True):
                 bonus += getattr(eq, "range_modifier", 0)
         if self.character is not None:
@@ -149,7 +169,7 @@ class Player:
         bonus = 0
         game = self.metadata.game
         ignore = getattr(game, "event_flags", {}).get("lasso")
-        for eq in self.equipment.values():
+        for eq in self._equipment.values():
             if not ignore and getattr(eq, "active", True):
                 bonus += getattr(eq, "distance_modifier", 0)
         if self.character is not None:
