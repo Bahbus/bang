@@ -184,8 +184,9 @@ class GameBoard(QtWidgets.QGraphicsView):
         self._scene.addPixmap(self.card_pixmap).setPos(draw_x, draw_y)
         self._scene.addText("Draw").setPos(draw_x, draw_y + self.card_height)
         self._scene.addPixmap(self.card_pixmap).setPos(discard_x, draw_y)
-        self._scene.addText("Discard").setPos(discard_x,
-                                              draw_y + self.card_height)
+        self._scene.addText("Discard").setPos(
+            discard_x, draw_y + self.card_height
+        )
 
         # Star emblem at the center of the table
         star = QtGui.QPolygonF()
@@ -211,7 +212,7 @@ class GameBoard(QtWidgets.QGraphicsView):
                 0,
             )
             for i, pl in enumerate(self.players):
-                ang = math.radians((i - idx) * angle_step - 90)
+                ang = math.radians((i - idx) * angle_step + 90)
                 x = center_x + radius * math.cos(ang) - self.card_width / 2
                 y = center_y + radius * math.sin(ang) - self.card_height / 2
                 self._scene.addPixmap(self.card_pixmap).setPos(x, y)
@@ -259,9 +260,21 @@ class BangUI(QtWidgets.QMainWindow):
         self.setCentralWidget(self.stack)
         self.setStyleSheet(
             """
-            QWidget { background-color: #deb887; font-family: 'Courier New'; }
-            QPushButton { background-color: #f4a460; border: 2px solid #8b4513; }
-            QLineEdit { background-color: #fff8dc; }
+            QWidget {
+                background-color: #deb887;
+                font-family: 'Courier New';
+                font-size: 16px;
+            }
+            QPushButton {
+                background-color: #f4a460;
+                border: 2px solid #8b4513;
+                min-width: 80px;
+                max-width: 150px;
+            }
+            QLineEdit {
+                background-color: #fff8dc;
+                color: #000000;
+            }
             """
         )
 
@@ -366,11 +379,18 @@ class BangUI(QtWidgets.QMainWindow):
     def _create_log_dock(self) -> None:
         self.log_dock = QtWidgets.QDockWidget("Log", self)
         self.log_dock.setFloating(True)
+        self.log_dock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
+        self.log_dock.setWindowFlags(
+            self.log_dock.windowFlags() | QtCore.Qt.WindowStaysOnTopHint
+        )
         self.log_text = QtWidgets.QTextEdit()
         self.log_text.setReadOnly(True)
+        self.log_text.setStyleSheet(
+            "background-color: rgba(0, 0, 0, 150); color: white;"
+        )
         self.log_dock.setWidget(self.log_text)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.log_dock)
-        self.log_dock.hide()
+        self.log_dock.show()
 
     # Networking -------------------------------------------------------
     def _start_host(self) -> None:
