@@ -181,37 +181,18 @@ class GameManager:
         if player not in self.players:
             return
 
-        # Track the current player object to preserve turn position when
-        # possible.
-        current_obj: Player | None = None
-        if self.turn_order:
-            current_obj = self.players[self.turn_order[self.current_turn]]
+        current_obj = self._current_player_obj() if self.turn_order else None
 
         idx = self.players.index(player)
         self.players.pop(idx)
         player.metadata.game = None
-
-        new_order: List[int] = []
-        for order_idx in self.turn_order:
-            if order_idx == idx:
-                continue
-            if order_idx > idx:
-                new_order.append(order_idx - 1)
-            else:
-                new_order.append(order_idx)
-        self.turn_order = new_order
-
+        self._reindex_turn_order(idx)
         if not self.turn_order:
             self.current_turn = 0
             return
 
-        if current_obj and current_obj in self.players:
-            cur_idx = self.players.index(current_obj)
-            if cur_idx in self.turn_order:
-                self.current_turn = self.turn_order.index(cur_idx)
-                return
+        self._reset_current_turn(current_obj)
 
-        self.current_turn %= len(self.turn_order)
 
     def start_game(self, deal_roles: bool = True) -> None:
         """Begin the game and deal starting hands."""
@@ -733,24 +714,25 @@ class GameManager:
     ) -> None:
         """Execute the actual card draws for the phase."""
         if self.event_flags.get("peyote"):
-            guesses = peyote_guesses or []
-            cont = True
-            while cont:
-                card = self._draw_from_deck()
-                if card:
-                    player.hand.append(card)
-                    guess = guesses.pop(0).lower() if guesses else "red"
-                    is_red = card.suit in ("Hearts", "Diamonds")
-                    cont = (
-                        guess.startswith("r")
-                        and is_red
-                        or guess.startswith("b")
-                        and not is_red
-                    )
-                else:
-                    cont = False
+            self._draw_with_peyote(player, peyote_guesses or [])
         else:
             self.draw_card(player, 2)
+
+    def _draw_with_peyote(self, player: Player, guesses: list[str]) -> None:
+        """Handle the Peyote event drawing loop."""
+        cont = True
+        while cont:
+            card = self._draw_from_deck()
+            if not card:
+                break
+            player.hand.append(card)
+            guess = guesses.pop(0).lower() if guesses else "red"
+            cont = self._peyote_guess_correct(card, guess)
+
+    def _peyote_guess_correct(self, card: BaseCard, guess: str) -> bool:
+        """Return ``True`` if the peyote guess was correct."""
+        is_red = card.suit in ("Hearts", "Diamonds")
+        return guess.startswith("r") and is_red or guess.startswith("b") and not is_red
 
     def _post_draw_events(
         self,
@@ -760,23 +742,33 @@ class GameManager:
         handcuffs_suit: str | None,
     ) -> None:
         """Handle effects that trigger after cards are drawn."""
+        self._apply_law_of_the_west(player)
+        if self.event_flags.get("ranch"):
+            self._handle_ranch(player, ranch_discards or [])
+        if self.event_flags.get("handcuffs"):
+            self._set_turn_suit(handcuffs_suit)
+
+    def _apply_law_of_the_west(self, player: Player) -> None:
+        """Immediately play the last drawn card if Law of the West is active."""
         if self.event_flags.get("law_of_the_west") and len(player.hand) >= 2:
             card = player.hand[-1]
             self.play_card(player, card)
 
-        if self.event_flags.get("ranch") and ranch_discards:
-            ranch_discards = sorted(ranch_discards, reverse=True)
-            drawn = 0
-            for idx in ranch_discards:
-                if 0 <= idx < len(player.hand):
-                    discarded = player.hand.pop(idx)
-                    self.discard_pile.append(discarded)
-                    drawn += 1
-            if drawn:
-                self.draw_card(player, drawn)
+    def _handle_ranch(self, player: Player, discards: list[int]) -> None:
+        """Discard selected cards and redraw when The Ranch is active."""
+        discards = sorted(discards, reverse=True)
+        drawn = 0
+        for idx in discards:
+            if 0 <= idx < len(player.hand):
+                discarded = player.hand.pop(idx)
+                self.discard_pile.append(discarded)
+                drawn += 1
+        if drawn:
+            self.draw_card(player, drawn)
 
-        if self.event_flags.get("handcuffs"):
-            self.event_flags["turn_suit"] = handcuffs_suit or "Hearts"
+    def _set_turn_suit(self, suit: str | None) -> None:
+        """Record the suit restriction for the Handcuffs event."""
+        self.event_flags["turn_suit"] = suit or "Hearts"
 
     def play_phase(self, player: Player) -> None:
         """Signal the start of the play phase for ``player``."""
@@ -866,18 +858,26 @@ class GameManager:
         self, player: Player, card: BaseCard
     ) -> bool:
         """Check event related card play restrictions."""
-        if self.event_flags.get("no_jail") and isinstance(card, JailCard):
+        return not (
+            self._jail_blocked(card)
+            or self._judge_blocked(card)
+            or self._handcuffs_blocked(player, card)
+        )
+
+    def _jail_blocked(self, card: BaseCard) -> bool:
+        """Return ``True`` if Jail cards are currently banned."""
+        return self.event_flags.get("no_jail") and isinstance(card, JailCard)
+
+    def _judge_blocked(self, card: BaseCard) -> bool:
+        """Return ``True`` if equipment cards are disallowed by The Judge."""
+        return self.event_flags.get("judge") and card.card_type in {"equipment", "green"}
+
+    def _handcuffs_blocked(self, player: Player, card: BaseCard) -> bool:
+        """Return ``True`` if Handcuffs restricts ``player`` from playing ``card``."""
+        if not self.event_flags.get("handcuffs") or not self.event_flags.get("turn_suit"):
             return False
-        if self.event_flags.get("judge") and card.card_type in {"equipment", "green"}:
-            return False
-        if self.event_flags.get("handcuffs") and self.event_flags.get("turn_suit"):
-            active = self.players[self.turn_order[self.current_turn]]
-            if (
-                player is active
-                and getattr(card, "suit", None) != self.event_flags["turn_suit"]
-            ):
-                return False
-        return True
+        active = self.players[self.turn_order[self.current_turn]]
+        return player is active and getattr(card, "suit", None) != self.event_flags["turn_suit"]
 
     def _is_bang(self, player: Player, card: BaseCard, target: Optional[Player]) -> bool:
         return isinstance(card, BangCard) or (
@@ -1053,13 +1053,24 @@ class GameManager:
         is_bang: bool,
     ) -> None:
         """Handle damage, discard and Bang! bookkeeping."""
-        if target and before is not None and target.health < before:
-            self.on_player_damaged(target, player)
-        if target and before is not None and target.health > before:
-            self.on_player_healed(target)
+        self._apply_damage_and_healing(player, target, before)
         self._pass_left_or_discard(player, card)
         if is_bang:
             self._update_bang_counters(player)
+        self._draw_if_empty(player)
+
+    def _apply_damage_and_healing(
+        self, source: Player, target: Optional[Player], before: Optional[int]
+    ) -> None:
+        """Trigger damage or heal callbacks if ``target`` changed health."""
+        if target and before is not None:
+            if target.health < before:
+                self.on_player_damaged(target, source)
+            elif target.health > before:
+                self.on_player_healed(target)
+
+    def _draw_if_empty(self, player: Player) -> None:
+        """Draw a card if the player has an empty hand and may draw."""
         if player.metadata.draw_when_empty and not player.hand:
             self.draw_card(player)
 
@@ -1242,13 +1253,22 @@ class GameManager:
         """Draw cards for General Store and record selection order."""
         if not self.deck:
             return []
+        self.general_store_cards = self._deal_general_store_cards()
+        self._set_general_store_order(player)
+        return [c.card_name for c in self.general_store_cards]
+
+    def _deal_general_store_cards(self) -> List[BaseCard]:
+        """Draw one card per living player for General Store."""
         alive = [p for p in self.players if p.is_alive()]
         cards: List[BaseCard] = []
         for _ in range(len(alive)):
             card = self._draw_from_deck()
             if card:
                 cards.append(card)
-        self.general_store_cards = cards
+        return cards
+
+    def _set_general_store_order(self, player: Player) -> None:
+        """Determine the order of selection for General Store."""
         start_idx = self.players.index(player)
         order: List[Player] = []
         for i in range(len(self.players)):
@@ -1257,10 +1277,20 @@ class GameManager:
                 order.append(p)
         self.general_store_order = order
         self.general_store_index = 0
-        return [c.card_name for c in cards]
 
     def general_store_pick(self, player: Player, index: int) -> bool:
         """Give the chosen card to the current player."""
+        if not self._valid_general_store_pick(player, index):
+            return False
+        card = self.general_store_cards.pop(index)
+        player.hand.append(card)
+        self.general_store_index += 1
+        if self.general_store_index >= len(self.general_store_order):
+            self._cleanup_general_store_leftovers()
+        return True
+
+    def _valid_general_store_pick(self, player: Player, index: int) -> bool:
+        """Return ``True`` if ``player`` may pick ``index``."""
         if (
             self.general_store_cards is None
             or self.general_store_order is None
@@ -1268,18 +1298,15 @@ class GameManager:
             or self.general_store_order[self.general_store_index] is not player
         ):
             return False
-        if not (0 <= index < len(self.general_store_cards)):
-            return False
-        card = self.general_store_cards.pop(index)
-        player.hand.append(card)
-        self.general_store_index += 1
-        if self.general_store_index >= len(self.general_store_order):
-            for leftover in self.general_store_cards:
-                self.discard_pile.append(leftover)
-            self.general_store_cards = None
-            self.general_store_order = None
-            self.general_store_index = 0
-        return True
+        return 0 <= index < len(self.general_store_cards)
+
+    def _cleanup_general_store_leftovers(self) -> None:
+        """Discard any unclaimed General Store cards."""
+        for leftover in self.general_store_cards:
+            self.discard_pile.append(leftover)
+        self.general_store_cards = None
+        self.general_store_order = None
+        self.general_store_index = 0
 
     def reset_turn_flags(self, player: Player) -> None:
         player.metadata.doc_used = False
@@ -1322,6 +1349,27 @@ class GameManager:
                 return
         self.discard_pile.append(card)
 
+    # ------------------------------------------------------------------
+    # Turn management helpers
+    def _current_player_obj(self) -> Player:
+        """Return the Player instance whose turn it currently is."""
+        return self.players[self.turn_order[self.current_turn]]
+
+    def _reindex_turn_order(self, removed_idx: int) -> None:
+        """Remove ``removed_idx`` from turn order and shift indices."""
+        self.turn_order = [
+            i - 1 if i > removed_idx else i for i in self.turn_order if i != removed_idx
+        ]
+
+    def _reset_current_turn(self, current_obj: Player | None) -> None:
+        """Update ``current_turn`` after player removal."""
+        if current_obj and current_obj in self.players:
+            cur_idx = self.players.index(current_obj)
+            if cur_idx in self.turn_order:
+                self.current_turn = self.turn_order.index(cur_idx)
+                return
+        self.current_turn %= len(self.turn_order)
+
     def _get_player_by_index(self, idx: int) -> Optional[Player]:
         if 0 <= idx < len(self.players):
             return self.players[idx]
@@ -1332,20 +1380,38 @@ class GameManager:
         return self._get_player_by_index(idx)
 
     def on_player_damaged(self, player: Player, source: Optional[Player] = None) -> None:
+        self._notify_damage_listeners(player, source)
+        if player.health > 0:
+            return
+        if self._handle_ghost_town_revive(player):
+            return
+        self._record_first_elimination(player)
+        self._bounty_reward(source)
+        self._notify_death_listeners(player, source)
+        self._check_win_conditions()
+
+    def _notify_damage_listeners(self, player: Player, source: Optional[Player]) -> None:
         for cb in self.player_damaged_listeners:
             cb(player, source)
 
-        if player.health <= 0:
-            if self.event_flags.get("ghost_town") and player.metadata.ghost_revived:
-                player.health = 1
-                return
-            if self.first_eliminated is None:
-                self.first_eliminated = player
-            if source and self.event_flags.get("bounty"):
-                self.draw_card(source, 2)
-            for cb in self.player_death_listeners:
-                cb(player, source)
-            self._check_win_conditions()
+    def _bounty_reward(self, source: Optional[Player]) -> None:
+        if source and self.event_flags.get("bounty"):
+            self.draw_card(source, 2)
+
+    def _notify_death_listeners(self, player: Player, source: Optional[Player]) -> None:
+        for cb in self.player_death_listeners:
+            cb(player, source)
+
+    def _handle_ghost_town_revive(self, player: Player) -> bool:
+        """Revive a Ghost Town player if possible."""
+        if self.event_flags.get("ghost_town") and player.metadata.ghost_revived:
+            player.health = 1
+            return True
+        return False
+
+    def _record_first_elimination(self, player: Player) -> None:
+        if self.first_eliminated is None:
+            self.first_eliminated = player
 
     def on_player_healed(self, player: Player) -> None:
         for cb in self.player_healed_listeners:
