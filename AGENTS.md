@@ -1,8 +1,8 @@
 # Agent Guidelines
 
 This repository contains a Python implementation of the Bang card game, a small
-websocket server, and a Tkinter UI. To maintain consistency, follow these rules
-when making changes.
+websocket server, and a Qt-based interface. To maintain consistency, follow
+these rules when making changes.
 
 ## Development
 - Use Python 3.10+.
