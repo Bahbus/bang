@@ -33,8 +33,9 @@ class GameBoard(QtWidgets.QGraphicsView):
         super().resizeEvent(event)
         self.fitInView(self._scene.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
-    def _create_card_pixmap(self, width: int | None = None,
-                             height: int | None = None) -> QtGui.QPixmap:
+    def _create_card_pixmap(
+        self, width: int | None = None, height: int | None = None
+    ) -> QtGui.QPixmap:
         w = width or self.card_width
         h = height or self.card_height
         pix = QtGui.QPixmap(w, h)
@@ -180,4 +181,3 @@ class GameView(QtWidgets.QWidget):
                 })
             )
             self.hand_layout.addWidget(btn)
-

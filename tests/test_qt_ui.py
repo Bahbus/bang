@@ -5,8 +5,9 @@ import pytest
 
 pytest.importorskip("PySide6")
 
-from PySide6 import QtWidgets, QtCore, QtGui
-from bang_py.ui import BangUI, GameBoard
+from PySide6 import QtWidgets, QtCore, QtGui  # noqa: E402
+from bang_py.ui import BangUI  # noqa: E402
+from bang_py.ui_components.game_view import GameBoard  # noqa: E402
 
 
 @pytest.fixture
@@ -19,6 +20,7 @@ def qt_app():
     yield app
     if created:
         app.quit()
+
 
 def test_bang_ui_creation(qt_app):
     ui = BangUI()
