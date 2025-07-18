@@ -3,8 +3,10 @@ import json
 
 import pytest
 
-from bang_py.ui import BangUI, GameBoard
+pytest.importorskip("PySide6")
+
 from PySide6 import QtWidgets, QtCore, QtGui
+from bang_py.ui import BangUI, GameBoard
 
 
 @pytest.fixture

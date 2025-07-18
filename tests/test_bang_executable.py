@@ -4,7 +4,11 @@ import sys
 from pathlib import Path
 import shutil
 
+import pytest
 
+
+@pytest.mark.skipif(shutil.which("pyinstaller") is None,
+                    reason="pyinstaller not installed")
 def test_bang_executable_exits(tmp_path):
     try:
         subprocess.run(["make", "build-exe"], check=True)
