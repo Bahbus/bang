@@ -27,6 +27,7 @@ from .characters.slab_the_killer import SlabTheKiller
 from .characters.suzy_lafayette import SuzyLafayette
 from .characters.vulture_sam import VultureSam
 from .characters.willy_the_kid import WillyTheKid
+from .helpers import RankSuitIconLoader
 
 __all__ = [
     "GameManager",
@@ -55,6 +56,7 @@ __all__ = [
     "VultureSam",
     "WillyTheKid",
     "create_standard_deck",
+    "RankSuitIconLoader",
 ]
 try:
     from .network.server import BangServer
