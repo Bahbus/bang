@@ -1,6 +1,10 @@
 import asyncio
 import json
-import websockets
+
+try:  # Optional websockets import for test environments
+    import websockets
+except ModuleNotFoundError:  # pragma: no cover - handled in main()
+    websockets = None  # type: ignore[assignment]
 
 
 async def main(
@@ -24,6 +28,10 @@ async def main(
     Incoming messages are parsed as JSON when possible and printed to the
     console along with the list of players.
     """
+    if websockets is None:
+        print("websockets package is required for networking")
+        return
+
     async with websockets.connect(uri) as websocket:
         prompt = await websocket.recv()
         print(prompt)
