@@ -72,7 +72,7 @@ screenshots and are **not** used by the program.
 ## Building a Windows Executable
 
 `pyinstaller` can bundle the UI into a standalone Windows executable. Install the
-build dependencies and run the target:
+build dependencies (PyInstaller 6.2 or newer) and run the target:
 
 ```bash
 pip install -r requirements.txt
