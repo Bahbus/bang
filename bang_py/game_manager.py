@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Sequence
 import random
 
 from .deck import Deck
@@ -111,9 +111,9 @@ class GameManager:
     _duel_counts: dict | None = field(default=None, init=False, repr=False)
 
     @property
-    def players(self) -> List[Player]:
-        """List of players in turn order."""
-        return self._players
+    def players(self) -> Sequence[Player]:
+        """Players in turn order as a read-only sequence."""
+        return tuple(self._players)
 
     def prompt_new_identity(self, player: Player) -> bool:
         """Return True if the player opts to switch characters."""

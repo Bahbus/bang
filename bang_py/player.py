@@ -3,7 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Dict, List, TYPE_CHECKING
+from typing import Dict, List, Sequence, TYPE_CHECKING
 
 from .cards.roles import (
     BaseRole,
@@ -211,7 +211,7 @@ class Player:
         return max(1, distance)
 
     @staticmethod
-    def _seated_distance(player: "Player", other: "Player", players: List["Player"]) -> int:
+    def _seated_distance(player: "Player", other: "Player", players: Sequence["Player"]) -> int:
         """Return the seat distance between two players counting only the living."""
         alive = [p for p in players if p.is_alive()]
         p_index = alive.index(player)

@@ -2,7 +2,7 @@ import asyncio
 import json
 import secrets
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence
 import logging
 
 try:  # Optional websockets import for test environments
@@ -33,7 +33,7 @@ class Connection:
     player: Player
 
 
-def _serialize_players(players: List[Player]) -> List[dict]:
+def _serialize_players(players: Sequence[Player]) -> List[dict]:
     """Return minimal player info for the UI."""
     return [
         {
