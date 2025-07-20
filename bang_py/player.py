@@ -18,7 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from .game_manager import GameManager
 
 
-@dataclass
+@dataclass(slots=True)
 class PlayerMetadata:
     """State information associated with a player."""
 
@@ -54,7 +54,7 @@ class PlayerMetadata:
     beer_heal_bonus: int = 0
 
 
-@dataclass
+@dataclass(slots=True)
 class Player:
     name: str
     role: BaseRole | None = None
