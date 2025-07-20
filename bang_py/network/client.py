@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 
 try:  # Optional websockets import for test environments
     import websockets
@@ -29,23 +30,23 @@ async def main(
     console along with the list of players.
     """
     if websockets is None:
-        print("websockets package is required for networking")
+        logging.error("websockets package is required for networking")
         return
 
     async with websockets.connect(uri) as websocket:
         prompt = await websocket.recv()
-        print(prompt)
+        logging.info(prompt)
         await websocket.send(room_code)
         response = await websocket.recv()
         if response != "Enter your name:":
-            print(response)
+            logging.info(response)
             return
-        print(response)
+        logging.info(response)
         if name is None:
             name = input()
         await websocket.send(name)
         join_msg = await websocket.recv()
-        print(join_msg)
+        logging.info(join_msg)
 
         async for message in websocket:
             try:
@@ -55,10 +56,10 @@ async def main(
             if isinstance(data, dict):
                 msg = data.get("message")
                 if msg:
-                    print(msg)
-                print("Players:", data.get("players"))
+                    logging.info(msg)
+                logging.info("Players: %s", data.get("players"))
             else:
-                print(data)
+                logging.info(str(data))
 
 
 def run() -> None:
