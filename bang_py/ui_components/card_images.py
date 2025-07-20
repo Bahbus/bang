@@ -86,19 +86,23 @@ class CardImageLoader:
 
     @staticmethod
     def _template_for(card_type: str, card_set: str | None) -> str:
-        if card_type == "blue":
-            return "blue"
-        if card_type == "green":
-            return "green"
-        if card_type == "character":
-            return "character"
-        if card_type == "role":
-            return "role"
-        if card_type == "event":
-            if card_set == "fistful_of_cards":
+        """Return template name based on card ``type`` and ``set``."""
+
+        match (card_type, card_set):
+            case ("event", "fistful_of_cards"):
                 return "fistful"
-            return "high_noon"
-        return "brown"
+            case ("event", _):
+                return "high_noon"
+            case ("blue", _):
+                return "blue"
+            case ("green", _):
+                return "green"
+            case ("character", _):
+                return "character"
+            case ("role", _):
+                return "role"
+            case _:
+                return "brown"
 
 
 card_image_loader = CardImageLoader(*DEFAULT_SIZE)
