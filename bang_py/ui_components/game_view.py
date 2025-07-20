@@ -7,7 +7,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from .card_images import card_image_loader
 
-ASSETS_DIR = Path(__file__).resolve().with_name("assets")
+ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
 BULLET_PATH = ASSETS_DIR / "bullet.png"
 
 

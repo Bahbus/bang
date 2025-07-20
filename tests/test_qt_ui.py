@@ -6,8 +6,6 @@ import pytest
 pytest.importorskip("PySide6")
 
 from PySide6 import QtWidgets, QtCore, QtGui  # noqa: E402
-from bang_py.ui import BangUI  # noqa: E402
-from bang_py.ui_components.game_view import GameBoard  # noqa: E402
 
 
 @pytest.fixture
@@ -23,12 +21,16 @@ def qt_app():
 
 
 def test_bang_ui_creation(qt_app):
+    from bang_py.ui import BangUI
+
     ui = BangUI()
     assert ui.windowTitle() == "Bang!"
     ui.close()
 
 
 def test_broadcast_state_updates_ui(qt_app):
+    from bang_py.ui import BangUI
+
     ui = BangUI()
     ui._build_game_view()
     state = {
@@ -48,6 +50,7 @@ def test_broadcast_state_updates_ui(qt_app):
 
 
 def test_gameboard_uses_available_geometry(qt_app, monkeypatch):
+    from bang_py.ui_components.game_view import GameBoard
     rect = QtCore.QRect(0, 0, 1234, 987)
 
     class DummyScreen:
@@ -58,4 +61,35 @@ def test_gameboard_uses_available_geometry(qt_app, monkeypatch):
     board = GameBoard()
     assert board.max_width == rect.width()
     assert board.max_height == rect.height()
+    board.close()
+
+
+def test_gameboard_bullets(qt_app):
+    from bang_py.ui_components.game_view import GameBoard
+
+    board = GameBoard()
+    assert not board.bullet_pixmap.isNull()
+
+    players = [
+        {"name": "Alice", "health": 3},
+        {"name": "Bob", "health": 2},
+    ]
+    board.update_players(players)
+
+    bullet_size = board.bullet_pixmap.size()
+    bullet_items = [
+        item
+        for item in board._scene.items()
+        if isinstance(item, QtWidgets.QGraphicsPixmapItem)
+        and item.pixmap().size() == bullet_size
+    ]
+    assert len(bullet_items) == sum(p["health"] for p in players)
+
+    tooltips = [
+        item.toolTip()
+        for item in board._scene.items()
+        if isinstance(item, QtWidgets.QGraphicsTextItem)
+    ]
+    assert "Health: 3" in tooltips
+    assert "Health: 2" in tooltips
     board.close()
