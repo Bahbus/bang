@@ -4,7 +4,8 @@ This repository now contains a Python implementation of the Bang card game along
 
 ## Running the server
 
-Install the package (which also installs `websockets` and the Qt bindings):
+Install the package using **Python 3.13+**. This pulls in
+`websockets>=15.0.1` and the Qt bindings (`PySide6>=6.9.1`):
 
 ```bash
 pip install .
@@ -31,10 +32,10 @@ layout. The main window starts maximized and you can press ``F11`` to toggle
 true full-screen mode. The log now appears in a floating dock that can be
 dragged anywhere or docked to the sides of the window.
 
-Install the Qt requirements first:
+Install the Qt requirements first (PySide6 6.9.1 or newer):
 
 ```bash
-pip install PySide6
+pip install "PySide6>=6.9.1"
 ```
 
 Then run the interface with:
@@ -42,6 +43,9 @@ Then run the interface with:
 ```bash
 bang-ui
 ```
+
+Set `BANG_AUTO_CLOSE=1` to automatically close the window. This is mainly useful
+for automated tests.
 
 Enter your name and choose **Host Game** or **Join Game**. Hosting launches a
 local server and shows a room code to share with friends. The host screen lets
@@ -72,7 +76,7 @@ screenshots and are **not** used by the program.
 ## Building a Windows Executable
 
 `pyinstaller` can bundle the UI into a standalone Windows executable. Install the
-build dependencies (PyInstaller 6.14 or newer) and run the target:
+build dependencies (PyInstaller 6.14.2 or newer) and run the target:
 
 ```bash
 pip install -r requirements.txt
@@ -85,6 +89,9 @@ from the command line:
 ```cmd
 bang.exe
 ```
+The entry script now sets the Qt plugin path automatically. When running the
+executable non-interactively, set `BANG_AUTO_CLOSE=1` to exit shortly after
+startup.
 A GitHub Actions workflow builds this executable for each tagged release and
 automatically attaches `bang.exe` to the release as a downloadable asset. The workflow
 needs the `contents: write` permission (or a PAT) to upload the file.
