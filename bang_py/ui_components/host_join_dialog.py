@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from PySide6 import QtCore, QtWidgets
 
+"""Dialog widgets for hosting or joining a game.
+
+Defines :class:`HostJoinDialog` that collects the network information
+needed to start or join a game room.
+"""
+
 
 class HostJoinDialog(QtWidgets.QDialog):
     """Dialog for hosting or joining a game."""

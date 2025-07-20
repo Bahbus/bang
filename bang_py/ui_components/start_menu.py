@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from PySide6 import QtCore, QtWidgets
 
+"""Widgets for the initial menu.
+
+Contains :class:`StartMenu` which asks for the player's name and offers
+buttons to host or join a game or open settings.
+"""
+
 
 class StartMenu(QtWidgets.QWidget):
     """Main menu with options to host or join a game."""
