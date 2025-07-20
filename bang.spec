@@ -1,12 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
+from glob import glob
+
+asset_paths = [
+    (path, 'bang_py/assets')
+    for pattern in ('bang_py/assets/*.png', 'bang_py/assets/*.svg')
+    for path in glob(pattern)
+]
 
 a = Analysis(
     ['pyinstaller_entry.py'],
     pathex=[],
     binaries=collect_dynamic_libs('PySide6'),
-    datas=[],
+    datas=asset_paths,
     hiddenimports=collect_submodules('PySide6'),
     hookspath=[],
     hooksconfig={},

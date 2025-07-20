@@ -19,3 +19,9 @@ dependencies = [
 bang-server = "bang_py.network.server:main"
 bang-client = "bang_py.network.client:run"
 bang-ui = "bang_py.ui:main"
+
+[tool.setuptools.package-data]
+"bang_py" = [
+    "assets/*.png",
+    "assets/*.svg",
+]
