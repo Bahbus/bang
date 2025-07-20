@@ -511,8 +511,11 @@ class BangServer:
                 "websockets package is required to run the server"
             )
         async with serve(self.handler, self.host, self.port):
-            print(
-                f"Server started on {self.host}:{self.port} (code: {self.room_code})"
+            logger.info(
+                "Server started on %s:%s (code: %s)",
+                self.host,
+                self.port,
+                self.room_code,
             )
             await asyncio.Future()  # run forever
 
