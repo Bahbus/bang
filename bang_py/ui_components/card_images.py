@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pathlib import Path
+from importlib import resources
 from typing import Dict, Tuple
 
 from PySide6 import QtCore, QtGui
@@ -13,7 +13,7 @@ except Exception:  # pragma: no cover - optional dependency
 from ..helpers import RankSuitIconLoader
 
 DEFAULT_SIZE = (60, 90)
-ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+ASSETS_DIR = resources.files("bang_py") / "assets"
 
 _TEMPLATE_FILES = {
     "blue": "template_blue.png",
@@ -53,7 +53,8 @@ class CardImageLoader:
         templates: Dict[str, QtGui.QPixmap] = {}
         for key, fname in _TEMPLATE_FILES.items():
             path = ASSETS_DIR / fname
-            pix = QtGui.QPixmap(str(path))
+            with resources.as_file(path) as file_path:
+                pix = QtGui.QPixmap(str(file_path))
             if pix.isNull():
                 pix = cls._fallback_pixmap(width, height)
             else:

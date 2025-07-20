@@ -1,3 +1,5 @@
+"""Console client for connecting to a Bang websocket server."""
+
 import asyncio
 import json
 import logging
