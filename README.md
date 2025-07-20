@@ -64,11 +64,10 @@ Use the **End Turn** button or press the configured key (default `e`) when you a
 finished. Win or elimination messages are shown both in the log and as a popup
 dialog.
 
-The card backs and small heart icons are generated at runtime so the GUI does
-not require any external image files. Two JPEGs,
-``example-bang-menu-ui.jpg`` and ``example_bang_ui.jpg``, remain in the
-repository root only as reference screenshots and are **not** loaded by the
-program.
+Card templates and a bullet icon are loaded from `bang_py/assets/`, ensuring the
+GUI has the images it needs. Two JPEGs, ``example-bang-menu-ui.jpg`` and
+``example_bang_ui.jpg``, remain in the repository root solely as reference
+screenshots and are **not** used by the program.
 
 ## Building a Windows Executable
 
