@@ -13,7 +13,7 @@ except Exception:  # pragma: no cover - optional dependency
 from ..helpers import RankSuitIconLoader
 
 DEFAULT_SIZE = (60, 90)
-ASSETS_DIR = Path(__file__).resolve().with_name("assets")
+ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
 
 _TEMPLATE_FILES = {
     "blue": "template_blue.png",
