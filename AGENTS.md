@@ -5,7 +5,7 @@ websocket server, and a Qt-based interface. To maintain consistency, follow
 these rules when making changes.
 
 ## Development
-- Use Python 3.10+.
+ - Use Python 3.13+.
 - After modifying code, run `pytest` from the repository root to ensure tests
   pass.
 - Keep tests deterministic. If randomness is needed, seed the RNG inside the tests or offer hooks to bypass shuffling.
