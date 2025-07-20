@@ -6,7 +6,7 @@ from ..player import Player
 
 class MustangCard(BaseCard):
     card_name = "Mustang"
-    card_type = "equipment"
+    card_type = "blue"
     distance_modifier = 1
     description = "Opponents see you at 1 greater distance."
 

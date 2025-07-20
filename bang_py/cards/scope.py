@@ -6,7 +6,7 @@ from ..player import Player
 
 class ScopeCard(BaseCard):
     card_name = "Scope"
-    card_type = "equipment"
+    card_type = "blue"
     range_modifier = 1
     description = "Increases your attack range by 1."
 

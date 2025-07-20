@@ -4,6 +4,8 @@ import math
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from .card_images import card_image_loader
+
 
 class GameBoard(QtWidgets.QGraphicsView):
     """Simple board rendering using QGraphicsView."""
@@ -38,14 +40,9 @@ class GameBoard(QtWidgets.QGraphicsView):
     ) -> QtGui.QPixmap:
         w = width or self.card_width
         h = height or self.card_height
-        pix = QtGui.QPixmap(w, h)
-        pix.fill(QtGui.QColor("#f4e1b5"))
-        painter = QtGui.QPainter(pix)
-        pen = QtGui.QPen(QtGui.QColor("#8b4513"))
-        painter.setPen(pen)
-        painter.drawRect(0, 0, w - 1, h - 1)
-        painter.end()
-        return pix
+        return card_image_loader.get_template("brown").scaled(
+            w, h, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
+        )
 
     def _draw_board(self) -> None:
         self._scene.clear()
@@ -113,12 +110,26 @@ class CardButton(QtWidgets.QPushButton):
 
     action_signal = QtCore.Signal(str, int)
 
-    def __init__(self, text: str, index: int) -> None:
+    def __init__(
+        self,
+        text: str,
+        index: int,
+        card_type: str = "action",
+        rank: int | str | None = None,
+        suit: str | None = None,
+        card_set: str | None = None,
+    ) -> None:
         super().__init__(text)
         self.index = index
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu)
         self.clicked.connect(self._play)
+
+        pix = card_image_loader.compose_card(card_type, rank, suit, card_set)
+        if not pix.isNull():
+            self.setIcon(QtGui.QIcon(pix))
+            self.setIconSize(QtCore.QSize(pix.width(), pix.height()))
+            self.setText("")
 
     def _play(self) -> None:
         self.action_signal.emit("play_card", self.index)
@@ -167,13 +178,25 @@ class GameView(QtWidgets.QWidget):
             self.player_list.addItem(f"{p['name']} ({p['health']})")
         self.board.update_players(players, self_name)
 
-    def update_hand(self, cards: list[str]) -> None:
+    def update_hand(self, cards: list[object]) -> None:
         while self.hand_layout.count():
             item = self.hand_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-        for idx, name in enumerate(cards):
-            btn = CardButton(name, idx)
+        for idx, card in enumerate(cards):
+            if isinstance(card, str):
+                name = card
+                ctype = "action"
+                rank = None
+                suit = None
+                cset = None
+            else:
+                name = getattr(card, "card_name", str(card))
+                ctype = getattr(card, "card_type", "action")
+                rank = getattr(card, "rank", None)
+                suit = getattr(card, "suit", None)
+                cset = getattr(card, "card_set", None)
+            btn = CardButton(name, idx, ctype, rank, suit, cset)
             btn.action_signal.connect(
                 lambda act, i=idx: self.action_signal.emit({
                     "action": act,

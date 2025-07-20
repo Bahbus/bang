@@ -14,7 +14,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 
 class BarrelCard(BaseCard):
     card_name = "Barrel"
-    card_type = "equipment"
+    card_type = "blue"
     description = "Draw when targeted by Bang!; on Heart, ignore it."
 
     def __init__(self, suit: str | None = None, rank: int | None = None) -> None:

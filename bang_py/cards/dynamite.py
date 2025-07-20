@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 
 class DynamiteCard(BaseCard):
     card_name = "Dynamite"
-    card_type = "equipment"
+    card_type = "blue"
     description = (
         "Passes around; at the start of your turn draw a card, and if it is a "
         "spade between 2 and 9, Dynamite explodes for 3 damage."

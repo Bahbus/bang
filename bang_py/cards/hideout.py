@@ -5,10 +5,10 @@ from ..player import Player
 
 
 class HideoutCard(BaseCard):
-    """Equipment increasing distance others see you by 1."""
+    """Blue card increasing distance others see you by 1."""
 
     card_name = "Hideout"
-    card_type = "equipment"
+    card_type = "blue"
     card_set = "dodge_city"
     distance_modifier = 1
     description = "Opponents see you at +1 distance."

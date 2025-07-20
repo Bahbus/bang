@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 
 class JailCard(BaseCard):
     card_name = "Jail"
-    card_type = "equipment"
+    card_type = "blue"
     description = "Skip your turn unless you draw a Heart."
 
     def __init__(self, suit: str | None = None, rank: int | None = None) -> None:

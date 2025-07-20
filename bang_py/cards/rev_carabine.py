@@ -8,7 +8,7 @@ class RevCarabineCard(BaseCard):
     """Classic gun with range 4."""
 
     card_name = "Rev. Carabine"
-    card_type = "equipment"
+    card_type = "blue"
     card_set = "dodge_city"
     slot = "Gun"
     range = 4
