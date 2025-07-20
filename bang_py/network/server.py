@@ -1,3 +1,5 @@
+"""Websocket server implementation for hosting a Bang game."""
+
 import asyncio
 import json
 import secrets
@@ -329,7 +331,7 @@ class BangServer:
         ) -> None:
             try:
                 await conn.websocket.send(json.dumps(payload))
-            except Exception as exc:
+            except (OSError, WebSocketException, asyncio.CancelledError) as exc:
                 logger.exception(
                     "Failed to send state to %s", conn.player.name, exc_info=exc
                 )
@@ -337,7 +339,7 @@ class BangServer:
                 # longer reachable before dropping the connection entirely.
                 try:
                     await conn.websocket.close()
-                except Exception as close_exc:
+                except (OSError, WebSocketException) as close_exc:
                     logger.exception(
                         "Error closing websocket for %s",
                         conn.player.name,

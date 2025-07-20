@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import math
-from pathlib import Path
+from importlib import resources
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from .card_images import card_image_loader
 
-ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+ASSETS_DIR = resources.files("bang_py") / "assets"
 BULLET_PATH = ASSETS_DIR / "bullet.png"
 
 
@@ -30,7 +30,8 @@ class GameBoard(QtWidgets.QGraphicsView):
         self.card_width = 60
         self.card_height = 90
         self.card_pixmap = self._create_card_pixmap()
-        self.bullet_pixmap = QtGui.QPixmap(str(BULLET_PATH)).scaled(
+        with resources.as_file(BULLET_PATH) as bullet_path:
+            self.bullet_pixmap = QtGui.QPixmap(str(bullet_path)).scaled(
             20,
             10,
             QtCore.Qt.KeepAspectRatio,

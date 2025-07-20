@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Qt threads for running the Bang server and client in the background."""
+
 import asyncio
 import json
 import logging
@@ -78,7 +80,7 @@ class ClientThread(QtCore.QThread):
                                                    self.loop)
             try:
                 fut.result(timeout=1)
-            except Exception as exc:  # noqa: BLE001
+            except (asyncio.TimeoutError, Exception) as exc:  # noqa: BLE001
                 logging.exception("Failed to close websocket: %s", exc)
         if self.loop.is_running():
             self.loop.call_soon_threadsafe(self.loop.stop)
