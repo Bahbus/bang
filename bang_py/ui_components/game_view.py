@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from .card_images import card_image_loader
+
+ASSETS_DIR = Path(__file__).resolve().with_name("assets")
+BULLET_PATH = ASSETS_DIR / "bullet.png"
 
 
 class GameBoard(QtWidgets.QGraphicsView):
@@ -26,6 +30,12 @@ class GameBoard(QtWidgets.QGraphicsView):
         self.card_width = 60
         self.card_height = 90
         self.card_pixmap = self._create_card_pixmap()
+        self.bullet_pixmap = QtGui.QPixmap(str(BULLET_PATH)).scaled(
+            20,
+            10,
+            QtCore.Qt.KeepAspectRatio,
+            QtCore.Qt.SmoothTransformation,
+        )
         self.players: list[dict] = []
         self.self_name: str | None = None
         self._draw_board()
@@ -95,8 +105,20 @@ class GameBoard(QtWidgets.QGraphicsView):
                 x = center_x + radius * math.cos(ang) - self.card_width / 2
                 y = center_y + radius * math.sin(ang) - self.card_height / 2
                 self._scene.addPixmap(self.card_pixmap).setPos(x, y)
-                text = f"{pl['name']} ({pl['health']})"
-                self._scene.addText(text).setPos(x, y + self.card_height)
+
+                bullet_y = y + self.card_height
+                spacing = 2
+                health = int(pl.get("health", 0))
+                bullet_w = self.bullet_pixmap.width()
+                row_w = health * bullet_w + max(0, health - 1) * spacing
+                start_x = x + (self.card_width - row_w) / 2
+                for b in range(health):
+                    item = self._scene.addPixmap(self.bullet_pixmap)
+                    item.setPos(start_x + b * (bullet_w + spacing), bullet_y)
+
+                name_item = self._scene.addText(pl["name"])
+                name_item.setPos(x, bullet_y + self.bullet_pixmap.height() + 2)
+                name_item.setToolTip(f"Health: {health}")
 
     def update_players(self, players: list[dict], self_name: str | None = None) -> None:
         """Redraw the board to show ``players`` with ``self_name`` at the bottom."""
@@ -175,7 +197,25 @@ class GameView(QtWidgets.QWidget):
     def update_players(self, players: list[dict], self_name: str | None = None) -> None:
         self.player_list.clear()
         for p in players:
-            self.player_list.addItem(f"{p['name']} ({p['health']})")
+            item = QtWidgets.QListWidgetItem()
+            widget = QtWidgets.QWidget()
+            layout = QtWidgets.QHBoxLayout(widget)
+            layout.setContentsMargins(2, 2, 2, 2)
+            name_label = QtWidgets.QLabel(p["name"])
+            layout.addWidget(name_label)
+            bullet_layout = QtWidgets.QHBoxLayout()
+            bullet_layout.setSpacing(2)
+            for _ in range(int(p.get("health", 0))):
+                lbl = QtWidgets.QLabel()
+                lbl.setPixmap(self.board.bullet_pixmap)
+                bullet_layout.addWidget(lbl)
+            layout.addLayout(bullet_layout)
+            layout.addStretch(1)
+            widget.setLayout(layout)
+            item.setSizeHint(widget.sizeHint())
+            item.setToolTip(f"Health: {p.get('health', 0)}")
+            self.player_list.addItem(item)
+            self.player_list.setItemWidget(item, widget)
         self.board.update_players(players, self_name)
 
     def update_hand(self, cards: list[object]) -> None:
