@@ -239,7 +239,9 @@ class BangUI(QtWidgets.QMainWindow):
 
 def main() -> None:
     """Start the Qt interface."""
-    app = QtWidgets.QApplication([])
+    app = QtWidgets.QApplication.instance()
+    if app is None:
+        app = QtWidgets.QApplication([])
     ui = BangUI()
     ui.showMaximized()
     if os.getenv("BANG_AUTO_CLOSE"):
