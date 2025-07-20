@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 
 class JoseDelgado(BaseCharacter):
     name = "Jose Delgado"
-    description = "You may discard an equipment card to draw two cards."
+    description = "You may discard a blue card to draw two cards."
     starting_health = 4
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:

@@ -881,8 +881,8 @@ class GameManager:
         return self.event_flags.get("no_jail") and isinstance(card, JailCard)
 
     def _judge_blocked(self, card: BaseCard) -> bool:
-        """Return ``True`` if equipment cards are disallowed by The Judge."""
-        return self.event_flags.get("judge") and card.card_type in {"equipment", "green"}
+        """Return ``True`` if blue cards are disallowed by The Judge."""
+        return self.event_flags.get("judge") and card.card_type in {"blue", "green"}
 
     def _handcuffs_blocked(self, player: Player, card: BaseCard) -> bool:
         """Return ``True`` if Handcuffs restricts ``player`` from playing ``card``."""

@@ -6,7 +6,7 @@ from ..player import Player
 
 class CarbineCard(BaseCard):
     card_name = "Carbine"
-    card_type = "equipment"
+    card_type = "blue"
     slot = "Gun"
     range = 4
     description = "Gun with range 4."

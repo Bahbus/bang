@@ -6,7 +6,7 @@ from ..player import Player
 
 class VolcanicCard(BaseCard):
     card_name = "Volcanic"
-    card_type = "equipment"
+    card_type = "blue"
     slot = "Gun"
     range = 1
     # Allows the player to fire unlimited Bang! cards during their turn

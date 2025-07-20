@@ -174,7 +174,7 @@ powers trigger automatically with a message in the log.
    instead of drawing. Use **Use Ability** if you closed the prompt.
 - **Johnny Kisch** – automatic: when you put a card in play, all other copies in
   play are discarded automatically.
-- **Jose Delgado** – popup: optionally discard equipment to draw two cards.
+ - **Jose Delgado** – popup: optionally discard a blue card to draw two cards.
 - **Jourdonnais** – automatic: always has a Barrel.
  - **Kit Carlson** – popup: look at the top three cards of the deck, keep two and
    put the third back on top. Can be triggered again with **Use Ability**.

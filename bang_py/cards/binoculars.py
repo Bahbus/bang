@@ -5,10 +5,10 @@ from ..player import Player
 
 
 class BinocularsCard(BaseCard):
-    """Equipment increasing your attack range by 1."""
+    """Blue card increasing your attack range by 1."""
 
     card_name = "Binoculars"
-    card_type = "equipment"
+    card_type = "blue"
     card_set = "dodge_city"
     range_modifier = 1
     description = "Increases attack range by 1."
