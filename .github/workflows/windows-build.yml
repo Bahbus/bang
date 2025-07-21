@@ -17,10 +17,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.13'
+          python-version: '3.13-dev'
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          python -m pip install -r requirements.txt
+          python -m pip install pyinstaller
       - name: Build executable
         run: |
           pyinstaller bang.spec
