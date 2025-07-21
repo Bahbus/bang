@@ -5,7 +5,7 @@ from importlib import resources
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .card_images import card_image_loader
+from .card_images import get_loader
 
 ASSETS_DIR = resources.files("bang_py") / "assets"
 BULLET_PATH = ASSETS_DIR / "bullet.png"
@@ -51,7 +51,8 @@ class GameBoard(QtWidgets.QGraphicsView):
     ) -> QtGui.QPixmap:
         w = width or self.card_width
         h = height or self.card_height
-        return card_image_loader.get_template("brown").scaled(
+        loader = get_loader()
+        return loader.get_template("brown").scaled(
             w, h, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
         )
 
@@ -148,7 +149,8 @@ class CardButton(QtWidgets.QPushButton):
         self.customContextMenuRequested.connect(self._context_menu)
         self.clicked.connect(self._play)
 
-        pix = card_image_loader.compose_card(card_type, rank, suit, card_set)
+        loader = get_loader()
+        pix = loader.compose_card(card_type, rank, suit, card_set)
         if not pix.isNull():
             self.setIcon(QtGui.QIcon(pix))
             self.setIconSize(QtCore.QSize(pix.width(), pix.height()))

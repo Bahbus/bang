@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from importlib import resources
-from typing import Dict, Tuple
+from typing import Dict
 
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore, QtGui, QtWidgets
 
 try:
     from PySide6 import QtSvg  # type: ignore
@@ -106,5 +106,21 @@ class CardImageLoader:
                 return "brown"
 
 
-card_image_loader = CardImageLoader(*DEFAULT_SIZE)
+_card_image_loader: CardImageLoader | None = None
+
+
+def get_loader() -> CardImageLoader:
+    """Return a cached :class:`CardImageLoader` instance.
+
+    The loader is created lazily after a ``QApplication`` exists to avoid
+    issues with Qt objects being instantiated before the application.
+    """
+
+    if QtWidgets.QApplication.instance() is None:
+        raise RuntimeError("QApplication must be instantiated before using CardImageLoader")
+
+    global _card_image_loader
+    if _card_image_loader is None:
+        _card_image_loader = CardImageLoader(*DEFAULT_SIZE)
+    return _card_image_loader
 
