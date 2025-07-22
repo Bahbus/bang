@@ -29,6 +29,9 @@ from ..cards.general_store import GeneralStoreCard
 
 logger = logging.getLogger(__name__)
 
+# Maximum allowed size for incoming websocket messages
+MAX_MESSAGE_SIZE = 4096
+
 
 @dataclass
 class Connection:
@@ -121,6 +124,9 @@ class BangServer:
 
         try:
             async for message in websocket:
+                if len(message) > MAX_MESSAGE_SIZE:
+                    await websocket.close(code=1009, reason="Message too large")
+                    break
                 await self._process_message(websocket, message)
         finally:
             self.game.remove_player(player)
