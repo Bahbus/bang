@@ -29,9 +29,12 @@ dist/
 *.log
 
 
-# Generated assets
-bang_py/assets/characters/*.png
-bang_py/assets/characters/*.jpg
-bang_py/assets/characters/*.jpeg
-bang_py/assets/audio/*.wav
-bang_py/assets/audio/*.ogg
+# Generated assets (legacy)
+# Placeholder assets were previously generated at test time. They are now
+# committed to the repository, but we keep this section for anyone who wishes to
+# ignore local modifications.
+# bang_py/assets/characters/*.png
+# bang_py/assets/characters/*.jpg
+# bang_py/assets/characters/*.jpeg
+# bang_py/assets/audio/*.wav
+# bang_py/assets/audio/*.ogg
