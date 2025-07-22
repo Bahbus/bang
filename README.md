@@ -43,12 +43,11 @@ This networking layer is experimental and only demonstrates joining the game and
 ## Graphical Interface
 
 The original Tkinter UI has been replaced with a Qt interface written for
-PyQt/PySide. It offers smoother graphics using ``QGraphicsView`` and a flexible
-layout. The main window starts maximized and you can press ``F11`` to toggle
-true full-screen mode. The log now appears in a floating dock that can be
-dragged anywhere or docked to the sides of the window.
-Experimental QML scenes for the menu and board are available under
-``bang_py/qml``.
+PyQt/PySide. It offers smoother graphics using ``QGraphicsView`` and QML
+components. The main window starts maximized and you can press ``F11`` to
+toggle true full-screen mode. The log now appears in a floating dock that can
+be dragged anywhere or docked to the sides of the window. The main menu and
+game board are now rendered from the QML scenes in ``bang_py/qml``.
 
 Install the Qt requirements first (PySide6 6.9.1 or newer):
 
@@ -64,6 +63,10 @@ bang-ui
 
 Set `BANG_AUTO_CLOSE=1` to automatically close the window. This is mainly useful
 for automated tests.
+
+![Main menu](example-bang-menu-ui.jpg)
+
+![Game board](example_bang_ui.jpg)
 
 Set `BANG_THEME=dark` to enable a dark interface or choose the theme from the
 **Settings** dialog at runtime.
@@ -95,9 +98,9 @@ GUI has the images it needs. Character portraits and short sound effects live in
 committed to the repository. Run `python scripts/generate_assets.py` to create
 the placeholders. They are released into the public domain; see
 `bang_py/assets/ATTRIBUTION.md` for details. Two JPEGs,
-``example-bang-menu-ui.jpg`` and ``example_bang_ui.jpg``, remain in the
-repository root solely as reference screenshots and are **not** used by the
-program.
+``example-bang-menu-ui.jpg`` and ``example_bang_ui.jpg``, show the latest QML
+interface and remain in the repository root solely as reference screenshots.
+They are **not** used by the program.
 
 ## Building a Windows Executable
 

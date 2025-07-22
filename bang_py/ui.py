@@ -3,7 +3,7 @@ import secrets
 from pathlib import Path
 import os
 
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets, QtQuickWidgets
 
 if __package__ in {None, ""}:
     import sys
@@ -11,7 +11,6 @@ if __package__ in {None, ""}:
     __package__ = "bang_py"
 
 from .ui_components import (
-    StartMenu,
     HostJoinDialog,
     GameView,
     ServerThread,
@@ -36,16 +35,36 @@ class BangUI(QtWidgets.QMainWindow):
         self.server_thread: ServerThread | None = None
         self.room_code = ""
         self.local_name = ""
+        self.menu_root: QtCore.QObject | None = None
 
         self._build_start_menu()
         self._create_log_dock()
 
+    def _get_player_name(self) -> str:
+        if self.menu_root is not None:
+            name = self.menu_root.property("nameText")
+            if isinstance(name, str):
+                return name.strip()
+        return ""
+
     # Menu screens -----------------------------------------------------
     def _build_start_menu(self) -> None:
-        self.start_menu = StartMenu()
-        self.start_menu.host_clicked.connect(self._host_menu)
-        self.start_menu.join_clicked.connect(self._join_menu)
-        self.start_menu.settings_clicked.connect(self._settings_dialog)
+        qml_dir = Path(__file__).resolve().parent / "qml"
+        self.start_menu = QtQuickWidgets.QQuickWidget()
+        self.start_menu.setResizeMode(
+            QtQuickWidgets.QQuickWidget.SizeRootObjectToView
+        )
+        self.start_menu.setSource(
+            QtCore.QUrl.fromLocalFile(str(qml_dir / "MainMenu.qml"))
+        )
+        root = self.start_menu.rootObject()
+        if root is not None:
+            root.setProperty("theme", self.theme)
+            root.setProperty("scale", 1.0)
+            root.hostGame.connect(self._host_menu)
+            root.joinGame.connect(self._join_menu)
+            root.settings.connect(self._settings_dialog)
+        self.menu_root = root
         self.stack.addWidget(self.start_menu)
         self.stack.setCurrentWidget(self.start_menu)
 
@@ -94,10 +113,16 @@ class BangUI(QtWidgets.QMainWindow):
             self.theme = theme_combo.currentText()
             os.environ["BANG_THEME"] = self.theme
             self.setStyleSheet(get_stylesheet(self.theme))
+            if self.menu_root is not None:
+                self.menu_root.setProperty("theme", self.theme)
+            if hasattr(self, "game_view"):
+                root = self.game_view.board_qml.rootObject()
+                if root is not None:
+                    root.setProperty("theme", self.theme)
 
     # Game view --------------------------------------------------------
     def _build_game_view(self) -> None:
-        self.game_view = GameView()
+        self.game_view = GameView(self.theme)
         self.game_view.action_signal.connect(self._send_action)
         self.game_view.end_turn_signal.connect(self._end_turn)
         self.board = self.game_view.board
@@ -130,7 +155,7 @@ class BangUI(QtWidgets.QMainWindow):
         certfile: str | None = None,
         keyfile: str | None = None,
     ) -> None:
-        name = self.start_menu.name_edit.text().strip()
+        name = self._get_player_name()
         if not name:
             QtWidgets.QMessageBox.critical(self, "Error",
                                            "Please enter your name")
@@ -154,7 +179,7 @@ class BangUI(QtWidgets.QMainWindow):
     def _start_join(
         self, addr: str, port: int, code: str, cafile: str | None = None
     ) -> None:
-        name = self.start_menu.name_edit.text().strip()
+        name = self._get_player_name()
         if not name:
             QtWidgets.QMessageBox.critical(self, "Error",
                                            "Please enter your name")
@@ -168,12 +193,12 @@ class BangUI(QtWidgets.QMainWindow):
         self.client = ClientThread(
             uri,
             code,
-            self.start_menu.name_edit.text().strip(),
+            self._get_player_name(),
             cafile,
         )
         self.client.message_received.connect(self._append_message)
         self.client.start()
-        self.local_name = self.start_menu.name_edit.text().strip()
+        self.local_name = self._get_player_name()
         self._build_game_view()
         self.log_dock.show()
 
