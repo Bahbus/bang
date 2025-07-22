@@ -4,7 +4,7 @@ import asyncio
 import json
 import secrets
 import ssl
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Sequence
 import logging
 
@@ -37,6 +37,7 @@ MAX_MESSAGE_SIZE = 4096
 class Connection:
     websocket: ServerConnection
     player: Player
+    tasks: set[asyncio.Task] = field(default_factory=set)
 
 
 def _serialize_players(players: Sequence[Player]) -> List[dict]:
@@ -85,7 +86,7 @@ class BangServer:
         self.game.turn_started_listeners.append(self._on_turn_started)
 
     def _create_send_task(self, conn: Connection, payload: str) -> None:
-        """Send ``payload`` to ``conn`` and log any delivery errors."""
+        """Create a task to send ``payload`` and track its lifecycle."""
 
         async def _send() -> None:
             try:
@@ -94,12 +95,19 @@ class BangServer:
                 logger.warning(
                     "Send to %s cancelled", conn.player.name, exc_info=exc
                 )
+                raise
             except WebSocketException as exc:  # pragma: no cover - network
                 logger.exception(
                     "Send to %s failed", conn.player.name, exc_info=exc
                 )
 
-        asyncio.create_task(_send())
+        task = asyncio.create_task(_send())
+        conn.tasks.add(task)
+
+        def _remove(t: asyncio.Task) -> None:
+            conn.tasks.discard(t)
+
+        task.add_done_callback(_remove)
 
     async def handler(self, websocket: ServerConnection) -> None:
         """Register a new client and process game commands sent over the socket."""
@@ -130,7 +138,12 @@ class BangServer:
                 await self._process_message(websocket, message)
         finally:
             self.game.remove_player(player)
-            self.connections.pop(websocket, None)
+            conn = self.connections.pop(websocket, None)
+            if conn:
+                for task in list(conn.tasks):
+                    task.cancel()
+                if conn.tasks:
+                    await asyncio.gather(*conn.tasks, return_exceptions=True)
             await self.broadcast_state()
 
     async def _process_message(
