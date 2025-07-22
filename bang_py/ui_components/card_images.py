@@ -40,17 +40,29 @@ _TEMPLATE_FILES = {
 
 def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.QPixmap:
     """Return a portrait pixmap for ``name`` or a default image."""
-    fname = name.lower().replace(" ", "_") + ".png"
-    path = CHARACTER_DIR / fname
-    if not path.exists():
+    base = name.lower().replace(" ", "_")
+    for ext in (".png", ".jpg", ".jpeg"):
+        path = CHARACTER_DIR / f"{base}{ext}"
+        if path.exists():
+            break
+    else:
         path = CHARACTER_DIR / "default.png"
+    if not path.exists():
+        pix = QtGui.QPixmap(width, height)
+        pix.fill(QtGui.QColor("gray"))
+        return pix
     with resources.as_file(path) as file_path:
         pix = QtGui.QPixmap(str(file_path))
     if pix.isNull():
         pix = QtGui.QPixmap(width, height)
         pix.fill(QtGui.QColor("gray"))
     else:
-        pix = pix.scaled(width, height, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        pix = pix.scaled(
+            width,
+            height,
+            QtCore.Qt.KeepAspectRatio,
+            QtCore.Qt.SmoothTransformation,
+        )
     return pix
 
 
@@ -58,8 +70,14 @@ def load_sound(name: str) -> QtMultimedia.QSoundEffect | None:
     """Return a sound effect for ``name`` if QtMultimedia is available."""
     if QtMultimedia is None:
         return None
-    path = AUDIO_DIR / f"{name}.wav"
-    if not path.exists():
+    base = name.lower().replace(" ", "_")
+    path = None
+    for ext in (".wav", ".ogg"):
+        candidate = AUDIO_DIR / f"{base}{ext}"
+        if candidate.exists():
+            path = candidate
+            break
+    if path is None:
         return None
     effect = QtMultimedia.QSoundEffect()
     with resources.as_file(path) as file_path:
