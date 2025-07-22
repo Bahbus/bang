@@ -3,6 +3,7 @@
 import asyncio
 import json
 import secrets
+import ssl
 from dataclasses import dataclass
 from typing import Any, Dict, List, Sequence
 import logging
@@ -58,6 +59,8 @@ class BangServer:
         room_code: str | None = None,
         expansions: list[str] | None = None,
         max_players: int = 7,
+        certfile: str | None = None,
+        keyfile: str | None = None,
     ) -> None:
         self.host = host
         self.port = port
@@ -67,6 +70,12 @@ class BangServer:
         self.game = GameManager(expansions=expansions or [])
         self.connections: Dict[ServerConnection, Connection] = {}
         self.max_players = max_players
+        self.certfile = certfile
+        self.keyfile = keyfile
+        self.ssl_context: ssl.SSLContext | None = None
+        if certfile:
+            self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            self.ssl_context.load_cert_chain(certfile, keyfile)
         self.game.player_damaged_listeners.append(self._on_player_damaged)
         self.game.player_healed_listeners.append(self._on_player_healed)
         self.game.game_over_listeners.append(self._on_game_over)
@@ -512,7 +521,12 @@ class BangServer:
             raise RuntimeError(
                 "websockets package is required to run the server"
             )
-        async with serve(self.handler, self.host, self.port):
+        async with serve(
+            self.handler,
+            self.host,
+            self.port,
+            ssl=self.ssl_context,
+        ):
             logger.info(
                 "Server started on %s:%s (code: %s)",
                 self.host,
@@ -524,7 +538,21 @@ class BangServer:
 
 def main() -> None:
     """Entry point for the ``bang-server`` console script."""
-    server = BangServer()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Start Bang websocket server")
+    parser.add_argument("--host", default="localhost")
+    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--certfile", help="Path to SSL certificate", default=None)
+    parser.add_argument("--keyfile", help="Path to SSL key", default=None)
+    args = parser.parse_args()
+
+    server = BangServer(
+        host=args.host,
+        port=args.port,
+        certfile=args.certfile,
+        keyfile=args.keyfile,
+    )
     asyncio.run(server.start())
 
 

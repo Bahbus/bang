@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import ssl
 
 from typing import Any
 
@@ -25,21 +26,38 @@ from ..network.server import BangServer
 class ServerThread(QtCore.QThread):
     """Run a :class:`BangServer` in a background thread."""
 
-    def __init__(self, host: str, port: int, room_code: str,
-                 expansions: list[str], max_players: int) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        room_code: str,
+        expansions: list[str],
+        max_players: int,
+        certfile: str | None = None,
+        keyfile: str | None = None,
+    ) -> None:
         super().__init__()
         self.host = host
         self.port = port
         self.room_code = room_code
         self.expansions = expansions
         self.max_players = max_players
+        self.certfile = certfile
+        self.keyfile = keyfile
         self.loop = asyncio.new_event_loop()
         self.server_task: asyncio.Task | None = None
 
     def run(self) -> None:  # type: ignore[override]
         asyncio.set_event_loop(self.loop)
-        server = BangServer(self.host, self.port, self.room_code,
-                            self.expansions, self.max_players)
+        server = BangServer(
+            self.host,
+            self.port,
+            self.room_code,
+            self.expansions,
+            self.max_players,
+            self.certfile,
+            self.keyfile,
+        )
         self.server_task = self.loop.create_task(server.start())
         try:
             self.loop.run_until_complete(self.server_task)
@@ -61,11 +79,12 @@ class ClientThread(QtCore.QThread):
 
     message_received = QtCore.Signal(str)
 
-    def __init__(self, uri: str, room_code: str, name: str) -> None:
+    def __init__(self, uri: str, room_code: str, name: str, cafile: str | None = None) -> None:
         super().__init__()
         self.uri = uri
         self.room_code = room_code
         self.name = name
+        self.cafile = cafile
         self.loop = asyncio.new_event_loop()
         self.websocket: WebSocketClientProtocol | None = None
 
@@ -92,7 +111,13 @@ class ClientThread(QtCore.QThread):
             self.message_received.emit(msg)
             return
         try:
-            self.websocket = await websockets.connect(self.uri)
+            ssl_ctx = None
+            if self.uri.startswith("wss://") or self.cafile:
+                ssl_ctx = ssl.create_default_context()
+                if self.cafile:
+                    ssl_ctx.load_verify_locations(self.cafile)
+
+            self.websocket = await websockets.connect(self.uri, ssl=ssl_ctx)
             await self.websocket.recv()
             await self.websocket.send(self.room_code)
             response = await self.websocket.recv()
