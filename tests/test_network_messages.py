@@ -1,0 +1,43 @@
+import asyncio
+import json
+
+import pytest
+from bang_py.network.server import BangServer, MAX_MESSAGE_SIZE
+
+websockets = pytest.importorskip("websockets")
+
+
+def test_oversized_message_closes_connection() -> None:
+    async def run_flow() -> None:
+        server = BangServer(host="localhost", port=8770, room_code="z999")
+        async with websockets.serve(server.handler, server.host, server.port):
+            async with websockets.connect("ws://localhost:8770") as ws:
+                await ws.recv()
+                await ws.send("z999")
+                await ws.recv()
+                await ws.send("Alice")
+                await ws.recv()
+                await ws.recv()
+                await ws.send("x" * (MAX_MESSAGE_SIZE + 1))
+                with pytest.raises(websockets.exceptions.ConnectionClosed):
+                    await ws.recv()
+    asyncio.run(run_flow())
+
+
+def test_malformed_message_ignored() -> None:
+    async def run_flow() -> None:
+        server = BangServer(host="localhost", port=8771, room_code="z998")
+        async with websockets.serve(server.handler, server.host, server.port):
+            async with websockets.connect("ws://localhost:8771") as ws:
+                await ws.recv()
+                await ws.send("z998")
+                await ws.recv()
+                await ws.send("Bob")
+                await ws.recv()
+                await ws.recv()
+                await ws.send("{not-json")
+                # Connection should remain open
+                await ws.send("end_turn")
+                data = json.loads(await ws.recv())
+                assert "players" in data
+    asyncio.run(run_flow())
