@@ -7,6 +7,7 @@ import random
 
 from .event_decks import EventCard, create_high_noon_deck, create_fistful_deck
 from .cards.roles import SheriffRoleCard
+from .player import Player
 
 if TYPE_CHECKING:
     from .game_manager import GameManager
@@ -65,11 +66,31 @@ class EventLogicMixin:
                 deck.append(final)
         return deck
 
-    def _sheriff_event_updates(self: 'GameManager', player):
+    def _apply_event_start_effects(self: 'GameManager', player: Player) -> Player | None:
+        """Run start-of-turn event logic."""
+        pre_ghost = self.event_flags.get("ghost_town")
+        player = self._sheriff_event_updates(player, bool(pre_ghost))
+
+        self._process_new_identity(player)
+
+        if self._skip_turn_if_needed():
+            return None
+
+        if not self._apply_start_damage(player):
+            return None
+
+        if not self._apply_fistful_of_cards(player):
+            return None
+
+        self._handle_dead_man(player)
+
+        return player
+
+    def _sheriff_event_updates(self: 'GameManager', player, pre_ghost: bool):
         """Update sheriff counters and remove Ghost Town revivals."""
         if isinstance(player.role, SheriffRoleCard):
             self._increment_sheriff_turns()
-            if self.event_flags.get("ghost_town") and self.sheriff_turns >= 2:
+            if pre_ghost and self.event_deck and self.sheriff_turns >= 2:
                 player = self._ghost_town_cleanup(player)
         return player
 
