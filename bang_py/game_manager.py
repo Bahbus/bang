@@ -13,6 +13,7 @@ from .helpers import handle_out_of_turn_discard
 from .event_logic import EventLogicMixin
 from .card_handlers import CardHandlersMixin
 from .general_store import GeneralStoreMixin
+from .turn_phases import TurnPhasesMixin
 from .characters.jesse_jones import JesseJones
 from .characters.jose_delgado import JoseDelgado
 from .characters.kit_carlson import KitCarlson
@@ -37,7 +38,7 @@ from .cards.roles import (
 from .characters.base import BaseCharacter
 from .event_decks import EventCard
 @dataclass
-class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
+class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin, TurnPhasesMixin):
     """Manage players, deck and discard pile.
 
     Controls turn order and triggers game events.
@@ -241,125 +242,6 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
             player.character.ability(self, player)
             player.metadata.game = self
 
-    def _apply_event_start_effects(self, player: Player) -> Player | None:
-        """Run start-of-turn event logic.
-
-        Return the acting player or ``None`` if they are eliminated or skipped.
-        """
-        pre_ghost = self.event_flags.get("ghost_town")
-        player = self._sheriff_event_updates(player, bool(pre_ghost))
-
-        self._process_new_identity(player)
-
-        if self._skip_turn_if_needed():
-            return None
-
-        if not self._apply_start_damage(player):
-            return None
-
-        if not self._apply_fistful_of_cards(player):
-            return None
-
-        self._handle_dead_man(player)
-
-        return player
-
-    def _sheriff_event_updates(self, player: Player, pre_ghost: bool) -> Player:
-        """Update sheriff-related counters and Ghost Town clean up."""
-        if isinstance(player.role, SheriffRoleCard):
-            self._increment_sheriff_turns()
-            if pre_ghost and self.event_deck and self.sheriff_turns >= 2:
-                player = self._ghost_town_cleanup(player)
-        return player
-
-    # ------------------------------------------------------------------
-    # Sheriff helpers
-    def _increment_sheriff_turns(self) -> None:
-        """Increment sheriff turn count and draw events when eligible."""
-        self.sheriff_turns += 1
-        if self.event_deck and self.sheriff_turns >= 2:
-            self.draw_event_card()
-
-    def _ghost_town_cleanup(self, player: Player) -> Player:
-        """Remove revived ghosts once the sheriff has taken two turns."""
-        removed = False
-        for pl in self._players:
-            if pl.metadata.ghost_revived and pl.is_alive():
-                pl.health = 0
-                pl.metadata.ghost_revived = False
-                removed = True
-        if removed:
-            self.turn_order = [i for i, pl in enumerate(self._players) if pl.is_alive()]
-            self.current_turn = self.turn_order.index(self._players.index(player))
-            idx = self.turn_order[self.current_turn]
-            player = self._players[idx]
-        return player
-
-    def _process_new_identity(self, player: Player) -> None:
-        """Handle the New Identity event for ``player``."""
-        if self.event_flags.get("new_identity") and player.metadata.unused_character:
-            if self.prompt_new_identity(player):
-                self.apply_new_identity(player)
-
-    def _skip_turn_if_needed(self) -> bool:
-        """Skip the current turn if the corresponding event is active."""
-        if self.event_flags.get("skip_turn"):
-            self.event_flags.pop("skip_turn")
-            self.current_turn = (self.current_turn + 1) % len(self.turn_order)
-            self._begin_turn()
-            return True
-        return False
-
-    def _apply_start_damage(self, player: Player) -> bool:
-        """Apply start-of-turn damage to ``player`` if required."""
-        dmg = self.event_flags.get("start_damage", 0)
-        if dmg:
-            player.take_damage(dmg)
-            self.on_player_damaged(player)
-            if not player.is_alive():
-                self._begin_turn()
-                return False
-        return True
-
-    def _apply_fistful_of_cards(self, player: Player) -> bool:
-        """Resolve the Fistful of Cards effect against ``player``."""
-        if self.event_flags.get("fistful_of_cards"):
-            for _ in range(len(player.hand)):
-                if not self._auto_miss(player):
-                    player.take_damage(1)
-                    self.on_player_damaged(player)
-                    if not player.is_alive():
-                        self._begin_turn()
-                        return False
-        return True
-
-    def _handle_dead_man(self, player: Player) -> None:
-        """Apply the Dead Man event to ``player`` if applicable."""
-        if (
-            self.event_flags.get("dead_man")
-            and self.event_flags.get("dead_man_player") is player
-            and not player.is_alive()
-            and not self.event_flags.get("dead_man_used")
-        ):
-            player.health = 2
-            self.draw_card(player, 2)
-            self.event_flags["dead_man_used"] = True
-
-    def _maybe_revive_ghost_town(self, player: Player) -> bool:
-        """Revive ``player`` if Ghost Town is active.
-
-        Return ``True`` if revived so no further start actions occur.
-        """
-        if self.event_flags.get("ghost_town") and not player.is_alive():
-            player.health = 1
-            player.metadata.ghost_revived = True
-            self.draw_card(player, 3)
-            player.metadata.bangs_played = 0
-            for cb in self.turn_started_listeners:
-                cb(player)
-            return True
-        return False
-
     def _handle_equipment_start(self, player: Player) -> bool:
         """Process start-of-turn equipment effects.
 
@@ -493,28 +375,6 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
                 if modifier:
                     player._apply_health_modifier(modifier)
 
-    def _handle_vendetta(self, player: Player) -> bool:
-        """Resolve the Vendetta event. Return ``True`` if an extra turn occurs."""
-        if (
-            not self.event_flags.get("vendetta")
-            or player in self.event_flags.get("vendetta_used", set())
-        ):
-            return False
-        card = self._draw_from_deck()
-        if card:
-            self.discard_pile.append(card)
-            if card.suit == "Hearts":
-                self.event_flags.setdefault("vendetta_used", set()).add(player)
-                self._begin_turn()
-                return True
-        return False
-
-    def _finish_ghost_town(self, player: Player) -> None:
-        """Remove temporary Ghost Town revival at turn end."""
-        if self.event_flags.get("ghost_town") and player.metadata.ghost_revived:
-            player.health = 0
-            player.metadata.ghost_revived = False
-            self._check_win_conditions()
 
     def _advance_turn(self) -> None:
         """Move the turn pointer and start the next turn."""
@@ -524,222 +384,6 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
             self.current_turn = (self.current_turn + 1) % len(self.turn_order)
         self._begin_turn()
 
-    def _draw_from_deck(self) -> BaseCard | None:
-        """Draw a card reshuffling the discard pile if the deck is empty."""
-        card = self.deck.draw()
-        if card is None and self.discard_pile:
-            self.deck.cards.extend(self.discard_pile)
-            self.discard_pile.clear()
-            random.shuffle(self.deck.cards)
-            card = self.deck.draw()
-        return card
-
-    def draw_card(self, player: Player, num: int = 1) -> None:
-        """Draw ``num`` cards for ``player`` applying active event effects."""
-
-        bonus = int(self.event_flags.get("peyote_bonus", 0))
-        for _ in range(num + bonus):
-            card: BaseCard | None
-            if self.event_flags.get("abandoned_mine") and self.discard_pile:
-                card = self.discard_pile.pop()
-            else:
-                card = self._draw_from_deck()
-            if card:
-                suit = self.event_flags.get("suit_override")
-                if suit:
-                    card.suit = suit
-                player.hand.append(card)
-
-    def draw_phase(
-        self,
-        player: Player,
-        *,
-        jesse_target: Player | None = None,
-        jesse_card: int | None = None,
-        kit_back: int | None = None,
-        pedro_use_discard: bool | None = None,
-        jose_equipment: int | None = None,
-        pat_target: Player | None = None,
-        pat_card: str | None = None,
-
-        skip_heal: bool | None = None,
-        peyote_guesses: list[str] | None = None,
-        ranch_discards: list[int] | None = None,
-        handcuffs_suit: str | None = None,
-        blood_target: Player | None = None,
-
-    ) -> None:
-        """Run the draw phase for ``player`` with optional selections."""
-
-        if self._draw_pre_checks(player, skip_heal=skip_heal, blood_target=blood_target):
-            return
-
-        if self._dispatch_draw_listeners(
-            player,
-            jesse_target=jesse_target,
-            jesse_card=jesse_card,
-            kit_back=kit_back,
-            pedro_use_discard=pedro_use_discard,
-            jose_equipment=jose_equipment,
-            pat_target=pat_target,
-            pat_card=pat_card,
-        ):
-            return
-
-        self._perform_draw(player, peyote_guesses)
-
-        self._post_draw_events(
-            player,
-            ranch_discards=ranch_discards,
-            handcuffs_suit=handcuffs_suit,
-        )
-
-    def _draw_pre_checks(
-        self,
-        player: Player,
-        *,
-        skip_heal: bool | None,
-        blood_target: Player | None,
-    ) -> bool:
-        """Handle early draw-phase events. Returns ``True`` if phase ends."""
-        if self.event_flags.get("no_draw"):
-            return True
-
-        if self.event_flags.get("hard_liquor") and skip_heal:
-            player.heal(1)
-            self.on_player_healed(player)
-            return True
-
-        custom_draw = self.event_flags.get("draw_count")
-        if custom_draw is not None:
-            self.draw_card(player, custom_draw)
-            return True
-
-        if self.event_flags.get("blood_brothers") and blood_target:
-            self._blood_brothers_transfer(player, blood_target)
-
-        return False
-
-    def _dispatch_draw_listeners(
-        self,
-        player: Player,
-        *,
-        jesse_target: Player | None,
-        jesse_card: int | None,
-        kit_back: int | None,
-        pedro_use_discard: bool | None,
-        jose_equipment: int | None,
-        pat_target: Player | None,
-        pat_card: str | None,
-    ) -> bool:
-        """Notify draw phase listeners, returning ``True`` to stop."""
-        for cb in self.draw_phase_listeners:
-            if cb(
-                player,
-                {
-                    "jesse_target": jesse_target,
-                    "jesse_card": jesse_card,
-                    "kit_back": kit_back,
-                    "pedro_use_discard": pedro_use_discard,
-                    "jose_equipment": jose_equipment,
-                    "pat_target": pat_target,
-                    "pat_card": pat_card,
-                },
-            ):
-                return True
-        return False
-
-    def _perform_draw(
-        self, player: Player, peyote_guesses: list[str] | None
-    ) -> None:
-        """Execute the actual card draws for the phase."""
-        if self.event_flags.get("peyote"):
-            self._draw_with_peyote(player, peyote_guesses or [])
-        else:
-            self.draw_card(player, 2)
-
-    def _draw_with_peyote(self, player: Player, guesses: list[str]) -> None:
-        """Handle the Peyote event drawing loop."""
-        cont = True
-        while cont:
-            card = self._draw_from_deck()
-            if not card:
-                break
-            player.hand.append(card)
-            guess = guesses.pop(0).lower() if guesses else "red"
-            cont = self._peyote_guess_correct(card, guess)
-
-    def _peyote_guess_correct(self, card: BaseCard, guess: str) -> bool:
-        """Return ``True`` if the peyote guess was correct."""
-        is_red = card.suit in ("Hearts", "Diamonds")
-        return guess.startswith("r") and is_red or guess.startswith("b") and not is_red
-
-    def _post_draw_events(
-        self,
-        player: Player,
-        *,
-        ranch_discards: list[int] | None,
-        handcuffs_suit: str | None,
-    ) -> None:
-        """Handle effects that trigger after cards are drawn."""
-        self._apply_law_of_the_west(player)
-        if self.event_flags.get("ranch"):
-            self._handle_ranch(player, ranch_discards or [])
-        if self.event_flags.get("handcuffs"):
-            self._set_turn_suit(handcuffs_suit)
-
-    def _apply_law_of_the_west(self, player: Player) -> None:
-        """Immediately play the last drawn card if Law of the West is active."""
-        if self.event_flags.get("law_of_the_west") and len(player.hand) >= 2:
-            card = player.hand[-1]
-            self.play_card(player, card)
-
-    def _handle_ranch(self, player: Player, discards: list[int]) -> None:
-        """Discard selected cards and redraw when The Ranch is active."""
-        discards = sorted(discards, reverse=True)
-        drawn = 0
-        for idx in discards:
-            if 0 <= idx < len(player.hand):
-                discarded = player.hand.pop(idx)
-                self.discard_pile.append(discarded)
-                drawn += 1
-        if drawn:
-            self.draw_card(player, drawn)
-
-    def _set_turn_suit(self, suit: str | None) -> None:
-        """Record the suit restriction for the Handcuffs event."""
-        self.event_flags["turn_suit"] = suit or "Hearts"
-
-    def play_phase(self, player: Player) -> None:
-        """Signal the start of the play phase for ``player``."""
-        self.phase = "play"
-        for cb in self.play_phase_listeners:
-            cb(player)
-
-    def discard_phase(self, player: Player) -> None:
-        """Discard down to the player's hand limit at the end of their turn."""
-        limit = self._hand_limit(player)
-        self._discard_to_limit(player, limit)
-
-    def _hand_limit(self, player: Player) -> int:
-        """Return the maximum cards ``player`` can hold."""
-        limit = player.health
-        if player.metadata.hand_limit is not None:
-            limit = max(limit, player.metadata.hand_limit)
-        if player.metadata.no_hand_limit:
-            return 99
-        if "reverend_limit" in self.event_flags:
-            limit = min(limit, int(self.event_flags["reverend_limit"]))
-        return limit
-
-    def _discard_to_limit(self, player: Player, limit: int) -> None:
-        """Discard or pass cards until ``player`` meets ``limit``."""
-        while len(player.hand) > limit:
-            card = player.hand.pop()
-            if self.event_flags.get("abandoned_mine"):
-                self.deck.cards.insert(0, card)
-            else:
-                self._pass_left_or_discard(player, card)
 
     def _pre_card_checks(
         self, player: Player, card: BaseCard, target: Optional[Player]
@@ -847,25 +491,6 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
         limit = self.event_flags.get("bang_limit", 1)
         return count < limit or unlimited
 
-    def _dispatch_play(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
-        if self._handle_missed_as_bang(player, card, target):
-            return
-        handler = self._card_handlers.get(type(card))
-        if handler:
-            handler(player, card, target)
-        else:
-            card.play(target)
-
-    def _handle_missed_as_bang(
-        self, player: Player, card: BaseCard, target: Optional[Player]
-    ) -> bool:
-        """Treat a Missed! card as Bang! when allowed."""
-        if player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target:
-            handler = self._card_handlers.get(BangCard)
-            if handler:
-                handler(player, BangCard(), target)
-            return True
-        return False
 
 
     def play_card(self, player: Player, card: BaseCard, target: Optional[Player] = None) -> None:
@@ -1061,18 +686,6 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
         player.metadata.abilities.add(target.character.__class__)
         target.character.ability(self, player)
 
-    def _blood_brothers_transfer(self, player: Player, target: Player) -> None:
-        """Transfer one health from ``player`` to ``target`` if possible."""
-        if not self.event_flags.get("blood_brothers"):
-            return
-        if player is target or not player.is_alive() or not target.is_alive():
-            return
-        if player.health <= 1:
-            return
-        player.take_damage(1)
-        self.on_player_damaged(player)
-        target.heal(1)
-        self.on_player_healed(target)
 
     def ricochet_shoot(self, player: Player, target: Player, card_name: str) -> bool:
         """Discard a Bang! to shoot at ``card_name`` in front of ``target``."""
@@ -1094,65 +707,6 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
         self.discard_pile.append(card)
         return True
 
-    # General Store management
-    def start_general_store(self, player: Player) -> List[str]:
-        """Draw cards for General Store and record selection order."""
-        if not self.deck:
-            return []
-        self.general_store_cards = self._deal_general_store_cards()
-        self._set_general_store_order(player)
-        return [c.card_name for c in self.general_store_cards]
-
-    def _deal_general_store_cards(self) -> List[BaseCard]:
-        """Draw one card per living player for General Store."""
-        alive = [p for p in self._players if p.is_alive()]
-        cards: List[BaseCard] = []
-        for _ in range(len(alive)):
-            card = self._draw_from_deck()
-            if card:
-                cards.append(card)
-        return cards
-
-    def _set_general_store_order(self, player: Player) -> None:
-        """Determine the order of selection for General Store."""
-        start_idx = self._players.index(player)
-        order: List[Player] = []
-        for i in range(len(self._players)):
-            p = self._players[(start_idx + i) % len(self._players)]
-            if p.is_alive():
-                order.append(p)
-        self.general_store_order = order
-        self.general_store_index = 0
-
-    def general_store_pick(self, player: Player, index: int) -> bool:
-        """Give the chosen card to the current player."""
-        if not self._valid_general_store_pick(player, index):
-            return False
-        card = self.general_store_cards.pop(index)
-        player.hand.append(card)
-        self.general_store_index += 1
-        if self.general_store_index >= len(self.general_store_order):
-            self._cleanup_general_store_leftovers()
-        return True
-
-    def _valid_general_store_pick(self, player: Player, index: int) -> bool:
-        """Return ``True`` if ``player`` may pick ``index``."""
-        if (
-            self.general_store_cards is None
-            or self.general_store_order is None
-            or self.general_store_index >= len(self.general_store_order)
-            or self.general_store_order[self.general_store_index] is not player
-        ):
-            return False
-        return 0 <= index < len(self.general_store_cards)
-
-    def _cleanup_general_store_leftovers(self) -> None:
-        """Discard any unclaimed General Store cards."""
-        for leftover in self.general_store_cards:
-            self.discard_pile.append(leftover)
-        self.general_store_cards = None
-        self.general_store_order = None
-        self.general_store_index = 0
 
     def reset_turn_flags(self, player: Player) -> None:
         """Clear per-turn ability flags on ``player``."""
