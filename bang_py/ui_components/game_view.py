@@ -186,7 +186,6 @@ class GameView(QtWidgets.QWidget):
         self.theme = theme
         vbox = QtWidgets.QVBoxLayout(self)
 
-        hbox = QtWidgets.QHBoxLayout()
         self.board_qml = QtQuickWidgets.QQuickWidget()
         self.board_qml.setResizeMode(
             QtQuickWidgets.QQuickWidget.SizeRootObjectToView
@@ -194,21 +193,11 @@ class GameView(QtWidgets.QWidget):
         qml_dir = resources.files("bang_py") / "qml"
         with resources.as_file(qml_dir / "GameBoard.qml") as qml_path:
             self.board_qml.setSource(QtCore.QUrl.fromLocalFile(str(qml_path)))
-        root = self.board_qml.rootObject()
-        if root is not None:
-            root.setProperty("theme", theme)
-            root.setProperty("scale", 1.0)
-        board_container = QtWidgets.QWidget()
-        board_stack = QtWidgets.QStackedLayout(board_container)
-        board_stack.setStackingMode(QtWidgets.QStackedLayout.StackAll)
-        self.board = GameBoard()
-        board_stack.addWidget(self.board_qml)
-        board_stack.addWidget(self.board)
-        hbox.addWidget(board_container, 1)
-        self.player_list = QtWidgets.QListWidget()
-        self.player_list.setMaximumWidth(200)
-        hbox.addWidget(self.player_list)
-        vbox.addLayout(hbox, 1)
+        self.root_obj = self.board_qml.rootObject()
+        if self.root_obj is not None:
+            self.root_obj.setProperty("theme", theme)
+            self.root_obj.setProperty("scale", 1.0)
+        vbox.addWidget(self.board_qml, 1)
 
         self.update_sound = load_sound("beep")
 
@@ -227,31 +216,8 @@ class GameView(QtWidgets.QWidget):
     def update_players(self, players: list[dict], self_name: str | None = None) -> None:
         if self.update_sound:
             self.update_sound.play()
-        self.player_list.clear()
-        for p in players:
-            item = QtWidgets.QListWidgetItem()
-            widget = QtWidgets.QWidget()
-            layout = QtWidgets.QHBoxLayout(widget)
-            layout.setContentsMargins(2, 2, 2, 2)
-            icon_label = QtWidgets.QLabel()
-            icon_label.setPixmap(load_character_image(p.get("character", ""), 30, 45))
-            layout.addWidget(icon_label)
-            name_label = QtWidgets.QLabel(p["name"])
-            layout.addWidget(name_label)
-            bullet_layout = QtWidgets.QHBoxLayout()
-            bullet_layout.setSpacing(2)
-            for _ in range(int(p.get("health", 0))):
-                lbl = QtWidgets.QLabel()
-                lbl.setPixmap(self.board.bullet_pixmap)
-                bullet_layout.addWidget(lbl)
-            layout.addLayout(bullet_layout)
-            layout.addStretch(1)
-            widget.setLayout(layout)
-            item.setSizeHint(widget.sizeHint())
-            item.setToolTip(f"Health: {p.get('health', 0)}")
-            self.player_list.addItem(item)
-            self.player_list.setItemWidget(item, widget)
-        self.board.update_players(players, self_name)
+        if self.root_obj is not None:
+            self.root_obj.setProperty("players", players)
 
     def update_hand(self, cards: list[object]) -> None:
         while self.hand_layout.count():

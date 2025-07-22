@@ -38,7 +38,6 @@ class BangUI(QtWidgets.QMainWindow):
         self.menu_root: QtCore.QObject | None = None
 
         self._build_start_menu()
-        self._create_log_dock()
 
     def _get_player_name(self) -> str:
         if self.menu_root is not None:
@@ -115,37 +114,18 @@ class BangUI(QtWidgets.QMainWindow):
             self.setStyleSheet(get_stylesheet(self.theme))
             if self.menu_root is not None:
                 self.menu_root.setProperty("theme", self.theme)
-            if hasattr(self, "game_view"):
-                root = self.game_view.board_qml.rootObject()
-                if root is not None:
-                    root.setProperty("theme", self.theme)
+            if hasattr(self, "game_root") and self.game_root is not None:
+                self.game_root.setProperty("theme", self.theme)
 
     # Game view --------------------------------------------------------
     def _build_game_view(self) -> None:
         self.game_view = GameView(self.theme)
         self.game_view.action_signal.connect(self._send_action)
         self.game_view.end_turn_signal.connect(self._end_turn)
-        self.board = self.game_view.board
-        self.player_list = self.game_view.player_list
         self.hand_layout = self.game_view.hand_layout
+        self.game_root = self.game_view.root_obj
         self.stack.addWidget(self.game_view)
         self.stack.setCurrentWidget(self.game_view)
-
-    def _create_log_dock(self) -> None:
-        self.log_dock = QtWidgets.QDockWidget("Log", self)
-        self.log_dock.setFloating(True)
-        self.log_dock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures)
-        self.log_dock.setWindowFlags(
-            self.log_dock.windowFlags() | QtCore.Qt.WindowStaysOnTopHint
-        )
-        self.log_text = QtWidgets.QTextEdit()
-        self.log_text.setReadOnly(True)
-        self.log_text.setStyleSheet(
-            "background-color: rgba(0, 0, 0, 150); color: white;"
-        )
-        self.log_dock.setWidget(self.log_text)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.log_dock)
-        self.log_dock.show()
 
     # Networking -------------------------------------------------------
     def _start_host(
@@ -200,18 +180,23 @@ class BangUI(QtWidgets.QMainWindow):
         self.client.start()
         self.local_name = self._get_player_name()
         self._build_game_view()
-        self.log_dock.show()
 
     def _append_message(self, msg: str) -> None:
         try:
             data = json.loads(msg)
         except json.JSONDecodeError:
-            self.log_text.append(msg)
+            if hasattr(self, "game_root") and self.game_root is not None:
+                cur = self.game_root.property("logText") or ""
+                self.game_root.setProperty("logText", cur + msg + "\n")
             return
 
         if isinstance(data, dict):
             if "message" in data:
-                self.log_text.append(data["message"])
+                if hasattr(self, "game_root") and self.game_root is not None:
+                    cur = self.game_root.property("logText") or ""
+                    self.game_root.setProperty(
+                        "logText", cur + str(data["message"]) + "\n"
+                    )
             if "players" in data:
                 self._update_players(data["players"])
             if "hand" in data:
@@ -219,7 +204,9 @@ class BangUI(QtWidgets.QMainWindow):
             if "prompt" in data:
                 self._show_prompt(data["prompt"], data)
         else:
-            self.log_text.append(str(data))
+            if hasattr(self, "game_root") and self.game_root is not None:
+                cur = self.game_root.property("logText") or ""
+                self.game_root.setProperty("logText", cur + str(data) + "\n")
 
     def _end_turn(self) -> None:
         if self.client:
@@ -261,7 +248,9 @@ class BangUI(QtWidgets.QMainWindow):
                     }
                 )
         else:
-            self.log_text.append(f"Prompt: {prompt}")
+            if hasattr(self, "game_root") and self.game_root is not None:
+                cur = self.game_root.property("logText") or ""
+                self.game_root.setProperty("logText", cur + f"Prompt: {prompt}\n")
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         """Toggle full-screen mode when F11 is pressed."""
