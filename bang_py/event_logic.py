@@ -120,6 +120,21 @@ class EventLogicMixin:
             if self.prompt_new_identity(player):
                 self.apply_new_identity(player)
 
+    def apply_new_identity(self: 'GameManager', player: Player) -> None:
+        """Swap ``player`` to their unused character if the event is active."""
+
+        if not self.event_flags.get("new_identity"):
+            return
+        new_char = player.metadata.unused_character
+        if not new_char:
+            return
+        old_char = player.character
+        player.character = new_char
+        player.metadata.unused_character = old_char
+        player.reset_stats()
+        player.character.ability(self, player)
+        player.health = min(2, player.max_health)
+
     def _skip_turn_if_needed(self: 'GameManager') -> bool:
         if self.event_flags.get("skip_turn"):
             self.event_flags.pop("skip_turn")
