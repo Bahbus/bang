@@ -92,10 +92,11 @@ finished. Win or elimination messages are shown both in the log and as a popup
 dialog.
 
 Card templates and a bullet icon are loaded from `bang_py/assets/`, ensuring the
-GUI has the images it needs. Character portraits and short sound effects live in
-`bang_py/assets/characters/` and `bang_py/assets/audio/`. These files are not
-committed to the repository. Run `python scripts/generate_assets.py` to create
-the placeholders. They are released into the public domain; see
+GUI has the images it needs. Character portraits and short sound effects now
+ship with the repository under `bang_py/assets/characters/` and
+`bang_py/assets/audio/`. If any files are missing the
+`scripts/generate_assets.py` helper can create simple placeholders instead. The
+bundled assets are released into the public domain; see
 `bang_py/assets/ATTRIBUTION.md` for details. Two JPEGs,
 ``example-bang-menu-ui.jpg`` and ``example_bang_ui.jpg``, show the latest QML
 interface and remain in the repository root solely as reference screenshots.

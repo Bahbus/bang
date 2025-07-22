@@ -108,6 +108,14 @@ def create_beep(path: Path, freq: int = 440) -> None:
 def main() -> None:
     CHAR_DIR.mkdir(parents=True, exist_ok=True)
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+
+    # Skip regeneration if all expected assets already exist
+    char_paths = [CHAR_DIR / f"{slugify(n)}.png" for n in character_names()]
+    char_paths.append(CHAR_DIR / "default.png")
+    audio_paths = [AUDIO_DIR / n for n in ("beep.wav", "boop.wav", "click.wav")]
+    if all(p.exists() for p in [*char_paths, *audio_paths]):
+        print("Assets already present, skipping generation")
+        return
     create_default_image(CHAR_DIR / "default.png")
     for name in character_names():
         create_character_image(name, CHAR_DIR / f"{slugify(name)}.png")
