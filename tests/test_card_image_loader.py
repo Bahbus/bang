@@ -36,3 +36,13 @@ def test_compose_card_returns_pixmap(card_type, kwargs, qt_app):
     pix = loader.compose_card(card_type, **kwargs)
     assert isinstance(pix, QtGui.QPixmap)
     assert not pix.isNull()
+
+
+@pytest.mark.parametrize("name", ["other", "role", "character"])
+def test_get_card_back_returns_pixmap(name, qt_app):
+    from bang_py.ui_components.card_images import CardImageLoader
+
+    loader = CardImageLoader()
+    pix = loader.get_card_back(name)
+    assert isinstance(pix, QtGui.QPixmap)
+    assert not pix.isNull()

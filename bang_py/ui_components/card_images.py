@@ -15,6 +15,12 @@ from ..helpers import RankSuitIconLoader
 DEFAULT_SIZE = (60, 90)
 ASSETS_DIR = resources.files("bang_py") / "assets"
 
+_CARD_BACK_FILES = {
+    "other": "other_card_back.png",
+    "character": "character_card_back.png",
+    "role": "role_card_back.png",
+}
+
 _TEMPLATE_FILES = {
     "blue": "template_blue.png",
     "brown": "template_brown.png",
@@ -33,6 +39,7 @@ class CardImageLoader:
         self.width = width
         self.height = height
         self.templates = self._load_templates(width, height)
+        self.card_backs = self._load_card_backs(width, height)
         self.rank_loader = RankSuitIconLoader()
 
     @staticmethod
@@ -62,8 +69,33 @@ class CardImageLoader:
             templates[key] = pix
         return templates
 
+    @classmethod
+    def _load_card_backs(
+        cls, width: int, height: int
+    ) -> Dict[str, QtGui.QPixmap]:
+        backs: Dict[str, QtGui.QPixmap] = {}
+        for key, fname in _CARD_BACK_FILES.items():
+            path = ASSETS_DIR / fname
+            with resources.as_file(path) as file_path:
+                pix = QtGui.QPixmap(str(file_path))
+            if pix.isNull():
+                pix = cls._fallback_pixmap(width, height)
+            else:
+                pix = pix.scaled(
+                    width,
+                    height,
+                    QtCore.Qt.KeepAspectRatio,
+                    QtCore.Qt.SmoothTransformation,
+                )
+            backs[key] = pix
+        return backs
+
     def get_template(self, name: str) -> QtGui.QPixmap:
         return self.templates.get(name, self._fallback_pixmap(self.width, self.height))
+
+    def get_card_back(self, name: str) -> QtGui.QPixmap:
+        """Return a card back pixmap for ``name``."""
+        return self.card_backs.get(name, self._fallback_pixmap(self.width, self.height))
 
     def compose_card(
         self,
