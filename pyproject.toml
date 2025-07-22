@@ -24,5 +24,8 @@ bang-ui = "bang_py.ui:main"
 "bang_py" = [
     "assets/*.png",
     "assets/*.svg",
+    "assets/characters/*.png",
+    "assets/audio/*.wav",
+    "assets/*.md",
     "qml/*.qml",
 ]

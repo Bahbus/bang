@@ -4,6 +4,10 @@ from importlib import resources
 from typing import Dict
 
 from PySide6 import QtCore, QtGui, QtWidgets
+try:
+    from PySide6 import QtMultimedia  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    QtMultimedia = None
 
 try:
     from PySide6 import QtSvg  # type: ignore
@@ -14,6 +18,8 @@ from ..helpers import RankSuitIconLoader
 
 DEFAULT_SIZE = (60, 90)
 ASSETS_DIR = resources.files("bang_py") / "assets"
+CHARACTER_DIR = ASSETS_DIR / "characters"
+AUDIO_DIR = ASSETS_DIR / "audio"
 
 _CARD_BACK_FILES = {
     "other": "other_card_back.png",
@@ -30,6 +36,35 @@ _TEMPLATE_FILES = {
     "high_noon": "template_highnoon_event.png",
     "fistful": "template_afistfulofcards_event.png",
 }
+
+
+def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.QPixmap:
+    """Return a portrait pixmap for ``name`` or a default image."""
+    fname = name.lower().replace(" ", "_") + ".png"
+    path = CHARACTER_DIR / fname
+    if not path.exists():
+        path = CHARACTER_DIR / "default.png"
+    with resources.as_file(path) as file_path:
+        pix = QtGui.QPixmap(str(file_path))
+    if pix.isNull():
+        pix = QtGui.QPixmap(width, height)
+        pix.fill(QtGui.QColor("gray"))
+    else:
+        pix = pix.scaled(width, height, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+    return pix
+
+
+def load_sound(name: str) -> QtMultimedia.QSoundEffect | None:
+    """Return a sound effect for ``name`` if QtMultimedia is available."""
+    if QtMultimedia is None:
+        return None
+    path = AUDIO_DIR / f"{name}.wav"
+    if not path.exists():
+        return None
+    effect = QtMultimedia.QSoundEffect()
+    with resources.as_file(path) as file_path:
+        effect.setSource(QtCore.QUrl.fromLocalFile(str(file_path)))
+    return effect
 
 
 class CardImageLoader:
