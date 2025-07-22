@@ -17,36 +17,20 @@ from .ui_components import (
     ServerThread,
     ClientThread,
 )
+from .theme import get_stylesheet, get_current_theme
 
 
 class BangUI(QtWidgets.QMainWindow):
     """Qt GUI for hosting, joining and playing a Bang game."""
 
-    def __init__(self) -> None:
+    def __init__(self, theme: str | None = None) -> None:
         super().__init__()
         self.setWindowTitle("Bang!")
         self.resize(1024, 768)
         self.stack = QtWidgets.QStackedWidget()
         self.setCentralWidget(self.stack)
-        self.setStyleSheet(
-            """
-            QWidget {
-                background-color: #deb887;
-                font-family: 'Courier New';
-                font-size: 16px;
-            }
-            QPushButton {
-                background-color: #f4a460;
-                border: 2px solid #8b4513;
-                min-width: 80px;
-                max-width: 150px;
-            }
-            QLineEdit {
-                background-color: #fff8dc;
-                color: #000000;
-            }
-            """
-        )
+        self.theme = theme or get_current_theme()
+        self.setStyleSheet(get_stylesheet(self.theme))
 
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
@@ -92,8 +76,24 @@ class BangUI(QtWidgets.QMainWindow):
             self._start_join(addr, port, code, cafile)
 
     def _settings_dialog(self) -> None:
-        QtWidgets.QMessageBox.information(self, "Settings",
-                                          "Settings dialog placeholder")
+        dialog = QtWidgets.QDialog(self)
+        dialog.setWindowTitle("Settings")
+        layout = QtWidgets.QFormLayout(dialog)
+        theme_combo = QtWidgets.QComboBox()
+        theme_combo.addItems(["light", "dark"])
+        theme_combo.setCurrentText(self.theme)
+        layout.addRow("Theme:", theme_combo)
+
+        buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
+        )
+        buttons.accepted.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        if dialog.exec() == QtWidgets.QDialog.Accepted:
+            self.theme = theme_combo.currentText()
+            os.environ["BANG_THEME"] = self.theme
+            self.setStyleSheet(get_stylesheet(self.theme))
 
     # Game view --------------------------------------------------------
     def _build_game_view(self) -> None:
