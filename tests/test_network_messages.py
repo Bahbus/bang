@@ -41,3 +41,20 @@ def test_malformed_message_ignored() -> None:
                 data = json.loads(await ws.recv())
                 assert "players" in data
     asyncio.run(run_flow())
+
+
+def test_invalid_payload_rejected() -> None:
+    async def run_flow() -> None:
+        server = BangServer(host="localhost", port=8772, room_code="z997")
+        async with websockets.serve(server.handler, server.host, server.port):
+            async with websockets.connect("ws://localhost:8772") as ws:
+                await ws.recv()
+                await ws.send("z997")
+                await ws.recv()
+                await ws.send("Eve")
+                await ws.recv()
+                await ws.recv()
+                await ws.send(json.dumps({"action": "draw", "num": "two"}))
+                data = json.loads(await ws.recv())
+                assert data.get("error") == "invalid message"
+    asyncio.run(run_flow())
