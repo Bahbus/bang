@@ -9,6 +9,7 @@ from .card_images import get_loader
 
 ASSETS_DIR = resources.files("bang_py") / "assets"
 BULLET_PATH = ASSETS_DIR / "bullet.png"
+TABLE_PATH = ASSETS_DIR / "table.png"
 
 
 class GameBoard(QtWidgets.QGraphicsView):
@@ -30,6 +31,14 @@ class GameBoard(QtWidgets.QGraphicsView):
         self.card_width = 60
         self.card_height = 90
         self.card_pixmap = self._create_card_pixmap()
+        self.character_pixmap = self._create_card_pixmap(back_type="character")
+        with resources.as_file(TABLE_PATH) as table_path:
+            self.table_pixmap = QtGui.QPixmap(str(table_path)).scaled(
+                self.max_width,
+                self.max_height,
+                QtCore.Qt.KeepAspectRatioByExpanding,
+                QtCore.Qt.SmoothTransformation,
+            )
         with resources.as_file(BULLET_PATH) as bullet_path:
             self.bullet_pixmap = QtGui.QPixmap(str(bullet_path)).scaled(
             20,
@@ -47,27 +56,24 @@ class GameBoard(QtWidgets.QGraphicsView):
         self.fitInView(self._scene.sceneRect(), QtCore.Qt.KeepAspectRatio)
 
     def _create_card_pixmap(
-        self, width: int | None = None, height: int | None = None
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        back_type: str = "other",
     ) -> QtGui.QPixmap:
         w = width or self.card_width
         h = height or self.card_height
         loader = get_loader()
-        return loader.get_template("brown").scaled(
+        return loader.get_card_back(back_type).scaled(
             w, h, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
         )
 
     def _draw_board(self) -> None:
         self._scene.clear()
         self._scene.setSceneRect(0, 0, self.max_width, self.max_height)
-        table = self._scene.addEllipse(
-            5,
-            5,
-            self.max_width - 10,
-            self.max_height - 10,
-            QtGui.QPen(),
-            QtGui.QBrush(QtGui.QColor("saddlebrown")),
-        )
+        table = self._scene.addPixmap(self.table_pixmap)
         table.setZValue(-1)
+        table.setPos(0, 0)
         center_x = self.max_width / 2
         draw_x = center_x - self.card_width * 1.5
         draw_y = self.max_height * 0.5
@@ -106,7 +112,7 @@ class GameBoard(QtWidgets.QGraphicsView):
                 ang = math.radians((i - idx) * angle_step + 90)
                 x = center_x + radius * math.cos(ang) - self.card_width / 2
                 y = center_y + radius * math.sin(ang) - self.card_height / 2
-                self._scene.addPixmap(self.card_pixmap).setPos(x, y)
+                self._scene.addPixmap(self.character_pixmap).setPos(x, y)
 
                 bullet_y = y + self.card_height
                 spacing = 2

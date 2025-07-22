@@ -93,3 +93,11 @@ def test_gameboard_bullets(qt_app):
     assert "Health: 3" in tooltips
     assert "Health: 2" in tooltips
     board.close()
+
+
+def test_gameboard_table_pixmap(qt_app):
+    from bang_py.ui_components.game_view import GameBoard
+
+    board = GameBoard()
+    assert not board.table_pixmap.isNull()
+    board.close()
