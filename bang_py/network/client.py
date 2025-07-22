@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import ssl
 
 try:  # Optional websockets import for test environments
     import websockets
@@ -11,7 +12,10 @@ except ModuleNotFoundError:  # pragma: no cover - handled in main()
 
 
 async def main(
-    uri: str = "ws://localhost:8765", room_code: str = "", name: str | None = None
+    uri: str = "ws://localhost:8765",
+    room_code: str = "",
+    name: str | None = None,
+    cafile: str | None = None,
 ) -> None:
     """Connect to a ``bang-server`` instance and handle basic interaction.
 
@@ -24,6 +28,9 @@ async def main(
         shown and the code can be entered interactively.
     name:
         Optional player name. If ``None``, the user is prompted for it.
+    cafile:
+        Optional certificate authority file used to verify the server when
+        connecting via ``wss://``.
 
     Workflow
     --------
@@ -35,7 +42,13 @@ async def main(
         logging.error("websockets package is required for networking")
         return
 
-    async with websockets.connect(uri) as websocket:
+    ssl_ctx = None
+    if uri.startswith("wss://") or cafile:
+        ssl_ctx = ssl.create_default_context()
+        if cafile:
+            ssl_ctx.load_verify_locations(cafile)
+
+    async with websockets.connect(uri, ssl=ssl_ctx) as websocket:
         prompt = await websocket.recv()
         logging.info(prompt)
         await websocket.send(room_code)
@@ -66,7 +79,16 @@ async def main(
 
 def run() -> None:
     """Entry point for the ``bang-client`` console script."""
-    asyncio.run(main())
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Connect to Bang server")
+    parser.add_argument("uri", nargs="?", default="ws://localhost:8765")
+    parser.add_argument("--room", default="")
+    parser.add_argument("--name", default=None)
+    parser.add_argument("--cafile", default=None)
+    args = parser.parse_args()
+
+    asyncio.run(main(args.uri, args.room, args.name, args.cafile))
 
 
 if __name__ == "__main__":

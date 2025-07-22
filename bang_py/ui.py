@@ -74,7 +74,9 @@ class BangUI(QtWidgets.QMainWindow):
             except ValueError:
                 QtWidgets.QMessageBox.critical(self, "Error", "Invalid settings")
                 return
-            self._start_host(port, max_players)
+            cert = dialog.cert_edit.text().strip() or None
+            key = dialog.key_edit.text().strip() or None
+            self._start_host(port, max_players, cert, key)
 
     def _join_menu(self) -> None:
         dialog = HostJoinDialog("join", self)
@@ -86,7 +88,8 @@ class BangUI(QtWidgets.QMainWindow):
             except ValueError:
                 QtWidgets.QMessageBox.critical(self, "Error", "Invalid port")
                 return
-            self._start_join(addr, port, code)
+            cafile = dialog.cafile_edit.text().strip() or None
+            self._start_join(addr, port, code, cafile)
 
     def _settings_dialog(self) -> None:
         QtWidgets.QMessageBox.information(self, "Settings",
@@ -120,31 +123,54 @@ class BangUI(QtWidgets.QMainWindow):
         self.log_dock.show()
 
     # Networking -------------------------------------------------------
-    def _start_host(self, port: int, max_players: int) -> None:
+    def _start_host(
+        self,
+        port: int,
+        max_players: int,
+        certfile: str | None = None,
+        keyfile: str | None = None,
+    ) -> None:
         name = self.start_menu.name_edit.text().strip()
         if not name:
             QtWidgets.QMessageBox.critical(self, "Error",
                                            "Please enter your name")
             return
         room_code = secrets.token_hex(3)
-        self.server_thread = ServerThread("", port, room_code, [], max_players)
+        self.server_thread = ServerThread(
+            "",
+            port,
+            room_code,
+            [],
+            max_players,
+            certfile,
+            keyfile,
+        )
         self.server_thread.start()
-        uri = f"ws://localhost:{port}"
-        self._start_client(uri, room_code)
+        scheme = "wss" if certfile else "ws"
+        uri = f"{scheme}://localhost:{port}"
+        self._start_client(uri, room_code, cafile=certfile)
         self.setWindowTitle(f"Bang! - {room_code}")
 
-    def _start_join(self, addr: str, port: int, code: str) -> None:
+    def _start_join(
+        self, addr: str, port: int, code: str, cafile: str | None = None
+    ) -> None:
         name = self.start_menu.name_edit.text().strip()
         if not name:
             QtWidgets.QMessageBox.critical(self, "Error",
                                            "Please enter your name")
             return
-        uri = f"ws://{addr}:{port}"
-        self._start_client(uri, code)
+        scheme = "wss" if cafile else "ws"
+        uri = f"{scheme}://{addr}:{port}"
+        self._start_client(uri, code, cafile)
 
-    def _start_client(self, uri: str, code: str) -> None:
+    def _start_client(self, uri: str, code: str, cafile: str | None = None) -> None:
         self.room_code = code
-        self.client = ClientThread(uri, code, self.start_menu.name_edit.text().strip())
+        self.client = ClientThread(
+            uri,
+            code,
+            self.start_menu.name_edit.text().strip(),
+            cafile,
+        )
         self.client.message_received.connect(self._append_message)
         self.client.start()
         self.local_name = self.start_menu.name_edit.text().strip()

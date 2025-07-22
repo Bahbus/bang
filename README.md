@@ -14,6 +14,22 @@ bang-server
 
 This starts a websocket server on `ws://localhost:8765`.
 
+### Secure connections
+
+Pass `--certfile` and `--keyfile` to start the server with TLS:
+
+```bash
+bang-server --certfile server.pem --keyfile server.key
+```
+
+Use the `wss://` scheme when connecting and provide the CA file if needed:
+
+```bash
+bang-client wss://localhost:8765 --cafile ca.pem
+```
+
+The Qt interface exposes these paths in the host and join dialogs.
+
 ## Connecting a client
 
 ```bash
