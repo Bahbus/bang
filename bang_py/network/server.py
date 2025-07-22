@@ -147,6 +147,50 @@ class BangServer:
                     await asyncio.gather(*conn.tasks, return_exceptions=True)
             await self.broadcast_state()
 
+    def _validate_payload(self, data: Dict[str, Any]) -> bool:
+        """Validate that ``data`` conforms to the expected schema."""
+        action = data.get("action")
+        if not isinstance(action, str):
+            return False
+
+        schemas: dict[str, Dict[str, tuple[type, ...]]] = {
+            "draw": {"num": (int,)},
+            "discard": {"card_index": (int,)},
+            "play_card": {"card_index": (int,), "target": (int,)},
+            "general_store_pick": {"index": (int,)},
+            "use_ability": {
+                "ability": (str,),
+                "indices": (list,),
+                "target": (int,),
+                "card_index": (int,),
+                "discard": (int,),
+                "equipment": (int,),
+                "card": (int,),
+                "use_discard": (bool,),
+                "enabled": (bool,),
+            },
+            "set_auto_miss": {"enabled": (bool,)},
+        }
+
+        schema = schemas.get(action)
+        if schema is None:
+            return False
+
+        for key, value in data.items():
+            if key == "action":
+                continue
+            expected = schema.get(key)
+            if expected is None:
+                return False
+            if key == "indices":
+                if not isinstance(value, list) or not all(
+                    isinstance(v, int) for v in value
+                ):
+                    return False
+            elif not isinstance(value, expected):
+                return False
+        return True
+
     async def _process_message(
         self, websocket: ServerConnection, message: str | bytes
     ) -> None:
@@ -162,6 +206,10 @@ class BangServer:
             return
 
         if not isinstance(data, dict):
+            return
+
+        if not self._validate_payload(data):
+            await websocket.send(json.dumps({"error": "invalid message"}))
             return
 
         action = data.get("action")
