@@ -1,7 +1,7 @@
 import os
 import pytest
 
-pytest.importorskip("PySide6")
+pytest.importorskip("PySide6", reason="PySide6 not installed; skipping GUI tests")
 
 from PySide6 import QtWidgets, QtGui
 
