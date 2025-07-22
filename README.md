@@ -47,6 +47,8 @@ PyQt/PySide. It offers smoother graphics using ``QGraphicsView`` and a flexible
 layout. The main window starts maximized and you can press ``F11`` to toggle
 true full-screen mode. The log now appears in a floating dock that can be
 dragged anywhere or docked to the sides of the window.
+Experimental QML scenes for the menu and board are available under
+``bang_py/qml``.
 
 Install the Qt requirements first (PySide6 6.9.1 or newer):
 
@@ -62,6 +64,9 @@ bang-ui
 
 Set `BANG_AUTO_CLOSE=1` to automatically close the window. This is mainly useful
 for automated tests.
+
+Set `BANG_THEME=dark` to enable a dark interface or choose the theme from the
+**Settings** dialog at runtime.
 
 Enter your name and choose **Host Game** or **Join Game**. Hosting launches a
 local server and shows a room code to share with friends. The host screen lets

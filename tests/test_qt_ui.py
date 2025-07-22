@@ -101,3 +101,12 @@ def test_gameboard_table_pixmap(qt_app):
     board = GameBoard()
     assert not board.table_pixmap.isNull()
     board.close()
+
+
+def test_dark_theme_from_env(qt_app, monkeypatch):
+    monkeypatch.setenv("BANG_THEME", "dark")
+    from bang_py.ui import BangUI
+
+    ui = BangUI()
+    assert "#2b2b2b" in ui.styleSheet()
+    ui.close()
