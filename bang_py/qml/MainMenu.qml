@@ -2,9 +2,16 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 
 Rectangle {
-    width: 400
-    height: 300
-    color: "#333333"
+    id: root
+    property string theme: "light"
+    property real scale: 1.0
+    width: 400 * scale
+    height: 300 * scale
+    color: theme === "dark" ? "#333333" : "#deb887"
+
+    signal hostGame()
+    signal joinGame()
+    signal settings()
 
     Column {
         anchors.centerIn: parent
@@ -13,11 +20,31 @@ Rectangle {
         Text {
             text: "Bang!"
             font.pointSize: 24
-            color: "white"
+            color: theme === "dark" ? "white" : "black"
         }
 
-        Button { text: "Host Game" }
-        Button { text: "Join Game" }
-        Button { text: "Settings" }
+        TextField {
+            id: nameField
+            placeholderText: "Name"
+            width: 200 * scale
+            color: theme === "dark" ? "white" : "black"
+            background: Rectangle {
+                color: theme === "dark" ? "#3c3c3c" : "#fff8dc"
+            }
+        }
+
+        Button {
+            text: "Host Game"
+            onClicked: root.hostGame()
+        }
+        Button {
+            text: "Join Game"
+            onClicked: root.joinGame()
+        }
+        Button {
+            text: "Settings"
+            onClicked: root.settings()
+        }
     }
+    property alias nameText: nameField.text
 }

@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from importlib import resources
 
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets, QtQuickWidgets
 
 from .card_images import get_loader, load_character_image, load_sound
 
@@ -181,13 +181,30 @@ class GameView(QtWidgets.QWidget):
     action_signal = QtCore.Signal(dict)
     end_turn_signal = QtCore.Signal()
 
-    def __init__(self) -> None:
+    def __init__(self, theme: str = "light") -> None:
         super().__init__()
+        self.theme = theme
         vbox = QtWidgets.QVBoxLayout(self)
 
         hbox = QtWidgets.QHBoxLayout()
+        self.board_qml = QtQuickWidgets.QQuickWidget()
+        self.board_qml.setResizeMode(
+            QtQuickWidgets.QQuickWidget.SizeRootObjectToView
+        )
+        qml_dir = resources.files("bang_py") / "qml"
+        with resources.as_file(qml_dir / "GameBoard.qml") as qml_path:
+            self.board_qml.setSource(QtCore.QUrl.fromLocalFile(str(qml_path)))
+        root = self.board_qml.rootObject()
+        if root is not None:
+            root.setProperty("theme", theme)
+            root.setProperty("scale", 1.0)
+        board_container = QtWidgets.QWidget()
+        board_stack = QtWidgets.QStackedLayout(board_container)
+        board_stack.setStackingMode(QtWidgets.QStackedLayout.StackAll)
         self.board = GameBoard()
-        hbox.addWidget(self.board, 1)
+        board_stack.addWidget(self.board_qml)
+        board_stack.addWidget(self.board)
+        hbox.addWidget(board_container, 1)
         self.player_list = QtWidgets.QListWidget()
         self.player_list.setMaximumWidth(200)
         hbox.addWidget(self.player_list)

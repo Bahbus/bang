@@ -2,19 +2,22 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 
 Item {
-    width: 800
-    height: 600
+    id: root
+    property string theme: "light"
+    property real scale: 1.0
+    width: 800 * scale
+    height: 600 * scale
 
     Rectangle {
         id: table
         anchors.fill: parent
-        color: "#006400"
+        color: theme === "dark" ? "#004000" : "#006400"
     }
 
     Text {
         anchors.centerIn: parent
         text: "Board Prototype"
-        color: "white"
+        color: theme === "dark" ? "white" : "black"
         font.pointSize: 20
     }
 }
