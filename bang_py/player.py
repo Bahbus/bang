@@ -86,6 +86,7 @@ class Player:
 
     @health.setter
     def health(self, value: int) -> None:
+        """Set current health clamping between 0 and ``max_health``."""
         self._health = max(0, min(value, self.max_health))
 
     def reset_stats(self) -> None:

@@ -468,6 +468,7 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
         return player
 
     def end_turn(self) -> None:
+        """Finish the current player's turn and advance to the next."""
         if not self.turn_order:
             return
         idx = self.turn_order[self.current_turn]
@@ -868,6 +869,7 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
 
 
     def play_card(self, player: Player, card: BaseCard, target: Optional[Player] = None) -> None:
+        """Play ``card`` from ``player`` against ``target`` if allowed."""
         if not self._pre_card_checks(player, card, target):
             return
 
@@ -924,6 +926,7 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
             player.metadata.bangs_played += 1
 
     def discard_card(self, player: Player, card: BaseCard) -> None:
+        """Discard ``card`` from ``player`` and process event effects."""
         if card in player.hand:
             player.hand.remove(card)
             self._pass_left_or_discard(player, card)
@@ -933,6 +936,7 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
                 self.draw_card(player)
 
     def sid_ketchum_ability(self, player: Player, indices: List[int] | None = None) -> None:
+        """Discard two cards to heal ``player`` for one life."""
         if len(player.hand) < 2 or player.health >= player.max_health:
             return
         discard_indices = indices or list(range(2))
@@ -1151,6 +1155,7 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
         self.general_store_index = 0
 
     def reset_turn_flags(self, player: Player) -> None:
+        """Clear per-turn ability flags on ``player``."""
         player.metadata.doc_used = False
         player.metadata.doc_free_bang = 0
         player.metadata.uncle_used = False
@@ -1222,6 +1227,7 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
         return self._get_player_by_index(idx)
 
     def on_player_damaged(self, player: Player, source: Optional[Player] = None) -> None:
+        """Handle player damage and determine if they are eliminated."""
         self._notify_damage_listeners(player, source)
         if player.health > 0:
             return
@@ -1256,6 +1262,7 @@ class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
             self.first_eliminated = player
 
     def on_player_healed(self, player: Player) -> None:
+        """Notify listeners that ``player`` has regained health."""
         for cb in self.player_healed_listeners:
             cb(player)
 
