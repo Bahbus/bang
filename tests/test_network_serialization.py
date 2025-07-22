@@ -16,12 +16,14 @@ def test_serialize_players_json_roundtrip():
             "name": "Alice",
             "health": players[0].health,
             "role": "Outlaw",
+            "character": "",
             "equipment": [],
         },
         {
             "name": "Bob",
             "health": players[1].health,
             "role": "Sheriff",
+            "character": "",
             "equipment": [],
         },
     ]
@@ -36,6 +38,7 @@ def test_serialize_players_with_health_changes():
             "name": "Bill",
             "health": 3,
             "role": "Sheriff",
+            "character": "",
             "equipment": [],
         }
     ]
@@ -49,6 +52,7 @@ def test_serialize_players_without_role():
             "name": "Alice",
             "health": player.health,
             "role": "",
+            "character": "",
             "equipment": [],
         }
     ]

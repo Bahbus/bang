@@ -35,8 +35,20 @@ def test_broadcast_state_updates_ui(qt_app):
     ui._build_game_view()
     state = {
         "players": [
-            {"name": "Alice", "health": 4, "role": "Sheriff", "equipment": []},
-            {"name": "Bob", "health": 3, "role": "Outlaw", "equipment": []},
+            {
+                "name": "Alice",
+                "health": 4,
+                "role": "Sheriff",
+                "equipment": [],
+                "character": "",
+            },
+            {
+                "name": "Bob",
+                "health": 3,
+                "role": "Outlaw",
+                "equipment": [],
+                "character": "",
+            },
         ],
         "hand": ["Bang", "Missed"],
         "character": "Test",

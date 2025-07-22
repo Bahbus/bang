@@ -5,7 +5,7 @@ from importlib import resources
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .card_images import get_loader
+from .card_images import get_loader, load_character_image, load_sound
 
 ASSETS_DIR = resources.files("bang_py") / "assets"
 BULLET_PATH = ASSETS_DIR / "bullet.png"
@@ -31,7 +31,6 @@ class GameBoard(QtWidgets.QGraphicsView):
         self.card_width = 60
         self.card_height = 90
         self.card_pixmap = self._create_card_pixmap()
-        self.character_pixmap = self._create_card_pixmap(back_type="character")
         with resources.as_file(TABLE_PATH) as table_path:
             self.table_pixmap = QtGui.QPixmap(str(table_path)).scaled(
                 self.max_width,
@@ -112,7 +111,10 @@ class GameBoard(QtWidgets.QGraphicsView):
                 ang = math.radians((i - idx) * angle_step + 90)
                 x = center_x + radius * math.cos(ang) - self.card_width / 2
                 y = center_y + radius * math.sin(ang) - self.card_height / 2
-                self._scene.addPixmap(self.character_pixmap).setPos(x, y)
+                portrait = load_character_image(
+                    pl.get("character", ""), self.card_width, self.card_height
+                )
+                self._scene.addPixmap(portrait).setPos(x, y)
 
                 bullet_y = y + self.card_height
                 spacing = 2
@@ -191,6 +193,8 @@ class GameView(QtWidgets.QWidget):
         hbox.addWidget(self.player_list)
         vbox.addLayout(hbox, 1)
 
+        self.update_sound = load_sound("beep")
+
         self.hand_widget = QtWidgets.QWidget()
         self.hand_layout = QtWidgets.QHBoxLayout(self.hand_widget)
         vbox.addWidget(self.hand_widget)
@@ -204,12 +208,17 @@ class GameView(QtWidgets.QWidget):
         vbox.addWidget(btn_end)
 
     def update_players(self, players: list[dict], self_name: str | None = None) -> None:
+        if self.update_sound:
+            self.update_sound.play()
         self.player_list.clear()
         for p in players:
             item = QtWidgets.QListWidgetItem()
             widget = QtWidgets.QWidget()
             layout = QtWidgets.QHBoxLayout(widget)
             layout.setContentsMargins(2, 2, 2, 2)
+            icon_label = QtWidgets.QLabel()
+            icon_label.setPixmap(load_character_image(p.get("character", ""), 30, 45))
+            layout.addWidget(icon_label)
             name_label = QtWidgets.QLabel(p["name"])
             layout.addWidget(name_label)
             bullet_layout = QtWidgets.QHBoxLayout()

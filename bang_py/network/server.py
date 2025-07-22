@@ -47,6 +47,7 @@ def _serialize_players(players: Sequence[Player]) -> List[dict]:
             "name": p.name,
             "health": p.health,
             "role": "" if p.role is None else p.role.card_name,
+            "character": getattr(p.character, "name", ""),
             "equipment": [eq.card_name for eq in p.equipment.values()],
         }
         for p in players

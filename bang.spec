@@ -3,9 +3,17 @@
 from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
 from glob import glob
 
+asset_patterns = (
+    'bang_py/assets/*.png',
+    'bang_py/assets/*.svg',
+    'bang_py/assets/characters/*.png',
+    'bang_py/assets/audio/*.wav',
+    'bang_py/assets/*.md',
+)
+
 asset_paths = [
     (path, 'bang_py/assets')
-    for pattern in ('bang_py/assets/*.png', 'bang_py/assets/*.svg')
+    for pattern in asset_patterns
     for path in glob(pattern)
 ]
 
