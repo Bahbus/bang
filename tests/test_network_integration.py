@@ -4,8 +4,9 @@ import ssl
 
 import pytest
 from bang_py.network.server import BangServer
-import trustme
 from bang_py.cards.bang import BangCard
+
+trustme = pytest.importorskip("trustme")
 
 websockets = pytest.importorskip("websockets")
 
