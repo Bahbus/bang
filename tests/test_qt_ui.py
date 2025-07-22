@@ -55,8 +55,9 @@ def test_broadcast_state_updates_ui(qt_app):
         "event": "",
     }
     ui._append_message(json.dumps(state))
-    assert ui.player_list.count() == 2
-    assert ui.board.players == state["players"]
+    root = ui.game_root
+    assert root is not None
+    assert root.property("players") == state["players"]
     assert ui.hand_layout.count() == 2
     ui.close()
 
