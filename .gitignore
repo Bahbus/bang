@@ -28,3 +28,10 @@ dist/
 # logs
 *.log
 
+
+# Generated assets
+bang_py/assets/characters/*.png
+bang_py/assets/characters/*.jpg
+bang_py/assets/characters/*.jpeg
+bang_py/assets/audio/*.wav
+bang_py/assets/audio/*.ogg
