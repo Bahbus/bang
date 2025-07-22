@@ -10,6 +10,9 @@ from .deck import Deck
 from .deck_factory import create_standard_deck
 from .cards.card import BaseCard
 from .helpers import handle_out_of_turn_discard
+from .event_logic import EventLogicMixin
+from .card_handlers import CardHandlersMixin
+from .general_store import GeneralStoreMixin
 from .characters.jesse_jones import JesseJones
 from .characters.jose_delgado import JoseDelgado
 from .characters.kit_carlson import KitCarlson
@@ -18,34 +21,10 @@ from .characters.pedro_ramirez import PedroRamirez
 from .characters.vera_custer import VeraCuster
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
-from .cards.stagecoach import StagecoachCard
-from .cards.wells_fargo import WellsFargoCard
-from .cards.cat_balou import CatBalouCard
 from .cards.panic import PanicCard
 from .cards.jail import JailCard
-from .cards.indians import IndiansCard
-from .cards.duel import DuelCard
 from .cards.general_store import GeneralStoreCard
-from .cards.saloon import SaloonCard
-from .cards.gatling import GatlingCard
-from .cards.howitzer import HowitzerCard
-from .cards.punch import PunchCard
-from .cards.knife import KnifeCard
-from .cards.brawl import BrawlCard
-from .cards.springfield import SpringfieldCard
-from .cards.whisky import WhiskyCard
-from .cards.beer import BeerCard
-from .cards.high_noon_card import HighNoonCard
-from .cards.pony_express import PonyExpressCard
-from .cards.tequila import TequilaCard
-from .cards.rag_time import RagTimeCard
-from .cards.bible import BibleCard
-from .cards.canteen import CanteenCard
-from .cards.conestoga import ConestogaCard
-from .cards.can_can import CanCanCard
-from .cards.buffalo_rifle import BuffaloRifleCard
-from .cards.pepperbox import PepperboxCard
-from .cards.derringer import DerringerCard
+
 
 from .player import Player
 from .cards.roles import (
@@ -56,15 +35,9 @@ from .cards.roles import (
     SheriffRoleCard,
 )
 from .characters.base import BaseCharacter
-from .event_decks import (
-    EventCard,
-    create_high_noon_deck,
-    create_fistful_deck,
-)
-
-
+from .event_decks import EventCard
 @dataclass
-class GameManager:
+class GameManager(EventLogicMixin, CardHandlersMixin, GeneralStoreMixin):
     """Manage players, deck and discard pile.
 
     Controls turn order and triggers game events.
@@ -119,13 +92,6 @@ class GameManager:
         """Return True if the player opts to switch characters."""
         return True
 
-    def draw_event_card(self) -> None:
-        """Draw and apply the next event card."""
-        if not self.event_deck:
-            return
-        self.current_event = self.event_deck.pop(0)
-        self.event_flags.clear()
-        self.current_event.apply(self)
 
     def __post_init__(self) -> None:
         """Initialize decks and register card handlers."""
@@ -143,36 +109,6 @@ class GameManager:
             self.deck = create_standard_deck(self.expansions)
         self.event_flags = {}
 
-    def _initialize_event_deck(self) -> None:
-        """Build and shuffle the event deck based on active expansions."""
-        if "high_noon" in self.expansions:
-            self.event_deck = self._prepare_high_noon_deck()
-        elif "fistful_of_cards" in self.expansions:
-            self.event_deck = self._prepare_fistful_deck()
-        elif self.event_deck:
-            random.shuffle(self.event_deck)
-
-    def _prepare_high_noon_deck(self) -> List[EventCard] | None:
-        """Create and shuffle the High Noon event deck."""
-        deck = create_high_noon_deck()
-        if deck:
-            final = next((c for c in deck if c.name == "High Noon"), None)
-            if final:
-                deck.remove(final)
-                random.shuffle(deck)
-                deck.append(final)
-        return deck
-
-    def _prepare_fistful_deck(self) -> List[EventCard] | None:
-        """Create and shuffle the Fistful of Cards event deck."""
-        deck = create_fistful_deck()
-        if deck:
-            final = next((c for c in deck if c.name == "A Fistful of Cards"), None)
-            if final:
-                deck.remove(final)
-                random.shuffle(deck)
-                deck.append(final)
-        return deck
 
     def add_player(self, player: Player) -> None:
         """Add a player to the game and record the game reference."""
@@ -930,112 +866,6 @@ class GameManager:
             return True
         return False
 
-    def _play_bang_card(self, player: Player, card: BangCard, target: Optional[Player]) -> None:
-        ignore_eq = player.metadata.ignore_others_equipment
-        extra_bang = self._consume_sniper_extra(player, card)
-        need_two = player.metadata.double_miss or extra_bang
-        if target and need_two:
-            if not self._attempt_double_dodge(target):
-                card.play(target, self.deck, ignore_equipment=ignore_eq)
-        else:
-            if not (target and self._auto_miss(target)):
-                card.play(target, self.deck, ignore_equipment=ignore_eq)
-
-    def _consume_sniper_extra(self, player: Player, card: BangCard) -> bool:
-        """Handle Sniper event extra Bang! consumption."""
-        if self.event_flags.get("sniper") and player.metadata.use_sniper:
-            extra = next(
-                (c for c in player.hand if isinstance(c, BangCard) and c is not card),
-                None,
-            )
-            player.metadata.use_sniper = False
-            if extra:
-                player.hand.remove(extra)
-                self._pass_left_or_discard(player, extra)
-                return True
-        return False
-
-    def _attempt_double_dodge(self, target: Player) -> bool:
-        """Let ``target`` discard two Missed! cards to avoid damage."""
-        misses = [c for c in target.hand if isinstance(c, MissedCard)]
-        if len(misses) >= 2:
-            for _ in range(2):
-                mcard = misses.pop()
-                target.hand.remove(mcard)
-                self.discard_pile.append(mcard)
-                handle_out_of_turn_discard(self, target, mcard)
-            target.metadata.dodged = True
-            return True
-        return False
-
-    def _handler_self_game(self, player: Player, card: BaseCard, target: Optional[Player]) -> None:
-        """Play the card on the acting player with game context."""
-        card.play(player, game=self)
-
-    def _handler_target_game(
-        self, player: Player, card: BaseCard, target: Optional[Player]
-    ) -> None:
-        """Play the card on ``target`` if provided using the game context."""
-        if target:
-            card.play(target, game=self)
-
-    def _handler_target_player_game(
-        self, player: Player, card: BaseCard, target: Optional[Player]
-    ) -> None:
-        """Play the card on ``target`` with ``player`` and game context."""
-        if target:
-            card.play(target, player, game=self)
-
-    def _handler_self_player_game(
-        self, player: Player, card: BaseCard, target: Optional[Player]
-    ) -> None:
-        """Play the card on the acting player with themselves as the target."""
-        card.play(player, player, game=self)
-
-    def _handler_target_or_self_player_game(
-        self, player: Player, card: BaseCard, target: Optional[Player]
-    ) -> None:
-        """Play on ``target`` if provided otherwise on ``player`` with game context."""
-        card.play(target or player, player, game=self)
-
-    def _handler_target_player(
-        self, player: Player, card: BaseCard, target: Optional[Player]
-    ) -> None:
-        """Play on ``target`` with ``player`` as context but without game."""
-        if target:
-            card.play(target, player)
-
-    def _register_card_handlers(self) -> None:
-        self._card_handlers = {
-            BangCard: self._play_bang_card,
-            StagecoachCard: self._handler_self_game,
-            WellsFargoCard: self._handler_self_game,
-            CatBalouCard: self._handler_target_game,
-            PanicCard: self._handler_target_player_game,
-            IndiansCard: self._handler_self_player_game,
-            DuelCard: self._handler_target_player_game,
-            GeneralStoreCard: self._handler_self_player_game,
-            SaloonCard: self._handler_self_player_game,
-            GatlingCard: self._handler_self_player_game,
-            HowitzerCard: self._handler_self_player_game,
-            WhiskyCard: self._handler_target_or_self_player_game,
-            BeerCard: self._handler_target_or_self_player_game,
-            PonyExpressCard: self._handler_self_player_game,
-            TequilaCard: self._handler_target_or_self_player_game,
-            HighNoonCard: self._handler_self_player_game,
-            PunchCard: self._handler_target_player,
-            KnifeCard: self._handler_target_player_game,
-            BrawlCard: self._handler_self_player_game,
-            SpringfieldCard: self._handler_target_player_game,
-            RagTimeCard: self._handler_target_player_game,
-            BibleCard: self._handler_target_or_self_player_game,
-            CanteenCard: self._handler_target_or_self_player_game,
-            ConestogaCard: self._handler_target_player_game,
-            CanCanCard: self._handler_target_game,
-            BuffaloRifleCard: self._handler_target_player_game,
-            PepperboxCard: self._handler_target_player_game,
-            DerringerCard: self._handler_target_player_game,
-        }
 
     def play_card(self, player: Player, card: BaseCard, target: Optional[Player] = None) -> None:
         if not self._pre_card_checks(player, card, target):
