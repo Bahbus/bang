@@ -7,11 +7,13 @@ import importlib.util
 
 import pytest
 
+pytest.importorskip(
+    "PySide6", reason="PySide6 not installed; skipping executable test"
+)
+
 pytestmark = pytest.mark.skipif(
-    os.getenv("CI") == "true"
-    or shutil.which("pyinstaller") is None
-    or importlib.util.find_spec("PySide6") is None,
-    reason="Skipping executable test on CI or when dependencies are missing",
+    os.getenv("CI") == "true" or shutil.which("pyinstaller") is None,
+    reason="Skipping executable test on CI or when PyInstaller is missing",
 )
 
 def test_bang_executable_exits(tmp_path):

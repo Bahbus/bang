@@ -6,6 +6,8 @@ import pytest
 
 @pytest.fixture(scope="session", autouse=True)
 def generate_assets():
+    if importlib.util.find_spec("PySide6") is None:
+        return
     root = pathlib.Path(__file__).resolve().parents[1]
     script_path = root / "scripts" / "generate_assets.py"
     spec = importlib.util.spec_from_file_location("generate_assets", script_path)
