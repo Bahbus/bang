@@ -131,6 +131,20 @@ A GitHub Actions workflow builds this executable for each tagged release and
 automatically attaches `bang.exe` to the release as a downloadable asset. The workflow
 needs the `contents: write` permission (or a PAT) to upload the file.
 
+## Running Tests
+
+Install the Qt bindings before running the test suite. The CI workflow installs
+`PySide6>=6.9.1` first:
+
+```bash
+pip install "PySide6>=6.9.1"
+pip install -r requirements.txt
+pip install -e .
+pytest
+```
+
+Tests that rely on the GUI use `pytest.importorskip("PySide6")` so they are skipped
+automatically when the dependency is missing.
 
 ## Characters
 
