@@ -10,12 +10,16 @@ try:  # Optional websockets import for test environments
 except ModuleNotFoundError:  # pragma: no cover - handled in main()
     websockets = None  # type: ignore[assignment]
 
+from .server import parse_join_token
+
 
 async def main(
     uri: str = "ws://localhost:8765",
     room_code: str = "",
     name: str | None = None,
     cafile: str | None = None,
+    token: str | None = None,
+    token_key: str | None = None,
 ) -> None:
     """Connect to a ``bang-server`` instance and handle basic interaction.
 
@@ -31,6 +35,11 @@ async def main(
     cafile:
         Optional certificate authority file used to verify the server when
         connecting via ``wss://``.
+    token:
+        Optional encoded join token. When provided ``uri`` and ``room_code`` are
+        derived from the token.
+    token_key:
+        Key used to decrypt ``token``. If omitted, the default key is used.
 
     Workflow
     --------
@@ -41,6 +50,12 @@ async def main(
     if websockets is None:
         logging.error("websockets package is required for networking")
         return
+
+    if token:
+        host, port, room_code = parse_join_token(
+            token, token_key.encode() if token_key else None
+        )
+        uri = f"ws://{host}:{port}"
 
     ssl_ctx = None
     if uri.startswith("wss://") or cafile:
@@ -86,9 +101,20 @@ def run() -> None:
     parser.add_argument("--room", default="")
     parser.add_argument("--name", default=None)
     parser.add_argument("--cafile", default=None)
+    parser.add_argument("--token", default=None)
+    parser.add_argument("--token-key", default=None)
     args = parser.parse_args()
 
-    asyncio.run(main(args.uri, args.room, args.name, args.cafile))
+    asyncio.run(
+        main(
+            args.uri,
+            args.room,
+            args.name,
+            args.cafile,
+            args.token,
+            args.token_key,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -12,7 +12,9 @@ needed to start or join a game room.
 class HostJoinDialog(QtWidgets.QDialog):
     """Dialog for hosting or joining a game."""
 
-    def __init__(self, mode: str = "host", parent: QtWidgets.QWidget | None = None) -> None:
+    def __init__(
+        self, mode: str = "host", parent: QtWidgets.QWidget | None = None
+    ) -> None:
         super().__init__(parent)
         self.mode = mode
         self.setWindowTitle("Host Game" if mode == "host" else "Join Game")
@@ -33,7 +35,9 @@ class HostJoinDialog(QtWidgets.QDialog):
             self.addr_edit = QtWidgets.QLineEdit("localhost")
             self.port_edit = QtWidgets.QLineEdit("8765")
             self.code_edit = QtWidgets.QLineEdit()
+            self.token_edit = QtWidgets.QLineEdit()
             self.cafile_edit = QtWidgets.QLineEdit()
+            layout.addRow("Token:", self.token_edit)
             layout.addRow("Host Address:", self.addr_edit)
             layout.addRow("Port:", self.port_edit)
             layout.addRow("Room Code:", self.code_edit)

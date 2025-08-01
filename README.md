@@ -30,6 +30,12 @@ bang-client wss://localhost:8765 --cafile ca.pem
 
 The Qt interface exposes these paths in the host and join dialogs.
 
+### Join tokens
+
+Running ``bang-server --show-token`` prints an encrypted string containing the
+host, port and room code. Start the Qt UI or ``bang-client`` with ``--token`` to
+join automatically.
+
 ## Connecting a client
 
 ```bash
