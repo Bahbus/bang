@@ -5,8 +5,10 @@ import json
 import secrets
 import ssl
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Sequence, Tuple
 import logging
+
+from cryptography.fernet import Fernet
 
 try:  # Optional websockets import for test environments
     from websockets.asyncio.server import serve, ServerConnection
@@ -31,6 +33,28 @@ logger = logging.getLogger(__name__)
 
 # Maximum allowed size for incoming websocket messages
 MAX_MESSAGE_SIZE = 4096
+
+# Default key for join tokens used when no key is provided.
+DEFAULT_TOKEN_KEY = b"xPv7Sx0hWCLo5A9HhF_zvg87gdRSB8OYBjWM7lV-H2I="
+
+
+def generate_join_token(
+    host: str, port: int, code: str, key: bytes | None = None
+) -> str:
+    """Return an encrypted token identifying a game room."""
+
+    key = key or DEFAULT_TOKEN_KEY
+    data = json.dumps({"host": host, "port": port, "code": code}).encode()
+    return Fernet(key).encrypt(data).decode()
+
+
+def parse_join_token(token: str, key: bytes | None = None) -> Tuple[str, int, str]:
+    """Decode ``token`` and return ``(host, port, code)``."""
+
+    key = key or DEFAULT_TOKEN_KEY
+    data = Fernet(key).decrypt(token.encode())
+    obj = json.loads(data.decode())
+    return obj["host"], int(obj["port"]), obj["code"]
 
 
 @dataclass
@@ -93,14 +117,10 @@ class BangServer:
             try:
                 await conn.websocket.send(payload)
             except asyncio.CancelledError as exc:  # pragma: no cover - network
-                logger.warning(
-                    "Send to %s cancelled", conn.player.name, exc_info=exc
-                )
+                logger.warning("Send to %s cancelled", conn.player.name, exc_info=exc)
                 raise
             except WebSocketException as exc:  # pragma: no cover - network
-                logger.exception(
-                    "Send to %s failed", conn.player.name, exc_info=exc
-                )
+                logger.exception("Send to %s failed", conn.player.name, exc_info=exc)
 
         task = asyncio.create_task(_send())
         conn.tasks.add(task)
@@ -293,10 +313,14 @@ class BangServer:
                 nxt = self.game.general_store_order[self.game.general_store_index]
                 conn = self._find_connection(nxt)
                 if conn:
-                    payload = json.dumps({
-                        "prompt": "general_store",
-                        "cards": [c.card_name for c in self.game.general_store_cards],
-                    })
+                    payload = json.dumps(
+                        {
+                            "prompt": "general_store",
+                            "cards": [
+                                c.card_name for c in self.game.general_store_cards
+                            ],
+                        }
+                    )
                     self._create_send_task(conn, payload)
 
     async def _handle_use_ability(
@@ -316,7 +340,9 @@ class BangServer:
         self.game.sid_ketchum_ability(player, idxs)
         return False
 
-    async def _ability_chuck_wengam(self, player: Player, _data: Dict[str, Any]) -> bool:
+    async def _ability_chuck_wengam(
+        self, player: Player, _data: Dict[str, Any]
+    ) -> bool:
         self.game.chuck_wengam_ability(player)
         return False
 
@@ -353,7 +379,9 @@ class BangServer:
             self.game.draw_phase(player, kit_back=discard)
         return False
 
-    async def _ability_pedro_ramirez(self, player: Player, data: Dict[str, Any]) -> bool:
+    async def _ability_pedro_ramirez(
+        self, player: Player, data: Dict[str, Any]
+    ) -> bool:
         use_discard = bool(data.get("use_discard", True))
         self.game.draw_phase(player, pedro_use_discard=use_discard)
         return False
@@ -403,6 +431,7 @@ class BangServer:
 
     async def broadcast_state(self, message: str | None = None) -> None:
         """Send updated game state to all connected clients."""
+
         async def send_payload(
             websocket: ServerConnection, conn: Connection, payload: dict
         ) -> None:
@@ -545,7 +574,9 @@ class BangServer:
         for i, p in enumerate(self.game.players):
             if p is player or not p.equipment:
                 continue
-            targets.append({"index": i, "cards": [c.card_name for c in p.equipment.values()]})
+            targets.append(
+                {"index": i, "cards": [c.card_name for c in p.equipment.values()]}
+            )
         if targets:
             payload = json.dumps({"prompt": "pat_brennan", "targets": targets})
             self._create_send_task(conn, payload)
@@ -586,9 +617,7 @@ class BangServer:
     async def start(self) -> None:
         """Start the websocket server and run until cancelled."""
         if serve is None:
-            raise RuntimeError(
-                "websockets package is required to run the server"
-            )
+            raise RuntimeError("websockets package is required to run the server")
         async with serve(
             self.handler,
             self.host,
@@ -613,6 +642,10 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--certfile", help="Path to SSL certificate", default=None)
     parser.add_argument("--keyfile", help="Path to SSL key", default=None)
+    parser.add_argument("--token-key", help="Key for join tokens", default=None)
+    parser.add_argument(
+        "--show-token", action="store_true", help="Display join token and exit"
+    )
     args = parser.parse_args()
 
     server = BangServer(
@@ -621,6 +654,12 @@ def main() -> None:
         certfile=args.certfile,
         keyfile=args.keyfile,
     )
+
+    if args.show_token:
+        key = args.token_key.encode() if args.token_key else None
+        print(generate_join_token(args.host, args.port, server.room_code, key))
+        return
+
     asyncio.run(server.start())
 
 

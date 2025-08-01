@@ -7,6 +7,7 @@ from PySide6 import QtCore, QtGui, QtWidgets, QtQuickWidgets
 
 if __package__ in {None, ""}:
     import sys
+
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     __package__ = "bang_py"
 
@@ -17,6 +18,7 @@ from .ui_components import (
     ClientThread,
 )
 from .theme import get_stylesheet, get_current_theme
+from .network.server import parse_join_token
 
 
 class BangUI(QtWidgets.QMainWindow):
@@ -50,9 +52,7 @@ class BangUI(QtWidgets.QMainWindow):
     def _build_start_menu(self) -> None:
         qml_dir = Path(__file__).resolve().parent / "qml"
         self.start_menu = QtQuickWidgets.QQuickWidget()
-        self.start_menu.setResizeMode(
-            QtQuickWidgets.QQuickWidget.SizeRootObjectToView
-        )
+        self.start_menu.setResizeMode(QtQuickWidgets.QQuickWidget.SizeRootObjectToView)
         self.start_menu.setSource(
             QtCore.QUrl.fromLocalFile(str(qml_dir / "MainMenu.qml"))
         )
@@ -83,13 +83,17 @@ class BangUI(QtWidgets.QMainWindow):
     def _join_menu(self) -> None:
         dialog = HostJoinDialog("join", self)
         if dialog.exec() == QtWidgets.QDialog.Accepted:
-            addr = dialog.addr_edit.text().strip()
-            code = dialog.code_edit.text().strip()
-            try:
-                port = int(dialog.port_edit.text())
-            except ValueError:
-                QtWidgets.QMessageBox.critical(self, "Error", "Invalid port")
-                return
+            token = dialog.token_edit.text().strip()
+            if token:
+                addr, port, code = parse_join_token(token)
+            else:
+                addr = dialog.addr_edit.text().strip()
+                code = dialog.code_edit.text().strip()
+                try:
+                    port = int(dialog.port_edit.text())
+                except ValueError:
+                    QtWidgets.QMessageBox.critical(self, "Error", "Invalid port")
+                    return
             cafile = dialog.cafile_edit.text().strip() or None
             self._start_join(addr, port, code, cafile)
 
@@ -137,8 +141,7 @@ class BangUI(QtWidgets.QMainWindow):
     ) -> None:
         name = self._get_player_name()
         if not name:
-            QtWidgets.QMessageBox.critical(self, "Error",
-                                           "Please enter your name")
+            QtWidgets.QMessageBox.critical(self, "Error", "Please enter your name")
             return
         room_code = secrets.token_hex(3)
         self.server_thread = ServerThread(
@@ -161,8 +164,7 @@ class BangUI(QtWidgets.QMainWindow):
     ) -> None:
         name = self._get_player_name()
         if not name:
-            QtWidgets.QMessageBox.critical(self, "Error",
-                                           "Please enter your name")
+            QtWidgets.QMessageBox.critical(self, "Error", "Please enter your name")
             return
         scheme = "wss" if cafile else "ws"
         uri = f"{scheme}://{addr}:{port}"
