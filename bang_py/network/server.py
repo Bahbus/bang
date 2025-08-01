@@ -43,7 +43,9 @@ def generate_join_token(
 ) -> str:
     """Return an encrypted token identifying a game room."""
 
-    key = key or DEFAULT_TOKEN_KEY
+    if key is None:
+        logger.warning("Generating join token with default key")
+        key = DEFAULT_TOKEN_KEY
     data = json.dumps({"host": host, "port": port, "code": code}).encode()
     return Fernet(key).encrypt(data).decode()
 
@@ -51,7 +53,9 @@ def generate_join_token(
 def parse_join_token(token: str, key: bytes | None = None) -> Tuple[str, int, str]:
     """Decode ``token`` and return ``(host, port, code)``."""
 
-    key = key or DEFAULT_TOKEN_KEY
+    if key is None:
+        logger.warning("Parsing join token with default key")
+        key = DEFAULT_TOKEN_KEY
     data = Fernet(key).decrypt(token.encode())
     obj = json.loads(data.decode())
     return obj["host"], int(obj["port"]), obj["code"]
@@ -90,6 +94,7 @@ class BangServer:
         max_players: int = 7,
         certfile: str | None = None,
         keyfile: str | None = None,
+        token_key: bytes | str | None = None,
     ) -> None:
         self.host = host
         self.port = port
@@ -97,6 +102,11 @@ class BangServer:
         # secure RNG to avoid predictable codes.
         self.room_code = room_code or secrets.token_hex(3)
         self.game = GameManager(expansions=expansions or [])
+        if token_key is None:
+            logger.warning("Using default join token key")
+            self.token_key = DEFAULT_TOKEN_KEY
+        else:
+            self.token_key = token_key if isinstance(token_key, bytes) else token_key.encode()
         self.connections: Dict[ServerConnection, Connection] = {}
         self.max_players = max_players
         self.certfile = certfile
@@ -109,6 +119,18 @@ class BangServer:
         self.game.player_healed_listeners.append(self._on_player_healed)
         self.game.game_over_listeners.append(self._on_game_over)
         self.game.turn_started_listeners.append(self._on_turn_started)
+
+    def generate_join_token(self) -> str:
+        """Return an encoded join token for this server."""
+
+        return generate_join_token(
+            self.host, self.port, self.room_code, self.token_key
+        )
+
+    def parse_join_token(self, token: str) -> Tuple[str, int, str]:
+        """Decode ``token`` using the server's join token key."""
+
+        return parse_join_token(token, self.token_key)
 
     def _create_send_task(self, conn: Connection, payload: str) -> None:
         """Create a task to send ``payload`` and track its lifecycle."""
@@ -653,11 +675,11 @@ def main() -> None:
         port=args.port,
         certfile=args.certfile,
         keyfile=args.keyfile,
+        token_key=args.token_key,
     )
 
     if args.show_token:
-        key = args.token_key.encode() if args.token_key else None
-        print(generate_join_token(args.host, args.port, server.room_code, key))
+        print(server.generate_join_token())
         return
 
     asyncio.run(server.start())
