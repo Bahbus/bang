@@ -123,3 +123,41 @@ def test_dark_theme_from_env(qt_app, monkeypatch):
     ui = BangUI()
     assert "#2b2b2b" in ui.styleSheet()
     ui.close()
+
+
+def test_join_menu_invalid_token_shows_error(qt_app, monkeypatch):
+    from bang_py import ui as ui_module
+
+    error_msg = {}
+
+    def fake_critical(parent, title, text):
+        error_msg["text"] = text
+
+    monkeypatch.setattr(QtWidgets.QMessageBox, "critical", fake_critical)
+
+    class DummyDialog:
+        def __init__(self, mode="join", parent=None):
+            self.token_edit = QtWidgets.QLineEdit()
+            self.token_edit.setText("invalid")
+            self.addr_edit = QtWidgets.QLineEdit("localhost")
+            self.port_edit = QtWidgets.QLineEdit("8765")
+            self.code_edit = QtWidgets.QLineEdit()
+            self.cafile_edit = QtWidgets.QLineEdit()
+
+        def exec(self):
+            return QtWidgets.QDialog.Accepted
+
+    monkeypatch.setattr(ui_module, "HostJoinDialog", DummyDialog)
+
+    called = {}
+
+    def fake_start_join(self, addr, port, code, cafile=None):
+        called["called"] = True
+
+    monkeypatch.setattr(ui_module.BangUI, "_start_join", fake_start_join)
+
+    ui = ui_module.BangUI()
+    ui._join_menu()
+    assert error_msg["text"] == "Invalid token"
+    assert "called" not in called
+    ui.close()

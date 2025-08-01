@@ -19,6 +19,7 @@ from .ui_components import (
 )
 from .theme import get_stylesheet, get_current_theme
 from .network.server import parse_join_token
+from cryptography.fernet import InvalidToken
 
 
 class BangUI(QtWidgets.QMainWindow):
@@ -85,7 +86,11 @@ class BangUI(QtWidgets.QMainWindow):
         if dialog.exec() == QtWidgets.QDialog.Accepted:
             token = dialog.token_edit.text().strip()
             if token:
-                addr, port, code = parse_join_token(token)
+                try:
+                    addr, port, code = parse_join_token(token)
+                except InvalidToken:
+                    QtWidgets.QMessageBox.critical(self, "Error", "Invalid token")
+                    return
             else:
                 addr = dialog.addr_edit.text().strip()
                 code = dialog.code_edit.text().strip()
