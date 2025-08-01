@@ -13,8 +13,8 @@ from PySide6 import QtCore
 
 try:  # Optional websockets import for test environments
     import websockets
-    from websockets import WebSocketException
-    WebSocketClientProtocol = websockets.WebSocketClientProtocol
+    from websockets.exceptions import WebSocketException
+    from websockets.legacy.client import WebSocketClientProtocol
 except ModuleNotFoundError:  # pragma: no cover - handled in _run()
     websockets = None  # type: ignore[assignment]
     WebSocketException = Exception  # type: ignore[assignment]
