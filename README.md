@@ -13,6 +13,8 @@ bang-server
 ```
 
 This starts a websocket server on `ws://localhost:8765`.
+Provide a custom join token key with ``--token-key`` or by passing
+``token_key`` when creating ``BangServer`` in code.
 
 ### Secure connections
 
@@ -34,7 +36,15 @@ The Qt interface exposes these paths in the host and join dialogs.
 
 Running ``bang-server --show-token`` prints an encrypted string containing the
 host, port and room code. Start the Qt UI or ``bang-client`` with ``--token`` to
-join automatically.
+join automatically. Pass ``--token-key`` with a custom base64 key when starting
+the server and client to override the built-in default:
+
+```bash
+bang-server --token-key $(openssl rand -base64 32) --show-token
+```
+
+The same key must be supplied to ``bang-client`` or ``bang-ui`` via the
+``--token-key`` option so they can decrypt the token.
 
 ## Connecting a client
 
