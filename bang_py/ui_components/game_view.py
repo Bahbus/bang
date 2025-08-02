@@ -73,6 +73,7 @@ class GameView(QtWidgets.QWidget):
             self.root_obj.discardCard.connect(
                 lambda: self.action_signal.emit({"action": "discard"})
             )
+            self.root_obj.endTurn.connect(self.end_turn_signal.emit)
         vbox.addWidget(self.board_qml, 1)
 
         self.update_sound = load_sound("beep")
@@ -80,10 +81,6 @@ class GameView(QtWidgets.QWidget):
         self.hand_widget = QtWidgets.QWidget()
         self.hand_layout = QtWidgets.QHBoxLayout(self.hand_widget)
         vbox.addWidget(self.hand_widget)
-
-        btn_end = QtWidgets.QPushButton("End Turn")
-        btn_end.clicked.connect(self.end_turn_signal.emit)
-        vbox.addWidget(btn_end)
 
     def update_players(self, players: list[dict], self_name: str | None = None) -> None:
         if self.update_sound:

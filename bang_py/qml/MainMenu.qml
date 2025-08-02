@@ -1,6 +1,9 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 
+// Styled buttons reside in this directory
+import "./"
+
 Rectangle {
     id: root
     property string theme: "light"
@@ -33,16 +36,19 @@ Rectangle {
             }
         }
 
-        Button {
+        StyledButton {
             text: "Host Game"
+            theme: root.theme
             onClicked: root.hostGame()
         }
-        Button {
+        StyledButton {
             text: "Join Game"
+            theme: root.theme
             onClicked: root.joinGame()
         }
-        Button {
+        StyledButton {
             text: "Settings"
+            theme: root.theme
             onClicked: root.settings()
         }
     }

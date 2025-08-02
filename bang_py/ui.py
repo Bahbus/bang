@@ -49,6 +49,21 @@ class BangUI(QtWidgets.QMainWindow):
                 return name.strip()
         return ""
 
+    def _transition_to(self, widget: QtWidgets.QWidget) -> None:
+        """Fade in the given widget on the stacked layout."""
+        if self.stack.indexOf(widget) == -1:
+            self.stack.addWidget(widget)
+        self.stack.setCurrentWidget(widget)
+        effect = QtWidgets.QGraphicsOpacityEffect(widget)
+        widget.setGraphicsEffect(effect)
+        effect.setOpacity(0)
+        anim = QtCore.QPropertyAnimation(effect, b"opacity", self)
+        anim.setDuration(300)
+        anim.setStartValue(0.0)
+        anim.setEndValue(1.0)
+        anim.start(QtCore.QAbstractAnimation.DeleteWhenStopped)
+        self._current_anim = anim
+
     # Menu screens -----------------------------------------------------
     def _build_start_menu(self) -> None:
         qml_dir = Path(__file__).resolve().parent / "qml"
@@ -65,8 +80,7 @@ class BangUI(QtWidgets.QMainWindow):
             root.joinGame.connect(self._join_menu)
             root.settings.connect(self._settings_dialog)
         self.menu_root = root
-        self.stack.addWidget(self.start_menu)
-        self.stack.setCurrentWidget(self.start_menu)
+        self._transition_to(self.start_menu)
 
     def _host_menu(self) -> None:
         dialog = HostJoinDialog("host", self)
@@ -133,8 +147,7 @@ class BangUI(QtWidgets.QMainWindow):
         self.game_view.end_turn_signal.connect(self._end_turn)
         self.hand_layout = self.game_view.hand_layout
         self.game_root = self.game_view.root_obj
-        self.stack.addWidget(self.game_view)
-        self.stack.setCurrentWidget(self.game_view)
+        self._transition_to(self.game_view)
 
     # Networking -------------------------------------------------------
     def _start_host(
