@@ -62,58 +62,21 @@ def test_broadcast_state_updates_ui(qt_app):
     ui.close()
 
 
-def test_gameboard_uses_available_geometry(qt_app, monkeypatch):
-    from bang_py.ui_components.game_view import GameBoard
-    rect = QtCore.QRect(0, 0, 1234, 987)
+def test_qml_board_signals(qt_app):
+    from bang_py.ui_components.game_view import GameView
 
-    class DummyScreen:
-        def availableGeometry(self):
-            return rect
+    gv = GameView()
+    root = gv.root_obj
+    triggered = {}
 
-    monkeypatch.setattr(QtGui.QGuiApplication, "primaryScreen", lambda: DummyScreen())
-    board = GameBoard()
-    assert board.max_width == rect.width()
-    assert board.max_height == rect.height()
-    board.close()
+    def _draw():
+        triggered["draw"] = True
 
-
-def test_gameboard_bullets(qt_app):
-    from bang_py.ui_components.game_view import GameBoard
-
-    board = GameBoard()
-    assert not board.bullet_pixmap.isNull()
-
-    players = [
-        {"name": "Alice", "health": 3},
-        {"name": "Bob", "health": 2},
-    ]
-    board.update_players(players)
-
-    bullet_size = board.bullet_pixmap.size()
-    bullet_items = [
-        item
-        for item in board._scene.items()
-        if isinstance(item, QtWidgets.QGraphicsPixmapItem)
-        and item.pixmap().size() == bullet_size
-    ]
-    assert len(bullet_items) == sum(p["health"] for p in players)
-
-    tooltips = [
-        item.toolTip()
-        for item in board._scene.items()
-        if isinstance(item, QtWidgets.QGraphicsTextItem)
-    ]
-    assert "Health: 3" in tooltips
-    assert "Health: 2" in tooltips
-    board.close()
-
-
-def test_gameboard_table_pixmap(qt_app):
-    from bang_py.ui_components.game_view import GameBoard
-
-    board = GameBoard()
-    assert not board.table_pixmap.isNull()
-    board.close()
+    if root is not None:
+        root.drawCard.connect(_draw)
+        root.drawCard.emit()
+    assert "draw" in triggered
+    gv.close()
 
 
 def test_dark_theme_from_env(qt_app, monkeypatch):
