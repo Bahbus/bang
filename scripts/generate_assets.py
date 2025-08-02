@@ -110,15 +110,15 @@ def main() -> None:
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
     # Skip regeneration if all expected assets already exist
-    char_paths = [CHAR_DIR / f"{slugify(n)}.png" for n in character_names()]
-    char_paths.append(CHAR_DIR / "default.png")
+    char_paths = [CHAR_DIR / f"{slugify(n)}.webp" for n in character_names()]
+    char_paths.append(CHAR_DIR / "default.webp")
     audio_paths = [AUDIO_DIR / n for n in ("beep.wav", "boop.wav", "click.wav")]
     if all(p.exists() for p in [*char_paths, *audio_paths]):
         print("Assets already present, skipping generation")
         return
-    create_default_image(CHAR_DIR / "default.png")
+    create_default_image(CHAR_DIR / "default.webp")
     for name in character_names():
-        create_character_image(name, CHAR_DIR / f"{slugify(name)}.png")
+        create_character_image(name, CHAR_DIR / f"{slugify(name)}.webp")
     create_beep(AUDIO_DIR / "beep.wav", 440)
     create_beep(AUDIO_DIR / "boop.wav", 660)
     create_beep(AUDIO_DIR / "click.wav", 880)
