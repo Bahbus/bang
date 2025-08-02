@@ -41,12 +41,12 @@ _TEMPLATE_FILES = {
 def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.QPixmap:
     """Return a portrait pixmap for ``name`` or a default image."""
     base = name.lower().replace(" ", "_")
-    for ext in (".png", ".jpg", ".jpeg"):
+    for ext in (".webp", ".png", ".jpg", ".jpeg"):
         path = CHARACTER_DIR / f"{base}{ext}"
         if path.exists():
             break
     else:
-        path = CHARACTER_DIR / "default.png"
+        path = CHARACTER_DIR / "default.webp"
     if not path.exists():
         pix = QtGui.QPixmap(width, height)
         pix.fill(QtGui.QColor("gray"))
