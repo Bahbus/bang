@@ -70,6 +70,10 @@ Install the Qt requirements first (PySide6 6.9.1 or newer):
 pip install "PySide6>=6.9.1"
 ```
 
+On Linux, the UI and tests also require the system packages
+`libgl1`, `libxkbcommon0`, and `libegl1` (see
+[Linux Dependencies](#linux-dependencies)).
+
 Then run the interface with:
 
 ```bash
@@ -117,6 +121,17 @@ bundled assets are released into the public domain; see
 ``example-bang-menu-ui.jpg`` and ``example_bang_ui.jpg``, show the latest QML
 interface and remain in the repository root solely as reference screenshots.
 They are **not** used by the program.
+
+## Linux Dependencies
+
+Running the Qt UI or the test suite on Linux requires additional system
+libraries. Install them with:
+
+```bash
+sudo apt install libgl1 libxkbcommon0 libegl1
+```
+
+These packages provide the OpenGL and keyboard functionality that PySide6 needs.
 
 ## Building a Windows Executable
 
