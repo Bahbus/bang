@@ -1,6 +1,9 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 
+// Styled buttons reside in this directory
+import "./"
+
 Item {
     id: root
     property string theme: "light"
@@ -11,6 +14,7 @@ Item {
 
     signal drawCard()
     signal discardCard()
+    signal endTurn()
 
     width: 800 * scale
     height: 600 * scale
@@ -53,13 +57,13 @@ Item {
         color: theme === "dark" ? "#555" : "#bbb"
         border.color: "black"
         radius: 4 * scale
-        MouseArea { anchors.fill: parent; onClicked: root.drawCard() }
     }
-    Text {
+    StyledButton {
         text: "Draw"
+        theme: root.theme
         anchors.top: drawPile.bottom
         anchors.horizontalCenter: drawPile.horizontalCenter
-        color: theme === "dark" ? "white" : "black"
+        onClicked: root.drawCard()
     }
 
     Rectangle {
@@ -71,13 +75,13 @@ Item {
         color: theme === "dark" ? "#666" : "#ddd"
         border.color: "black"
         radius: 4 * scale
-        MouseArea { anchors.fill: parent; onClicked: root.discardCard() }
     }
-    Text {
+    StyledButton {
         text: "Discard"
+        theme: root.theme
         anchors.top: discardPile.bottom
         anchors.horizontalCenter: discardPile.horizontalCenter
-        color: theme === "dark" ? "white" : "black"
+        onClicked: root.discardCard()
     }
 
     Repeater {
@@ -148,5 +152,15 @@ Item {
             color: theme === "dark" ? "white" : "black"
             background: Rectangle { color: "transparent" }
         }
+    }
+
+    StyledButton {
+        text: "End Turn"
+        theme: root.theme
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: 10 * scale
+        anchors.bottomMargin: 10 * scale
+        onClicked: root.endTurn()
     }
 }
