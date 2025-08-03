@@ -6,30 +6,31 @@ Button {
     id: control
     property string theme: "light"
     property url iconSource: ""
-    implicitHeight: 40
-    implicitWidth: 120
+    property real scale: 1.0
+    implicitHeight: 40 * scale
+    implicitWidth: 120 * scale
     hoverEnabled: true
 
     contentItem: Row {
-        spacing: icon.visible ? 6 : 0
+        spacing: (icon.visible ? 6 : 0) * scale
         anchors.centerIn: parent
         Image {
             id: icon
             source: control.iconSource
             visible: source !== ""
-            width: 20
-            height: 20
+            width: 20 * scale
+            height: 20 * scale
             fillMode: Image.PreserveAspectFit
         }
         Text {
             text: control.text
             color: control.theme === "dark" ? "white" : "black"
-            font.pointSize: 14
+            font.pointSize: 14 * scale
         }
     }
 
     background: Rectangle {
-        radius: 4
+        radius: 4 * scale
         border.color: control.theme === "dark" ? "#888888" : "#8b4513"
         color: control.down
                ? (control.theme === "dark" ? "#333333" : "#e39b3a")
