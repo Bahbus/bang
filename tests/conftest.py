@@ -3,6 +3,8 @@ import importlib.util
 
 import pytest
 
+from bang_py.network.server import DEFAULT_TOKEN_KEY
+
 
 @pytest.fixture(scope="session", autouse=True)
 def generate_assets():
@@ -16,4 +18,9 @@ def generate_assets():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     module.main()
+
+
+@pytest.fixture(autouse=True)
+def _set_token_key(monkeypatch):
+    monkeypatch.setenv("BANG_TOKEN_KEY", DEFAULT_TOKEN_KEY.decode())
 

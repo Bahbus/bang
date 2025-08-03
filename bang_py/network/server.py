@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import os
 import secrets
 import ssl
 from dataclasses import dataclass, field
@@ -34,29 +35,46 @@ logger = logging.getLogger(__name__)
 # Maximum allowed size for incoming websocket messages
 MAX_MESSAGE_SIZE = 4096
 
-# Default key for join tokens used when no key is provided.
+# Default key for join tokens used in tests and examples.
 DEFAULT_TOKEN_KEY = b"xPv7Sx0hWCLo5A9HhF_zvg87gdRSB8OYBjWM7lV-H2I="
+
+ENV_TOKEN_KEY = "BANG_TOKEN_KEY"
+
+
+def _token_key_bytes(key: bytes | str | None) -> bytes:
+    """Return ``key`` as bytes or read it from ``BANG_TOKEN_KEY``.
+
+    Raises:
+        ValueError: if no key is provided and the environment variable is unset.
+    """
+
+    if key is None:
+        env = os.getenv(ENV_TOKEN_KEY)
+        if env is None:
+            raise ValueError(
+                "Token key not provided and BANG_TOKEN_KEY environment variable is missing"
+            )
+        key = env
+    return key if isinstance(key, bytes) else key.encode()
 
 
 def generate_join_token(
-    host: str, port: int, code: str, key: bytes | None = None
+    host: str, port: int, code: str, key: bytes | str | None = None
 ) -> str:
     """Return an encrypted token identifying a game room."""
 
-    if key is None:
-        logger.warning("Generating join token with default key")
-        key = DEFAULT_TOKEN_KEY
+    key_bytes = _token_key_bytes(key)
     data = json.dumps({"host": host, "port": port, "code": code}).encode()
-    return Fernet(key).encrypt(data).decode()
+    return Fernet(key_bytes).encrypt(data).decode()
 
 
-def parse_join_token(token: str, key: bytes | None = None) -> Tuple[str, int, str]:
+def parse_join_token(
+    token: str, key: bytes | str | None = None
+) -> Tuple[str, int, str]:
     """Decode ``token`` and return ``(host, port, code)``."""
 
-    if key is None:
-        logger.warning("Parsing join token with default key")
-        key = DEFAULT_TOKEN_KEY
-    data = Fernet(key).decrypt(token.encode())
+    key_bytes = _token_key_bytes(key)
+    data = Fernet(key_bytes).decrypt(token.encode())
     obj = json.loads(data.decode())
     return obj["host"], int(obj["port"]), obj["code"]
 
@@ -102,11 +120,7 @@ class BangServer:
         # secure RNG to avoid predictable codes.
         self.room_code = room_code or secrets.token_hex(3)
         self.game = GameManager(expansions=expansions or [])
-        if token_key is None:
-            logger.warning("Using default join token key")
-            self.token_key = DEFAULT_TOKEN_KEY
-        else:
-            self.token_key = token_key if isinstance(token_key, bytes) else token_key.encode()
+        self.token_key = _token_key_bytes(token_key)
         self.connections: Dict[ServerConnection, Connection] = {}
         self.max_players = max_players
         self.certfile = certfile
