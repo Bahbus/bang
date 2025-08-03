@@ -162,6 +162,13 @@ class BangServer:
 
         await websocket.send("Enter your name:")
         name = await websocket.recv()
+        if not isinstance(name, str):
+            await websocket.send("Invalid name")
+            return
+        name = name.strip()
+        if not name or len(name) > 20 or not name.isprintable():
+            await websocket.send("Invalid name")
+            return
         if len(self.game.players) >= self.max_players:
             await websocket.send("Game full")
             return

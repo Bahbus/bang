@@ -46,7 +46,9 @@ class BangUI(QtWidgets.QMainWindow):
         if self.menu_root is not None:
             name = self.menu_root.property("nameText")
             if isinstance(name, str):
-                return name.strip()
+                name = name.strip()
+                if name and len(name) <= 20 and name.isprintable():
+                    return name
         return ""
 
     def _transition_to(self, widget: QtWidgets.QWidget) -> None:
@@ -159,7 +161,9 @@ class BangUI(QtWidgets.QMainWindow):
     ) -> None:
         name = self._get_player_name()
         if not name:
-            QtWidgets.QMessageBox.critical(self, "Error", "Please enter your name")
+            QtWidgets.QMessageBox.critical(
+                self, "Error", "Please enter a valid name"
+            )
             return
         room_code = secrets.token_hex(3)
         self.server_thread = ServerThread(
@@ -182,7 +186,9 @@ class BangUI(QtWidgets.QMainWindow):
     ) -> None:
         name = self._get_player_name()
         if not name:
-            QtWidgets.QMessageBox.critical(self, "Error", "Please enter your name")
+            QtWidgets.QMessageBox.critical(
+                self, "Error", "Please enter a valid name"
+            )
             return
         scheme = "wss" if cafile else "ws"
         uri = f"{scheme}://{addr}:{port}"
