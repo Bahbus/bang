@@ -18,7 +18,7 @@ Rectangle {
 
     Column {
         anchors.centerIn: parent
-        spacing: 10
+        spacing: 10 * scale
 
         Text {
             text: "Bang!"
@@ -39,16 +39,25 @@ Rectangle {
         StyledButton {
             text: "Host Game"
             theme: root.theme
+            scale: root.scale
+            width: 200 * root.scale
+            iconSource: "../assets/icons/host.svg"
             onClicked: root.hostGame()
         }
         StyledButton {
             text: "Join Game"
             theme: root.theme
+            scale: root.scale
+            width: 200 * root.scale
+            iconSource: "../assets/icons/join.svg"
             onClicked: root.joinGame()
         }
         StyledButton {
             text: "Settings"
             theme: root.theme
+            scale: root.scale
+            width: 200 * root.scale
+            iconSource: "../assets/icons/settings.svg"
             onClicked: root.settings()
         }
     }

@@ -6,6 +6,7 @@ from glob import glob
 asset_patterns = (
     'bang_py/assets/*.png',
     'bang_py/assets/*.svg',
+    'bang_py/assets/icons/*.svg',
     'bang_py/assets/characters/*.webp',
     'bang_py/assets/audio/*.wav',
     'bang_py/assets/*.md',

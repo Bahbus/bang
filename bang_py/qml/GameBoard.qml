@@ -61,6 +61,8 @@ Item {
     StyledButton {
         text: "Draw"
         theme: root.theme
+        scale: root.scale
+        iconSource: "../assets/icons/draw.svg"
         anchors.top: drawPile.bottom
         anchors.horizontalCenter: drawPile.horizontalCenter
         onClicked: root.drawCard()
@@ -79,6 +81,8 @@ Item {
     StyledButton {
         text: "Discard"
         theme: root.theme
+        scale: root.scale
+        iconSource: "../assets/icons/discard.svg"
         anchors.top: discardPile.bottom
         anchors.horizontalCenter: discardPile.horizontalCenter
         onClicked: root.discardCard()
@@ -157,6 +161,8 @@ Item {
     StyledButton {
         text: "End Turn"
         theme: root.theme
+        scale: root.scale
+        iconSource: "../assets/icons/end_turn.svg"
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.rightMargin: 10 * scale
