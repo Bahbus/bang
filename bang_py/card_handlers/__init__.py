@@ -2,45 +2,34 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from importlib import import_module
+from typing import TYPE_CHECKING, Iterable, Optional
 
-from .cards.bang import BangCard
-from .cards.missed import MissedCard
-from .cards.card import BaseCard
-from .cards.roles import SheriffRoleCard
-from .cards.stagecoach import StagecoachCard
-from .cards.wells_fargo import WellsFargoCard
-from .cards.cat_balou import CatBalouCard
-from .cards.panic import PanicCard
-from .cards.jail import JailCard
-from .cards.indians import IndiansCard
-from .cards.duel import DuelCard
-from .cards.general_store import GeneralStoreCard
-from .cards.saloon import SaloonCard
-from .cards.gatling import GatlingCard
-from .cards.howitzer import HowitzerCard
-from .cards.whisky import WhiskyCard
-from .cards.beer import BeerCard
-from .cards.high_noon_card import HighNoonCard
-from .cards.pony_express import PonyExpressCard
-from .cards.tequila import TequilaCard
-from .cards.punch import PunchCard
-from .cards.knife import KnifeCard
-from .cards.brawl import BrawlCard
-from .cards.springfield import SpringfieldCard
-from .cards.rag_time import RagTimeCard
-from .cards.bible import BibleCard
-from .cards.canteen import CanteenCard
-from .cards.conestoga import ConestogaCard
-from .cards.can_can import CanCanCard
-from .cards.buffalo_rifle import BuffaloRifleCard
-from .cards.pepperbox import PepperboxCard
-from .cards.derringer import DerringerCard
-from .helpers import handle_out_of_turn_discard
+from ..cards.bang import BangCard
+from ..cards.missed import MissedCard
+from ..cards.card import BaseCard
+from ..cards.panic import PanicCard
+from ..cards.jail import JailCard
+from ..cards.roles import SheriffRoleCard
+from ..helpers import handle_out_of_turn_discard
 
-if TYPE_CHECKING:
-    from .game_manager import GameManager
-    from .player import Player
+if TYPE_CHECKING:  # pragma: no cover - for type hints only
+    from ..game_manager import GameManager
+    from ..player import Player
+
+HANDLER_MODULES = {
+    "basic": "bang_py.card_handlers.basic",
+    "blue": "bang_py.card_handlers.blue",
+    "green": "bang_py.card_handlers.green",
+    "event": "bang_py.card_handlers.event",
+}
+
+
+def register_handler_groups(game: 'GameManager', groups: Iterable[str]) -> None:
+    """Import handler modules for ``groups`` and register them on ``game``."""
+    for group in groups:
+        module = import_module(HANDLER_MODULES[group])
+        module.register(game)
 
 
 class CardHandlersMixin:
@@ -51,28 +40,63 @@ class CardHandlersMixin:
     event_flags: dict
     _card_handlers: dict
 
-    def _handler_self_game(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player']) -> None:
+    def _handler_self_game(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
+    ) -> None:
         card.play(player, game=self)
 
-    def _handler_target_game(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player']) -> None:
+    def _handler_target_game(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
+    ) -> None:
         if target:
             card.play(target, game=self)
 
-    def _handler_target_player_game(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player']) -> None:
+    def _handler_target_player_game(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
+    ) -> None:
         if target:
             card.play(target, player, game=self)
 
-    def _handler_self_player_game(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player']) -> None:
+    def _handler_self_player_game(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
+    ) -> None:
         card.play(player, player, game=self)
 
-    def _handler_target_or_self_player_game(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player']) -> None:
+    def _handler_target_or_self_player_game(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
+    ) -> None:
         card.play(target or player, player, game=self)
 
-    def _handler_target_player(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player']) -> None:
+    def _handler_target_player(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
+    ) -> None:
         if target:
             card.play(target, player)
 
-    def _play_bang_card(self: 'GameManager', player: 'Player', card: BangCard, target: Optional['Player']) -> None:
+    def _play_bang_card(
+        self: 'GameManager',
+        player: 'Player',
+        card: BangCard,
+        target: Optional['Player'],
+    ) -> None:
         ignore_eq = player.metadata.ignore_others_equipment
         extra_bang = self._consume_sniper_extra(player, card)
         need_two = player.metadata.double_miss or extra_bang
@@ -83,7 +107,9 @@ class CardHandlersMixin:
             if not (target and self._auto_miss(target)):
                 card.play(target, self.deck, ignore_equipment=ignore_eq)
 
-    def _consume_sniper_extra(self: 'GameManager', player: 'Player', card: BangCard) -> bool:
+    def _consume_sniper_extra(
+        self: 'GameManager', player: 'Player', card: BangCard
+    ) -> bool:
         if self.event_flags.get("sniper") and player.metadata.use_sniper:
             extra = next(
                 (c for c in player.hand if isinstance(c, BangCard) and c is not card),
@@ -108,39 +134,18 @@ class CardHandlersMixin:
             return True
         return False
 
-    def _register_card_handlers(self: 'GameManager') -> None:
-        self._card_handlers = {
-            BangCard: self._play_bang_card,
-            StagecoachCard: self._handler_self_game,
-            WellsFargoCard: self._handler_self_game,
-            CatBalouCard: self._handler_target_game,
-            PanicCard: self._handler_target_player_game,
-            IndiansCard: self._handler_self_player_game,
-            DuelCard: self._handler_target_player_game,
-            GeneralStoreCard: self._handler_self_player_game,
-            SaloonCard: self._handler_self_player_game,
-            GatlingCard: self._handler_self_player_game,
-            HowitzerCard: self._handler_self_player_game,
-            WhiskyCard: self._handler_target_or_self_player_game,
-            BeerCard: self._handler_target_or_self_player_game,
-            PonyExpressCard: self._handler_self_player_game,
-            TequilaCard: self._handler_target_or_self_player_game,
-            HighNoonCard: self._handler_self_player_game,
-            PunchCard: self._handler_target_player,
-            KnifeCard: self._handler_target_player_game,
-            BrawlCard: self._handler_self_player_game,
-            SpringfieldCard: self._handler_target_player_game,
-            RagTimeCard: self._handler_target_player_game,
-            BibleCard: self._handler_target_or_self_player_game,
-            CanteenCard: self._handler_target_or_self_player_game,
-            ConestogaCard: self._handler_target_player_game,
-            CanCanCard: self._handler_target_game,
-            BuffaloRifleCard: self._handler_target_player_game,
-            PepperboxCard: self._handler_target_player_game,
-            DerringerCard: self._handler_target_player_game,
-        }
+    def _register_card_handlers(
+        self: 'GameManager', groups: Iterable[str] | None = None
+    ) -> None:
+        self._card_handlers = {}
+        register_handler_groups(self, groups or HANDLER_MODULES.keys())
 
-    def _dispatch_play(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player']) -> None:
+    def _dispatch_play(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
+    ) -> None:
         if self._handle_missed_as_bang(player, card, target):
             return
         handler = self._card_handlers.get(type(card))
@@ -149,7 +154,12 @@ class CardHandlersMixin:
         else:
             card.play(target)
 
-    def _handle_missed_as_bang(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player']) -> bool:
+    def _handle_missed_as_bang(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
+    ) -> bool:
         if player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target:
             handler = self._card_handlers.get(BangCard)
             if handler:
@@ -195,7 +205,10 @@ class CardHandlersMixin:
     # ------------------------------------------------------------------
     # Target restriction helpers
     def _bang_target_valid(
-        self, player: 'Player', card: BaseCard, target: Optional['Player']
+        self,
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
     ) -> bool:
         """Check range and sniper restrictions for Bang! cards."""
         if not (isinstance(card, BangCard) and target):
@@ -265,7 +278,12 @@ class CardHandlersMixin:
         limit = self.event_flags.get("bang_limit", 1)
         return count < limit or unlimited
 
-    def play_card(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player'] = None) -> None:
+    def play_card(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'] = None,
+    ) -> None:
         """Play ``card`` from ``player`` against ``target`` if allowed."""
         if not self._pre_card_checks(player, card, target):
             return
@@ -280,7 +298,12 @@ class CardHandlersMixin:
         self._notify_card_played(player, card, target)
         self._apply_post_play(player, card, target, before, is_bang)
 
-    def _notify_card_played(self: 'GameManager', player: 'Player', card: BaseCard, target: Optional['Player']) -> None:
+    def _notify_card_played(
+        self: 'GameManager',
+        player: 'Player',
+        card: BaseCard,
+        target: Optional['Player'],
+    ) -> None:
         """Call registered card played listeners."""
         for cb in self.card_played_listeners:
             cb(player, card, target)
@@ -332,6 +355,15 @@ class CardHandlersMixin:
             if player.metadata.draw_when_empty and not player.hand:
                 self.draw_card(player)
 
+    def _pass_left_or_discard(self: 'GameManager', player: 'Player', card: BaseCard) -> None:
+        """Pass card to the left during River, otherwise discard."""
+        if self.event_flags.get("river"):
+            idx = self._players.index(player)
+            target = self._players[(idx + 1) % len(self._players)]
+            target.hand.append(card)
+        else:
+            self.discard_pile.append(card)
+
     def _auto_miss(self: 'GameManager', target: 'Player') -> bool:
         if not self._should_use_auto_miss(target):
             return False
@@ -380,3 +412,5 @@ class CardHandlersMixin:
             target.metadata.dodged = True
             return True
         return False
+
+__all__ = ["CardHandlersMixin", "register_handler_groups"]
