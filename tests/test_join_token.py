@@ -21,3 +21,23 @@ def test_token_invalid_key():
     bad_key = b"fh-IQhdbcUCrWTWyQ7WcM5VqCPU-ixXvSawvMkE415Q="
     with pytest.raises(InvalidToken):
         parse_join_token(token, bad_key)
+
+
+def test_token_env_fallback(monkeypatch):
+    monkeypatch.setenv("BANG_TOKEN_KEY", DEFAULT_TOKEN_KEY.decode())
+    token = generate_join_token("host", 2, "abc")
+    host, port, code = parse_join_token(token)
+    assert host == "host"
+    assert port == 2
+    assert code == "abc"
+
+
+def test_missing_key_raises(monkeypatch):
+    monkeypatch.delenv("BANG_TOKEN_KEY", raising=False)
+    with pytest.raises(ValueError):
+        generate_join_token("h", 1, "c")
+    token = generate_join_token("host", 1, "c", DEFAULT_TOKEN_KEY)
+    monkeypatch.delenv("BANG_TOKEN_KEY", raising=False)
+    with pytest.raises(ValueError):
+        parse_join_token(token)
+

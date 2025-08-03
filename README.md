@@ -13,8 +13,9 @@ bang-server
 ```
 
 This starts a websocket server on `ws://localhost:8765`.
-Provide a custom join token key with ``--token-key`` or by passing
-``token_key`` when creating ``BangServer`` in code.
+A join token encryption key is required and may be supplied with
+``--token-key``, by passing ``token_key`` when creating ``BangServer`` or via the
+``BANG_TOKEN_KEY`` environment variable.
 
 ### Secure connections
 
@@ -36,15 +37,16 @@ The Qt interface exposes these paths in the host and join dialogs.
 
 Running ``bang-server --show-token`` prints an encrypted string containing the
 host, port and room code. Start the Qt UI or ``bang-client`` with ``--token`` to
-join automatically. Pass ``--token-key`` with a custom base64 key when starting
-the server and client to override the built-in default:
+join automatically. The server and client must share the same base64 key. You
+can generate one and export it before launching the server:
 
 ```bash
-bang-server --token-key $(openssl rand -base64 32) --show-token
+export BANG_TOKEN_KEY=$(openssl rand -base64 32)
+bang-server --show-token
 ```
 
-The same key must be supplied to ``bang-client`` or ``bang-ui`` via the
-``--token-key`` option so they can decrypt the token.
+Clients can either set ``BANG_TOKEN_KEY`` or pass ``--token-key``/``token_key``
+explicitly so they can decrypt the token.
 
 ## Connecting a client
 
