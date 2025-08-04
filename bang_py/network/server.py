@@ -666,6 +666,7 @@ class BangServer:
             self.host,
             self.port,
             ssl=self.ssl_context,
+            max_size=MAX_MESSAGE_SIZE,
         ):
             logger.info(
                 "Server started on %s:%s (code: %s)",

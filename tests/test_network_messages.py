@@ -10,7 +10,9 @@ websockets = pytest.importorskip("websockets")
 def test_oversized_message_closes_connection() -> None:
     async def run_flow() -> None:
         server = BangServer(host="localhost", port=8770, room_code="z999")
-        async with websockets.serve(server.handler, server.host, server.port):
+        async with websockets.serve(
+            server.handler, server.host, server.port, max_size=MAX_MESSAGE_SIZE
+        ):
             async with websockets.connect("ws://localhost:8770") as ws:
                 await ws.recv()
                 await ws.send("z999")
@@ -19,8 +21,9 @@ def test_oversized_message_closes_connection() -> None:
                 await ws.recv()
                 await ws.recv()
                 await ws.send("x" * (MAX_MESSAGE_SIZE + 1))
-                with pytest.raises(websockets.exceptions.ConnectionClosed):
+                with pytest.raises(websockets.exceptions.ConnectionClosed) as exc:
                     await ws.recv()
+                assert exc.value.code == 1009
     asyncio.run(run_flow())
 
 
