@@ -147,7 +147,6 @@ class BangUI(QtWidgets.QMainWindow):
         self.game_view = GameView(self.theme)
         self.game_view.action_signal.connect(self._send_action)
         self.game_view.end_turn_signal.connect(self._end_turn)
-        self.hand_layout = self.game_view.hand_layout
         self.game_root = self.game_view.root_obj
         self._transition_to(self.game_view)
 

@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtMultimedia
 
 // Styled buttons reside in this directory
 import "./"
@@ -9,17 +10,22 @@ Item {
     property string theme: "light"
     property real scale: 1.0
     property var players: []
+    property var hand: []
     property string selfName: ""
     property alias logText: logArea.text
 
     signal drawCard()
     signal discardCard()
     signal endTurn()
+    signal playCard(int index)
+    signal discardFromHand(int index)
 
     width: 800 * scale
     height: 600 * scale
     property real cardW: 60 * scale
     property real cardH: 90 * scale
+
+    onHandChanged: shuffleSound.play()
 
     Rectangle {
         anchors.fill: parent
@@ -65,7 +71,7 @@ Item {
         iconSource: "../assets/icons/draw.svg"
         anchors.top: drawPile.bottom
         anchors.horizontalCenter: drawPile.horizontalCenter
-        onClicked: root.drawCard()
+        onClicked: { clickSound.play(); drawSound.play(); root.drawCard() }
     }
 
     Rectangle {
@@ -85,7 +91,7 @@ Item {
         iconSource: "../assets/icons/discard.svg"
         anchors.top: discardPile.bottom
         anchors.horizontalCenter: discardPile.horizontalCenter
-        onClicked: root.discardCard()
+        onClicked: { clickSound.play(); discardSound.play(); root.discardCard() }
     }
 
     Repeater {
@@ -167,6 +173,53 @@ Item {
         anchors.bottom: parent.bottom
         anchors.rightMargin: 10 * scale
         anchors.bottomMargin: 10 * scale
-        onClicked: root.endTurn()
+        onClicked: { clickSound.play(); root.endTurn() }
     }
+
+    Row {
+        id: handRow
+        spacing: 4 * scale
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        Repeater {
+            model: hand.length
+            delegate: Item {
+                width: cardW
+                height: cardH
+                property var card: hand[index]
+                Image {
+                    anchors.fill: parent
+                    source: card.source
+                    fillMode: Image.PreserveAspectFit
+                }
+                Text {
+                    text: card.name
+                    anchors.centerIn: parent
+                    color: theme === "dark" ? "white" : "black"
+                    visible: card.source === ""
+                    font.pixelSize: 12 * scale
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: {
+                        clickSound.play()
+                        if (mouse.button === Qt.RightButton) {
+                            discardSound.play()
+                            root.discardFromHand(index)
+                        } else {
+                            playSound.play()
+                            root.playCard(index)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    SoundEffect { id: clickSound; source: "../assets/audio/ui_click.mp3" }
+    SoundEffect { id: drawSound; source: "../assets/audio/draw_card.mp3" }
+    SoundEffect { id: discardSound; source: "../assets/audio/discard_card.mp3" }
+    SoundEffect { id: playSound; source: "../assets/audio/play_card.mp3" }
+    SoundEffect { id: shuffleSound; source: "../assets/audio/shuffle_cards.mp3" }
 }

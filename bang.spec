@@ -24,7 +24,10 @@ a = Analysis(
     pathex=[],
     binaries=collect_dynamic_libs('PySide6'),
     datas=asset_paths,
-    hiddenimports=collect_submodules('PySide6') + collect_submodules('websockets'),
+    hiddenimports=
+        collect_submodules('PySide6')
+        + collect_submodules('websockets')
+        + ['bang_py.card_handlers.dispatch', 'bang_py.card_handlers.bang_handlers'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
