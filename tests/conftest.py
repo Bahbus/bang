@@ -3,12 +3,17 @@ import importlib.util
 
 import pytest
 
-from bang_py.network.server import DEFAULT_TOKEN_KEY
+try:
+    from bang_py.network.server import DEFAULT_TOKEN_KEY
+except Exception:
+    DEFAULT_TOKEN_KEY = None
 
 
 @pytest.fixture(scope="session", autouse=True)
 def generate_assets():
-    if importlib.util.find_spec("PySide6") is None:
+    try:
+        from PySide6 import QtCore, QtGui, QtWidgets  # noqa: F401
+    except Exception:
         return
     root = pathlib.Path(__file__).resolve().parents[1]
     script_path = root / "scripts" / "generate_assets.py"
@@ -22,5 +27,6 @@ def generate_assets():
 
 @pytest.fixture(autouse=True)
 def _set_token_key(monkeypatch):
-    monkeypatch.setenv("BANG_TOKEN_KEY", DEFAULT_TOKEN_KEY.decode())
+    if DEFAULT_TOKEN_KEY is not None:
+        monkeypatch.setenv("BANG_TOKEN_KEY", DEFAULT_TOKEN_KEY.decode())
 

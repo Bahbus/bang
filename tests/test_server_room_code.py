@@ -1,4 +1,8 @@
 import secrets
+import pytest
+
+pytest.importorskip("cryptography")
+
 from bang_py.network.server import BangServer
 
 
