@@ -67,7 +67,10 @@ def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.
 
 
 def load_sound(name: str) -> QtMultimedia.QSoundEffect | None:
-    """Return a sound effect for ``name`` if QtMultimedia is available."""
+    """Return a sound effect for ``name`` if QtMultimedia is available.
+
+    Examples include ``"gunshot"``, ``"card_shuffle"`` and ``"ui_click"``.
+    """
     if QtMultimedia is None:
         return None
     base = name.lower().replace(" ", "_")

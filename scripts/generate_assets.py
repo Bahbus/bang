@@ -1,8 +1,8 @@
 """Generate placeholder portraits and simple sound effects.
 
 This script creates colored images for each character defined in the game and
-basic sine wave tones used as sound effects. It is executed in the test suite
-and can also be run manually before packaging the game.
+basic sine wave tones used as placeholder sound effects. It is executed in the
+test suite and can also be run manually before packaging the game.
 """
 
 from __future__ import annotations
@@ -98,30 +98,31 @@ def create_beep(path: Path, freq: int = 440) -> None:
         struct.pack('<h', int(volume * math.sin(2 * math.pi * freq * i / rate) * 32767))
         for i in range(int(duration * rate))
     ]
-    with wave.open(str(path), 'w') as f:
+    with wave.open(str(path), "w") as f:
         f.setnchannels(1)
         f.setsampwidth(2)
         f.setframerate(rate)
-        f.writeframes(b''.join(frames))
+        f.writeframes(b"".join(frames))
 
 
 def main() -> None:
     CHAR_DIR.mkdir(parents=True, exist_ok=True)
     AUDIO_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Skip regeneration if all expected assets already exist
+    # Skip regeneration if portraits exist and at least one real audio file is present
     char_paths = [CHAR_DIR / f"{slugify(n)}.webp" for n in character_names()]
     char_paths.append(CHAR_DIR / "default.webp")
-    audio_paths = [AUDIO_DIR / n for n in ("beep.wav", "boop.wav", "click.wav")]
-    if all(p.exists() for p in [*char_paths, *audio_paths]):
+    existing_audio = list(AUDIO_DIR.glob("*.wav")) + list(AUDIO_DIR.glob("*.ogg"))
+    if all(p.exists() for p in char_paths) and existing_audio:
         print("Assets already present, skipping generation")
         return
     create_default_image(CHAR_DIR / "default.webp")
     for name in character_names():
         create_character_image(name, CHAR_DIR / f"{slugify(name)}.webp")
-    create_beep(AUDIO_DIR / "beep.wav", 440)
-    create_beep(AUDIO_DIR / "boop.wav", 660)
-    create_beep(AUDIO_DIR / "click.wav", 880)
+    if not existing_audio:
+        create_beep(AUDIO_DIR / "gunshot.wav", 440)
+        create_beep(AUDIO_DIR / "card_shuffle.wav", 660)
+        create_beep(AUDIO_DIR / "ui_click.wav", 880)
 
 
 if __name__ == "__main__":
