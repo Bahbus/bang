@@ -3,6 +3,8 @@ import importlib.util
 
 import pytest
 
+pytest.importorskip("cryptography")
+
 from bang_py.network.server import DEFAULT_TOKEN_KEY
 
 

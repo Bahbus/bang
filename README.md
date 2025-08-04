@@ -161,17 +161,19 @@ needs the `contents: write` permission (or a PAT) to upload the file.
 ## Running Tests
 
 Install the Qt bindings before running the test suite. The CI workflow installs
-`PySide6>=6.9.1` first:
+`PySide6>=6.9.1` first along with `cryptography` for the network tests:
 
 ```bash
 pip install "PySide6>=6.9.1"
+pip install cryptography
 pip install -r requirements.txt
 pip install -e .
 pytest
 ```
 
 Tests that rely on the GUI use `pytest.importorskip("PySide6")` so they are skipped
-automatically when the dependency is missing.
+automatically when the dependency is missing. Networking tests behave the same
+way if `cryptography` is not installed.
 
 ## Characters
 
