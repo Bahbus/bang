@@ -33,12 +33,26 @@ class CardButton(QtWidgets.QPushButton):
         self.customContextMenuRequested.connect(self._context_menu)
         self.clicked.connect(self._play)
 
+        self.set_card(text, card_type, rank, suit, card_set)
+
+    def set_card(
+        self,
+        text: str,
+        card_type: str = "action",
+        rank: int | str | None = None,
+        suit: str | None = None,
+        card_set: str | None = None,
+    ) -> None:
+        """Update button appearance for a new card."""
+        self.setText(text)
         loader = get_loader()
         pix = loader.compose_card(card_type, rank, suit, card_set, text)
         if not pix.isNull():
             self.setIcon(QtGui.QIcon(pix))
             self.setIconSize(QtCore.QSize(pix.width(), pix.height()))
             self.setText("")
+        else:
+            self.setIcon(QtGui.QIcon())
 
     def _play(self) -> None:
         if self.click_sound:
@@ -95,6 +109,7 @@ class GameView(QtWidgets.QWidget):
         self.hand_widget = QtWidgets.QWidget()
         self.hand_layout = QtWidgets.QHBoxLayout(self.hand_widget)
         vbox.addWidget(self.hand_widget)
+        self.hand_buttons: list[CardButton] = []
 
     def update_players(self, players: list[dict], self_name: str | None = None) -> None:
         if self.root_obj is not None:
@@ -105,11 +120,23 @@ class GameView(QtWidgets.QWidget):
     def update_hand(self, cards: list[object]) -> None:
         if self.shuffle_sound:
             self.shuffle_sound.play()
-        while self.hand_layout.count():
-            item = self.hand_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+
+        # Ensure enough buttons exist and update their content
         for idx, card in enumerate(cards):
+            if idx < len(self.hand_buttons):
+                btn = self.hand_buttons[idx]
+            else:
+                btn = CardButton(
+                    "",
+                    idx,
+                    play_sound=self.play_sound,
+                    click_sound=self.click_sound,
+                    discard_sound=self.discard_sound,
+                )
+                btn.action_signal.connect(self._forward_action)
+                self.hand_buttons.append(btn)
+                self.hand_layout.addWidget(btn)
+
             if isinstance(card, str):
                 name = card
                 ctype = "action"
@@ -122,24 +149,17 @@ class GameView(QtWidgets.QWidget):
                 rank = getattr(card, "rank", None)
                 suit = getattr(card, "suit", None)
                 cset = getattr(card, "card_set", None)
-            btn = CardButton(
-                name,
-                idx,
-                ctype,
-                rank,
-                suit,
-                cset,
-                play_sound=self.play_sound,
-                click_sound=self.click_sound,
-                discard_sound=self.discard_sound,
-            )
-            btn.action_signal.connect(
-                lambda act, i=idx: self.action_signal.emit({
-                    "action": act,
-                    "card_index": i,
-                })
-            )
-            self.hand_layout.addWidget(btn)
+            btn.index = idx
+            btn.set_card(name, ctype, rank, suit, cset)
+            btn.show()
+
+        # Hide any extra buttons
+        for extra in self.hand_buttons[len(cards):]:
+            extra.hide()
+
+    def _forward_action(self, act: str, index: int) -> None:
+        """Relay button actions with card index."""
+        self.action_signal.emit({"action": act, "card_index": index})
 
     def _draw_card(self) -> None:
         if self.click_sound:
