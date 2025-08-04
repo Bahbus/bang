@@ -2,6 +2,8 @@ import asyncio
 import random
 
 import pytest
+
+pytest.importorskip("cryptography")
 from bang_py.network.server import BangServer
 
 websockets = pytest.importorskip("websockets")

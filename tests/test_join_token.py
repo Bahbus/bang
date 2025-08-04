@@ -1,5 +1,7 @@
 import pytest
 
+pytest.importorskip("cryptography")
+
 from bang_py.network.server import (
     generate_join_token,
     parse_join_token,

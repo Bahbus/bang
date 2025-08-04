@@ -2,6 +2,9 @@ import asyncio
 import json
 
 import pytest
+
+pytest.importorskip("cryptography")
+
 from bang_py.network.server import BangServer, MAX_MESSAGE_SIZE
 
 websockets = pytest.importorskip("websockets")

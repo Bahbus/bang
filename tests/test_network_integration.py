@@ -3,6 +3,9 @@ import json
 import ssl
 
 import pytest
+
+pytest.importorskip("cryptography")
+
 from bang_py.network.server import BangServer
 from bang_py.cards.bang import BangCard
 

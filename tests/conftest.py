@@ -3,9 +3,10 @@ import importlib.util
 
 import pytest
 
-pytest.importorskip("cryptography")
-
-from bang_py.network.server import DEFAULT_TOKEN_KEY
+try:
+    from bang_py.network.server import DEFAULT_TOKEN_KEY
+except Exception:
+    DEFAULT_TOKEN_KEY = None
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -26,5 +27,6 @@ def generate_assets():
 
 @pytest.fixture(autouse=True)
 def _set_token_key(monkeypatch):
-    monkeypatch.setenv("BANG_TOKEN_KEY", DEFAULT_TOKEN_KEY.decode())
+    if DEFAULT_TOKEN_KEY is not None:
+        monkeypatch.setenv("BANG_TOKEN_KEY", DEFAULT_TOKEN_KEY.decode())
 

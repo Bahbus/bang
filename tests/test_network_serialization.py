@@ -1,4 +1,9 @@
 import json
+
+import pytest
+
+pytest.importorskip("cryptography")
+
 from bang_py.player import Player
 from bang_py.cards.roles import SheriffRoleCard, OutlawRoleCard
 from bang_py.network.server import _serialize_players
