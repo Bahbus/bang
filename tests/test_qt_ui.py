@@ -58,7 +58,9 @@ def test_broadcast_state_updates_ui(qt_app):
     root = ui.game_root
     assert root is not None
     assert root.property("players") == state["players"]
-    assert ui.hand_layout.count() == 2
+    hand_prop = root.property("hand")
+    assert isinstance(hand_prop, list)
+    assert len(hand_prop) == 2
     ui.close()
 
 
