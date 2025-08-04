@@ -3,6 +3,10 @@ from __future__ import annotations
 from importlib import resources
 
 from PySide6 import QtCore, QtGui, QtWidgets, QtQuickWidgets
+try:
+    from PySide6 import QtMultimedia  # type: ignore
+except Exception:  # pragma: no cover - optional dependency
+    QtMultimedia = None
 
 from .card_images import get_loader, load_sound
 
@@ -20,9 +24,11 @@ class CardButton(QtWidgets.QPushButton):
         rank: int | str | None = None,
         suit: str | None = None,
         card_set: str | None = None,
+        play_sound: QtMultimedia.QSoundEffect | None = None,
     ) -> None:
         super().__init__(text)
         self.index = index
+        self.play_sound = play_sound
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu)
         self.clicked.connect(self._play)
@@ -35,6 +41,8 @@ class CardButton(QtWidgets.QPushButton):
             self.setText("")
 
     def _play(self) -> None:
+        if self.play_sound:
+            self.play_sound.play()
         self.action_signal.emit("play_card", self.index)
 
     def _context_menu(self, pos: QtCore.QPoint) -> None:
@@ -76,21 +84,22 @@ class GameView(QtWidgets.QWidget):
             self.root_obj.endTurn.connect(self.end_turn_signal.emit)
         vbox.addWidget(self.board_qml, 1)
 
-        self.update_sound = load_sound("beep")
+        self.shuffle_sound = load_sound("card_shuffle")
+        self.play_sound = load_sound("gunshot")
 
         self.hand_widget = QtWidgets.QWidget()
         self.hand_layout = QtWidgets.QHBoxLayout(self.hand_widget)
         vbox.addWidget(self.hand_widget)
 
     def update_players(self, players: list[dict], self_name: str | None = None) -> None:
-        if self.update_sound:
-            self.update_sound.play()
         if self.root_obj is not None:
             self.root_obj.setProperty("players", players)
             if self_name is not None:
                 self.root_obj.setProperty("selfName", self_name)
 
     def update_hand(self, cards: list[object]) -> None:
+        if self.shuffle_sound:
+            self.shuffle_sound.play()
         while self.hand_layout.count():
             item = self.hand_layout.takeAt(0)
             if item.widget():
@@ -108,7 +117,7 @@ class GameView(QtWidgets.QWidget):
                 rank = getattr(card, "rank", None)
                 suit = getattr(card, "suit", None)
                 cset = getattr(card, "card_set", None)
-            btn = CardButton(name, idx, ctype, rank, suit, cset)
+            btn = CardButton(name, idx, ctype, rank, suit, cset, self.play_sound)
             btn.action_signal.connect(
                 lambda act, i=idx: self.action_signal.emit({
                     "action": act,
