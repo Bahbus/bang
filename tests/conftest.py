@@ -10,7 +10,9 @@ from bang_py.network.server import DEFAULT_TOKEN_KEY
 
 @pytest.fixture(scope="session", autouse=True)
 def generate_assets():
-    if importlib.util.find_spec("PySide6") is None:
+    try:
+        from PySide6 import QtCore, QtGui, QtWidgets  # noqa: F401
+    except Exception:
         return
     root = pathlib.Path(__file__).resolve().parents[1]
     script_path = root / "scripts" / "generate_assets.py"

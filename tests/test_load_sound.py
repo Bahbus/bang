@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("PySide6", reason="PySide6 not installed; skipping GUI tests")
+pytest.importorskip("PySide6.QtWidgets", reason="QtWidgets unavailable; skipping GUI tests")
 
 from PySide6 import QtWidgets
 from bang_py.ui_components.card_images import load_sound
