@@ -172,8 +172,10 @@ pytest
 ```
 
 Tests that rely on the GUI use `pytest.importorskip("PySide6")` so they are skipped
-automatically when the dependency is missing. Networking tests behave the same
-way if `cryptography` is not installed.
+automatically when the dependency is missing. These UI tests also make use of
+the `QtMultimedia` module for sound effects; if it is unavailable the QML-based
+tests will skip. Networking tests behave the same way if `cryptography` is not
+installed.
 
 ## Characters
 

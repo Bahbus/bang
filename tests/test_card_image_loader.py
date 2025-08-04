@@ -1,9 +1,19 @@
 import os
 import pytest
 
-pytest.importorskip("PySide6", reason="PySide6 not installed; skipping GUI tests")
-pytest.importorskip("PySide6.QtWidgets", reason="QtWidgets unavailable; skipping GUI tests")
-pytest.importorskip("PySide6.QtGui", reason="QtGui unavailable; skipping GUI tests")
+pytest.importorskip(
+    "PySide6", reason="PySide6 not installed; skipping GUI tests", exc_type=ImportError
+)
+pytest.importorskip(
+    "PySide6.QtWidgets",
+    reason="QtWidgets unavailable; skipping GUI tests",
+    exc_type=ImportError,
+)
+pytest.importorskip(
+    "PySide6.QtGui",
+    reason="QtGui unavailable; skipping GUI tests",
+    exc_type=ImportError,
+)
 
 from PySide6 import QtWidgets, QtGui
 from bang_py.ui_components.card_images import CardImageLoader, ACTION_ICON_MAP
