@@ -3,16 +3,14 @@
 This script creates coloured images for each character defined in the game and
 short sine wave tones used as placeholder MP3 sound effects. It is executed in
 the test suite and can also be run manually before packaging the game. If MP3
-encoding is unavailable a WAV fallback is produced instead.
+encoding is unavailable the sound files are simply skipped.
 """
 
 from __future__ import annotations
 
 import struct
 import math
-import wave
 from pathlib import Path
-from io import BytesIO
 
 import os
 
@@ -94,7 +92,7 @@ def create_beep(path: Path, freq: int = 440) -> None:
     """Create a short sine wave tone at ``path``.
 
     The function attempts to write an MP3 file. If the :mod:`pydub` package or
-    an MP3 encoder is unavailable a ``.wav`` file is written instead.
+    an MP3 encoder is unavailable the file is not created.
     """
 
     if path.exists():
@@ -107,25 +105,17 @@ def create_beep(path: Path, freq: int = 440) -> None:
         for i in range(int(duration * rate))
     ]
     raw = b"".join(frames)
-    if path.suffix == ".mp3":
-        try:  # Attempt MP3 export
-            from pydub import AudioSegment  # type: ignore
-        except Exception:
-            path = path.with_suffix(".wav")
-        else:
-            audio = AudioSegment(
-                data=raw,
-                sample_width=2,
-                frame_rate=rate,
-                channels=1,
-            )
-            audio.export(str(path), format="mp3")
-            return
-    with wave.open(str(path), "w") as f:
-        f.setnchannels(1)
-        f.setsampwidth(2)
-        f.setframerate(rate)
-        f.writeframes(raw)
+    try:  # Attempt MP3 export
+        from pydub import AudioSegment  # type: ignore
+    except Exception:
+        return
+    audio = AudioSegment(
+        data=raw,
+        sample_width=2,
+        frame_rate=rate,
+        channels=1,
+    )
+    audio.export(str(path), format="mp3")
 
 
 def main() -> None:
@@ -135,11 +125,7 @@ def main() -> None:
     # Skip regeneration if portraits exist and at least one real audio file is present
     char_paths = [CHAR_DIR / f"{slugify(n)}.webp" for n in character_names()]
     char_paths.append(CHAR_DIR / "default.webp")
-    existing_audio = (
-        list(AUDIO_DIR.glob("*.mp3"))
-        + list(AUDIO_DIR.glob("*.wav"))
-        + list(AUDIO_DIR.glob("*.ogg"))
-    )
+    existing_audio = list(AUDIO_DIR.glob("*.mp3")) + list(AUDIO_DIR.glob("*.ogg"))
     if all(p.exists() for p in char_paths) and existing_audio:
         print("Assets already present, skipping generation")
         return
