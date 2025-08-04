@@ -20,6 +20,25 @@ DEFAULT_SIZE = (60, 90)
 ASSETS_DIR = resources.files("bang_py") / "assets"
 CHARACTER_DIR = ASSETS_DIR / "characters"
 AUDIO_DIR = ASSETS_DIR / "audio"
+ICON_DIR = ASSETS_DIR / "icons"
+
+# Mapping of card/ability identifiers to icon filenames.
+ACTION_ICON_MAP = {
+    "bang": "bang_icon.webp",
+    "missed": "missed_icon.webp",
+    "any_player": "any_player_icon.webp",
+    "all_players": "all_players_icon.webp",
+    "any_reachable_player": "any_reachable_player_icon.webp",
+    "draw_card": "draw_card_icon.webp",
+    "discard_card": "discard_card_icon.webp",
+    "discard_another_card": "discard_another_card_icon.webp",
+    "gain_life": "gain_life_icon.webp",
+    "range_1": "range_1_icon.webp",
+    "range_2": "range_2_icon.webp",
+    "range_3": "range_3_icon.webp",
+    "range_4": "range_4_icon.webp",
+    "range_5": "range_5_icon.webp",
+}
 
 _CARD_BACK_FILES = {
     "other": "other_card_back.png",
@@ -97,6 +116,7 @@ class CardImageLoader:
         self.templates = self._load_templates(width, height)
         self.card_backs = self._load_card_backs(width, height)
         self.rank_loader = RankSuitIconLoader()
+        self.action_icons = self._load_action_icons()
 
     @staticmethod
     def _fallback_pixmap(width: int, height: int) -> QtGui.QPixmap:
@@ -146,6 +166,18 @@ class CardImageLoader:
             backs[key] = pix
         return backs
 
+    @classmethod
+    def _load_action_icons(cls) -> Dict[str, QtGui.QPixmap]:
+        icons: Dict[str, QtGui.QPixmap] = {}
+        for key, fname in ACTION_ICON_MAP.items():
+            path = ICON_DIR / fname
+            with resources.as_file(path) as file_path:
+                pix = QtGui.QPixmap(str(file_path))
+            if pix.isNull():
+                pix = cls._fallback_pixmap(int(DEFAULT_SIZE[0] * 0.4), int(DEFAULT_SIZE[1] * 0.4))
+            icons[key] = pix
+        return icons
+
     def get_template(self, name: str) -> QtGui.QPixmap:
         return self.templates.get(name, self._fallback_pixmap(self.width, self.height))
 
@@ -159,18 +191,37 @@ class CardImageLoader:
         rank: int | str | None = None,
         suit: str | None = None,
         card_set: str | None = None,
+        name: str | None = None,
     ) -> QtGui.QPixmap:
-        """Return a card pixmap for ``card_type`` with optional rank and suit."""
+        """Return a card pixmap with optional rank/suit and action icon overlays."""
         template_name = self._template_for(card_type, card_set)
         base = self.get_template(template_name).copy()
+        painter = QtGui.QPainter(base)
         if rank is not None and suit is not None:
             icon = self.rank_loader.get_pixmap(rank, suit)
-            icon = icon.scaled(int(self.width * 0.6), int(self.height * 0.6), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-            painter = QtGui.QPainter(base)
+            icon = icon.scaled(
+                int(self.width * 0.6),
+                int(self.height * 0.6),
+                QtCore.Qt.KeepAspectRatio,
+                QtCore.Qt.SmoothTransformation,
+            )
             x = (self.width - icon.width()) // 2
             y = (self.height - icon.height()) // 2
             painter.drawPixmap(x, y, icon)
-            painter.end()
+        if name:
+            key = name.lower().replace("!", "").replace(" ", "_")
+            action_icon = self.action_icons.get(key)
+            if action_icon and not action_icon.isNull():
+                action_icon = action_icon.scaled(
+                    int(self.width * 0.35),
+                    int(self.width * 0.35),
+                    QtCore.Qt.KeepAspectRatio,
+                    QtCore.Qt.SmoothTransformation,
+                )
+                x = self.width - action_icon.width()
+                y = self.height - action_icon.height()
+                painter.drawPixmap(x, y, action_icon)
+        painter.end()
         return base
 
     @staticmethod

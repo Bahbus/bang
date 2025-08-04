@@ -34,7 +34,7 @@ class CardButton(QtWidgets.QPushButton):
         self.clicked.connect(self._play)
 
         loader = get_loader()
-        pix = loader.compose_card(card_type, rank, suit, card_set)
+        pix = loader.compose_card(card_type, rank, suit, card_set, text)
         if not pix.isNull():
             self.setIcon(QtGui.QIcon(pix))
             self.setIconSize(QtCore.QSize(pix.width(), pix.height()))
