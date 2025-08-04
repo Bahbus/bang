@@ -1,10 +1,6 @@
 from __future__ import annotations
 
 from PySide6 import QtCore, QtWidgets
-try:
-    from PySide6 import QtMultimedia  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
-    QtMultimedia = None
 
 from .card_images import load_sound
 
@@ -33,7 +29,7 @@ class StartMenu(QtWidgets.QWidget):
         form.addRow("Name:", self.name_edit)
         layout.addLayout(form)
 
-        self.click_sound = load_sound("ui_click")
+        self.click_sound = load_sound("ui_click", self)
 
         host_btn = QtWidgets.QPushButton("Host Game")
         host_btn.clicked.connect(self._host)

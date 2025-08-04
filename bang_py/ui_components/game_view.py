@@ -3,10 +3,6 @@ from __future__ import annotations
 from importlib import resources
 
 from PySide6 import QtCore, QtGui, QtWidgets, QtQuickWidgets
-try:
-    from PySide6 import QtMultimedia  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
-    QtMultimedia = None
 
 from .card_images import get_loader, load_sound
 
@@ -24,11 +20,15 @@ class CardButton(QtWidgets.QPushButton):
         rank: int | str | None = None,
         suit: str | None = None,
         card_set: str | None = None,
-        play_sound: QtMultimedia.QSoundEffect | None = None,
+        play_sound: QtCore.QObject | None = None,
+        click_sound: QtCore.QObject | None = None,
+        discard_sound: QtCore.QObject | None = None,
     ) -> None:
         super().__init__(text)
         self.index = index
         self.play_sound = play_sound
+        self.click_sound = click_sound
+        self.discard_sound = discard_sound
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._context_menu)
         self.clicked.connect(self._play)
@@ -41,6 +41,8 @@ class CardButton(QtWidgets.QPushButton):
             self.setText("")
 
     def _play(self) -> None:
+        if self.click_sound:
+            self.click_sound.play()
         if self.play_sound:
             self.play_sound.play()
         self.action_signal.emit("play_card", self.index)
@@ -50,6 +52,10 @@ class CardButton(QtWidgets.QPushButton):
         discard = menu.addAction("Discard")
         chosen = menu.exec(self.mapToGlobal(pos))
         if chosen == discard:
+            if self.click_sound:
+                self.click_sound.play()
+            if self.discard_sound:
+                self.discard_sound.play()
             self.action_signal.emit("discard", self.index)
 
 
@@ -75,17 +81,16 @@ class GameView(QtWidgets.QWidget):
         if self.root_obj is not None:
             self.root_obj.setProperty("theme", theme)
             self.root_obj.setProperty("scale", 1.0)
-            self.root_obj.drawCard.connect(
-                lambda: self.action_signal.emit({"action": "draw"})
-            )
-            self.root_obj.discardCard.connect(
-                lambda: self.action_signal.emit({"action": "discard"})
-            )
-            self.root_obj.endTurn.connect(self.end_turn_signal.emit)
+            self.root_obj.drawCard.connect(self._draw_card)
+            self.root_obj.discardCard.connect(self._discard_card)
+            self.root_obj.endTurn.connect(self._end_turn)
         vbox.addWidget(self.board_qml, 1)
 
-        self.shuffle_sound = load_sound("card_shuffle")
-        self.play_sound = load_sound("gunshot")
+        self.click_sound = load_sound("ui_click", self)
+        self.draw_sound = load_sound("draw_card", self)
+        self.discard_sound = load_sound("discard_card", self)
+        self.shuffle_sound = load_sound("shuffle_cards", self)
+        self.play_sound = load_sound("play_card", self)
 
         self.hand_widget = QtWidgets.QWidget()
         self.hand_layout = QtWidgets.QHBoxLayout(self.hand_widget)
@@ -117,7 +122,17 @@ class GameView(QtWidgets.QWidget):
                 rank = getattr(card, "rank", None)
                 suit = getattr(card, "suit", None)
                 cset = getattr(card, "card_set", None)
-            btn = CardButton(name, idx, ctype, rank, suit, cset, self.play_sound)
+            btn = CardButton(
+                name,
+                idx,
+                ctype,
+                rank,
+                suit,
+                cset,
+                play_sound=self.play_sound,
+                click_sound=self.click_sound,
+                discard_sound=self.discard_sound,
+            )
             btn.action_signal.connect(
                 lambda act, i=idx: self.action_signal.emit({
                     "action": act,
@@ -125,3 +140,22 @@ class GameView(QtWidgets.QWidget):
                 })
             )
             self.hand_layout.addWidget(btn)
+
+    def _draw_card(self) -> None:
+        if self.click_sound:
+            self.click_sound.play()
+        if self.draw_sound:
+            self.draw_sound.play()
+        self.action_signal.emit({"action": "draw"})
+
+    def _discard_card(self) -> None:
+        if self.click_sound:
+            self.click_sound.play()
+        if self.discard_sound:
+            self.discard_sound.play()
+        self.action_signal.emit({"action": "discard"})
+
+    def _end_turn(self) -> None:
+        if self.click_sound:
+            self.click_sound.play()
+        self.end_turn_signal.emit()

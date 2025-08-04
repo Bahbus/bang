@@ -85,25 +85,46 @@ def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.
     return pix
 
 
-def load_sound(name: str) -> QtMultimedia.QSoundEffect | None:
-    """Return a sound effect for ``name`` if QtMultimedia is available.
+def load_sound(name: str, parent: QtCore.QObject | None = None) -> QtCore.QObject | None:
+    """Return a playable sound object for ``name``.
 
-    Examples include ``"gunshot"``, ``"card_shuffle"`` and ``"ui_click"``.
+    The loader searches for ``.mp3``, ``.wav`` and ``.ogg`` files in that order.
+    If a ``.mp3`` file is found a :class:`QMediaPlayer` with an accompanying
+    :class:`QAudioOutput` is returned, otherwise a :class:`QSoundEffect` is used.
+    The returned object is parented to ``parent`` so resources are released when
+    the parent is deleted.
     """
+
     if QtMultimedia is None:
         return None
+
+    class _MediaPlayer(QtMultimedia.QMediaPlayer):
+        """Small helper to ensure playback stops when deleted."""
+
+        def __del__(self) -> None:  # pragma: no cover - best effort
+            try:
+                self.stop()
+            except Exception:
+                pass
     base = name.lower().replace(" ", "_")
     path = None
-    for ext in (".wav", ".ogg"):
+    for ext in (".mp3", ".wav", ".ogg"):
         candidate = AUDIO_DIR / f"{base}{ext}"
         if candidate.exists():
             path = candidate
             break
     if path is None:
         return None
-    effect = QtMultimedia.QSoundEffect()
     with resources.as_file(path) as file_path:
-        effect.setSource(QtCore.QUrl.fromLocalFile(str(file_path)))
+        url = QtCore.QUrl.fromLocalFile(str(file_path))
+    if path.suffix == ".mp3":
+        player = _MediaPlayer(parent)
+        audio_out = QtMultimedia.QAudioOutput(player)
+        player.setAudioOutput(audio_out)
+        player.setSource(url)
+        return player
+    effect = QtMultimedia.QSoundEffect(parent)
+    effect.setSource(url)
     return effect
 
 
