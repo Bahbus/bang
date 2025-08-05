@@ -27,6 +27,11 @@ Item {
 
     onHandChanged: shuffleSound.play()
 
+    function playBang() { bangSound.play() }
+    function playMissed() { missedSound.play() }
+    function playIndians() { indiansSound.play() }
+    function playManyBangs() { manyBangsSound.play() }
+
     Rectangle {
         anchors.fill: parent
         color: theme === "dark" ? "#004000" : "#006400"
@@ -222,4 +227,8 @@ Item {
     SoundEffect { id: discardSound; source: "../assets/audio/discard_card.mp3" }
     SoundEffect { id: playSound; source: "../assets/audio/play_card.mp3" }
     SoundEffect { id: shuffleSound; source: "../assets/audio/shuffle_cards.mp3" }
+    SoundEffect { id: bangSound; source: "../assets/audio/bang.mp3" }
+    SoundEffect { id: missedSound; source: "../assets/audio/missed.mp3" }
+    SoundEffect { id: indiansSound; source: "../assets/audio/indians.mp3" }
+    SoundEffect { id: manyBangsSound; source: "../assets/audio/many_bangs.mp3" }
 }
