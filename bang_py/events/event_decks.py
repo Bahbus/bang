@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from .cards.events import (
+from ..cards.events import (
     BaseEventCard,
     AbandonedMineEventCard,
     AmbushEventCard,
@@ -39,10 +39,10 @@ from .cards.events import (
     HandcuffsEventCard,
     NewIdentityEventCard,
 )
-from .player import Player
+from ..player import Player
 
 if TYPE_CHECKING:
-    from .game_manager import GameManager
+    from ..game_manager import GameManager
 
 
 def _peyote(game: GameManager) -> None:
