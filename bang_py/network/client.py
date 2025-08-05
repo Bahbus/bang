@@ -6,9 +6,19 @@ import logging
 import ssl
 
 try:  # Optional websockets import for test environments
-    import websockets
-except ModuleNotFoundError:  # pragma: no cover - handled in main()
-    websockets = None  # type: ignore[assignment]
+    from websockets.asyncio.client import connect
+    from websockets.exceptions import WebSocketException
+    import websockets  # re-exported for tests
+except (ModuleNotFoundError, ImportError):  # pragma: no cover - fall back to legacy API
+    try:
+        import websockets
+        from websockets.exceptions import WebSocketException
+
+        connect = websockets.connect
+    except ModuleNotFoundError:  # pragma: no cover - handled in main()
+        connect = None  # type: ignore[assignment]
+        websockets = None  # type: ignore[assignment]
+        WebSocketException = Exception  # type: ignore[assignment]
 
 from .server import parse_join_token
 
@@ -47,7 +57,7 @@ async def main(
     Incoming messages are parsed as JSON when possible and printed to the
     console along with the list of players.
     """
-    if websockets is None:
+    if connect is None:
         logging.error("websockets package is required for networking")
         return
 
@@ -63,7 +73,7 @@ async def main(
         if cafile:
             ssl_ctx.load_verify_locations(cafile)
 
-    async with websockets.connect(uri, ssl=ssl_ctx) as websocket:
+    async with connect(uri, ssl=ssl_ctx) as websocket:
         prompt = await websocket.recv()
         logging.info(prompt)
         await websocket.send(room_code)

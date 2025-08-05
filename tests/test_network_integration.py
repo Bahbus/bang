@@ -12,14 +12,19 @@ from bang_py.cards.bang import BangCard
 trustme = pytest.importorskip("trustme")
 
 websockets = pytest.importorskip("websockets")
+try:  # Prefer the modern asyncio API
+    from websockets.asyncio.client import connect
+    from websockets.asyncio.server import serve
+except ModuleNotFoundError:  # pragma: no cover - older websockets versions
+    connect = websockets.connect  # type: ignore[attr-defined]
+    serve = websockets.serve  # type: ignore[attr-defined]
 
 
 def test_server_client_play_flow() -> None:
     async def run_flow() -> None:
         server = BangServer(host="localhost", port=8767, room_code="1111")
-        async with websockets.serve(server.handler, server.host, server.port):
-            async with websockets.connect("ws://localhost:8767") as ws1, \
-                       websockets.connect("ws://localhost:8767") as ws2:
+        async with serve(server.handler, server.host, server.port):
+            async with connect("ws://localhost:8767") as ws1, connect("ws://localhost:8767") as ws2:
                 # Alice join
                 await ws1.recv()
                 await ws1.send("1111")
@@ -49,7 +54,7 @@ def test_server_client_play_flow() -> None:
                 assert "eliminated" in data["message"]
                 assert not alice.is_alive()
 
-asyncio.run(run_flow())
+    asyncio.run(run_flow())
 
 
 def test_server_client_ssl(tmp_path) -> None:
@@ -72,10 +77,10 @@ def test_server_client_ssl(tmp_path) -> None:
 
     async def run_flow() -> None:
         ssl_client = ssl.create_default_context(cafile=str(ca_file))
-        async with websockets.serve(
+        async with serve(
             server.handler, server.host, server.port, ssl=server.ssl_context
         ):
-            async with websockets.connect(
+            async with connect(
                 "wss://localhost:8768", ssl=ssl_client
             ) as ws:
                 await ws.recv()
