@@ -17,22 +17,12 @@ pytest.importorskip(
     exc_type=ImportError,
 )
 pytest.importorskip(
-    "PySide6.QtGui",
-    reason="QtGui unavailable; skipping GUI tests",
-    exc_type=ImportError,
-)
-pytest.importorskip(
-    "PySide6.QtQuickWidgets",
-    reason="QtQuickWidgets unavailable; skipping GUI tests",
-    exc_type=ImportError,
-)
-pytest.importorskip(
     "PySide6.QtMultimedia",
     reason="QtMultimedia unavailable; skipping GUI tests",
     exc_type=ImportError,
 )
 
-from PySide6 import QtWidgets, QtCore, QtGui  # noqa: E402
+from PySide6 import QtWidgets, QtCore  # noqa: E402
 
 
 @pytest.fixture
@@ -51,7 +41,8 @@ def test_bang_ui_creation(qt_app):
     from bang_py.ui import BangUI
 
     ui = BangUI()
-    assert ui.windowTitle() == "Bang!"
+    ui.show()
+    assert ui.view.title() == "Bang!"
     ui.close()
 
 
@@ -92,10 +83,11 @@ def test_broadcast_state_updates_ui(qt_app):
 
 
 def test_qml_board_signals(qt_app):
-    from bang_py.ui_components.game_view import GameView
+    from bang_py.ui import BangUI
 
-    gv = GameView()
-    root = gv.root_obj
+    ui = BangUI()
+    ui._build_game_view()
+    root = ui.game_root
     triggered = {}
 
     def _draw():
@@ -105,7 +97,7 @@ def test_qml_board_signals(qt_app):
         root.drawCard.connect(_draw)
         root.drawCard.emit()
     assert "draw" in triggered
-    gv.close()
+    ui.close()
 
 
 def test_dark_theme_from_env(qt_app, monkeypatch):
@@ -113,7 +105,7 @@ def test_dark_theme_from_env(qt_app, monkeypatch):
     from bang_py.ui import BangUI
 
     ui = BangUI()
-    assert "#2b2b2b" in ui.styleSheet()
+    assert ui.root.property("theme") == "dark"
     ui.close()
 
 
@@ -127,20 +119,6 @@ def test_join_menu_invalid_token_shows_error(qt_app, monkeypatch):
 
     monkeypatch.setattr(QtWidgets.QMessageBox, "critical", fake_critical)
 
-    class DummyDialog:
-        def __init__(self, mode="join", parent=None):
-            self.token_edit = QtWidgets.QLineEdit()
-            self.token_edit.setText("invalid")
-            self.addr_edit = QtWidgets.QLineEdit("localhost")
-            self.port_edit = QtWidgets.QLineEdit("8765")
-            self.code_edit = QtWidgets.QLineEdit()
-            self.cafile_edit = QtWidgets.QLineEdit()
-
-        def exec(self):
-            return QtWidgets.QDialog.Accepted
-
-    monkeypatch.setattr(ui_module, "HostJoinDialog", DummyDialog)
-
     called = {}
 
     def fake_start_join(self, addr, port, code, cafile=None):
@@ -149,7 +127,7 @@ def test_join_menu_invalid_token_shows_error(qt_app, monkeypatch):
     monkeypatch.setattr(ui_module.BangUI, "_start_join", fake_start_join)
 
     ui = ui_module.BangUI()
-    ui._join_menu()
+    ui._join_menu("Alice", "", "0", "invalid", "")
     assert error_msg["text"] == "Invalid token"
     assert "called" not in called
     ui.close()

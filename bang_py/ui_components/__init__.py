@@ -1,12 +1,8 @@
-"""UI component widgets for the Bang game."""
+"""UI utilities for the Bang game."""
 
-from .host_join_dialog import HostJoinDialog
-from .game_view import GameView
-from .network_threads import ServerThread, ClientThread
+from .network_threads import ClientThread, ServerThread
 
 __all__ = [
-    "HostJoinDialog",
-    "GameView",
     "ServerThread",
     "ClientThread",
 ]
