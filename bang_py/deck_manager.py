@@ -1,0 +1,205 @@
+"""Deck creation and player management utilities."""
+
+from __future__ import annotations
+
+from typing import List, Optional, TYPE_CHECKING
+import random
+
+from .deck import Deck
+from .deck_factory import create_standard_deck
+from .cards.card import BaseCard
+from .cards.roles import (
+    BaseRole,
+    DeputyRoleCard,
+    OutlawRoleCard,
+    RenegadeRoleCard,
+    SheriffRoleCard,
+)
+from .characters.base import BaseCharacter
+
+if TYPE_CHECKING:  # pragma: no cover - imported for type checking
+    from .player import Player
+    from .game_manager import GameManager
+
+
+class DeckManagerMixin:
+    """Handle deck setup and player turn ordering."""
+
+    deck: Deck | None
+    expansions: List[str]
+    _players: List['Player']
+    discard_pile: List[BaseCard]
+    event_flags: dict
+    current_turn: int
+    turn_order: List[int]
+
+    def _initialize_main_deck(self: 'GameManager') -> None:
+        """Create the main deck if needed and ensure event flags exist."""
+        if self.deck is None:
+            if not self.expansions:
+                self.expansions.append("dodge_city")
+            self.deck = create_standard_deck(self.expansions)
+        self.event_flags = {}
+
+    def add_player(self: 'GameManager', player: 'Player') -> None:
+        """Add a player to the game and record the game reference."""
+        player.metadata.game = self
+        self._players.append(player)
+        if player.character is not None:
+            player.character.ability(self, player)
+
+    def remove_player(self: 'GameManager', player: 'Player') -> None:
+        """Remove ``player`` from the game and update turn order."""
+        if player not in self._players:
+            return
+        current_obj = self._current_player_obj() if self.turn_order else None
+        idx = self._players.index(player)
+        self._players.pop(idx)
+        player.metadata.game = None
+        self._reindex_turn_order(idx)
+        if not self.turn_order:
+            self.current_turn = 0
+            return
+        self._reset_current_turn(current_obj)
+
+    def start_game(self: 'GameManager', deal_roles: bool = True) -> None:
+        """Begin the game and deal starting hands."""
+        if deal_roles:
+            self._deal_roles_and_characters()
+        self.turn_order = list(range(len(self._players)))
+        self.current_turn = 0
+        for _ in range(2):
+            for player in self._players:
+                self.draw_card(player)
+        self._begin_turn()
+
+    # ------------------------------------------------------------------
+    # Setup helpers
+    def _build_role_deck(self: 'GameManager') -> List[BaseRole]:
+        role_map = {
+            3: [DeputyRoleCard, OutlawRoleCard, RenegadeRoleCard],
+            4: [SheriffRoleCard, RenegadeRoleCard, OutlawRoleCard, OutlawRoleCard],
+            5: [
+                SheriffRoleCard,
+                RenegadeRoleCard,
+                DeputyRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+            ],
+            6: [
+                SheriffRoleCard,
+                RenegadeRoleCard,
+                DeputyRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+            ],
+            7: [
+                SheriffRoleCard,
+                RenegadeRoleCard,
+                DeputyRoleCard,
+                DeputyRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+            ],
+            8: [
+                SheriffRoleCard,
+                RenegadeRoleCard,
+                RenegadeRoleCard,
+                DeputyRoleCard,
+                DeputyRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+                OutlawRoleCard,
+            ],
+        }
+        classes = role_map.get(len(self._players))
+        if not classes:
+            raise ValueError("Unsupported player count")
+        return [cls() for cls in classes]
+
+    def _build_character_deck(self: 'GameManager') -> List[type[BaseCharacter]]:
+        from . import characters
+
+        return [
+            getattr(characters, name)
+            for name in characters.__all__
+            if name != "BaseCharacter"
+        ]
+
+    def choose_character(
+        self, player: 'Player', options: List[BaseCharacter]
+    ) -> BaseCharacter:
+        """Select which character a player will use. Defaults to the first."""
+        return options[0]
+
+    def _deal_roles_and_characters(self: 'GameManager') -> None:
+        role_deck = self._build_role_deck()
+        random.shuffle(role_deck)
+        char_deck = [cls() for cls in self._build_character_deck()]
+        random.shuffle(char_deck)
+        for player in self._players:
+            player.role = role_deck.pop()
+            choices = [char_deck.pop(), char_deck.pop()]
+            chosen = self.choose_character(player, choices)
+            player.character = chosen
+            for ch in choices:
+                if ch is not chosen:
+                    player.metadata.unused_character = ch
+                    break
+            player.reset_stats()
+            player.character.ability(self, player)
+            player.metadata.game = self
+
+    def _next_alive_player(self: 'GameManager', player: 'Player') -> Optional['Player']:
+        """Return the next living player to the left."""
+        if player not in self._players:
+            return None
+        idx = self._players.index(player)
+        for i in range(1, len(self._players)):
+            nxt = self._players[(idx + i) % len(self._players)]
+            if nxt.is_alive():
+                return nxt
+        return None
+
+    def _pass_left_or_discard(self: 'GameManager', source: 'Player', card: BaseCard) -> None:
+        """Pass card left if The River is active, else discard."""
+        if self.event_flags.get("river"):
+            target = self._next_alive_player(source)
+            if target and target is not source:
+                target.hand.append(card)
+                return
+        self.discard_pile.append(card)
+
+    # ------------------------------------------------------------------
+    # Turn management helpers
+    def _current_player_obj(self: 'GameManager') -> 'Player':
+        """Return the Player instance whose turn it currently is."""
+        return self._players[self.turn_order[self.current_turn]]
+
+    def _reindex_turn_order(self: 'GameManager', removed_idx: int) -> None:
+        """Remove ``removed_idx`` from turn order and shift indices."""
+        self.turn_order = [
+            i - 1 if i > removed_idx else i for i in self.turn_order if i != removed_idx
+        ]
+
+    def _reset_current_turn(
+        self: 'GameManager', current_obj: Optional['Player'] | None
+    ) -> None:
+        """Update ``current_turn`` after player removal."""
+        if current_obj and current_obj in self._players:
+            cur_idx = self._players.index(current_obj)
+            if cur_idx in self.turn_order:
+                self.current_turn = self.turn_order.index(cur_idx)
+                return
+        self.current_turn %= len(self.turn_order)
+
+    def _get_player_by_index(self: 'GameManager', idx: int) -> Optional['Player']:
+        if 0 <= idx < len(self._players):
+            return self._players[idx]
+        return None
+
+    def get_player_by_index(self: 'GameManager', idx: int) -> Optional['Player']:
+        """Return the player at ``idx`` if it exists."""
+        return self._get_player_by_index(idx)
