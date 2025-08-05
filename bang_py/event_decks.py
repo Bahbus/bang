@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, List, TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from .cards.events import (
     BaseEventCard,
@@ -188,7 +189,7 @@ class EventCard:
             self.apply(game)
 
 
-def create_high_noon_deck() -> List[BaseEventCard]:
+def create_high_noon_deck() -> list[BaseEventCard]:
     """Return a simple High Noon event deck."""
     return [
         BlessingEventCard(),
@@ -209,7 +210,7 @@ def create_high_noon_deck() -> List[BaseEventCard]:
     ]
 
 
-def create_fistful_deck() -> List[BaseEventCard]:
+def create_fistful_deck() -> list[BaseEventCard]:
     """Return a simple Fistful of Cards event deck."""
     return [
         AbandonedMineEventCard(),

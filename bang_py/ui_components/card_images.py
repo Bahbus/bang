@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from importlib import resources
-from typing import Dict
 
 from PySide6 import QtCore, QtGui, QtWidgets
 try:
@@ -153,8 +152,8 @@ class CardImageLoader:
     @classmethod
     def _load_templates(
         cls, width: int, height: int
-    ) -> Dict[str, QtGui.QPixmap]:
-        templates: Dict[str, QtGui.QPixmap] = {}
+    ) -> dict[str, QtGui.QPixmap]:
+        templates: dict[str, QtGui.QPixmap] = {}
         for key, fname in _TEMPLATE_FILES.items():
             path = ASSETS_DIR / fname
             with resources.as_file(path) as file_path:
@@ -169,8 +168,8 @@ class CardImageLoader:
     @classmethod
     def _load_card_backs(
         cls, width: int, height: int
-    ) -> Dict[str, QtGui.QPixmap]:
-        backs: Dict[str, QtGui.QPixmap] = {}
+    ) -> dict[str, QtGui.QPixmap]:
+        backs: dict[str, QtGui.QPixmap] = {}
         for key, fname in _CARD_BACK_FILES.items():
             path = ASSETS_DIR / fname
             with resources.as_file(path) as file_path:
@@ -188,8 +187,8 @@ class CardImageLoader:
         return backs
 
     @classmethod
-    def _load_action_icons(cls) -> Dict[str, QtGui.QPixmap]:
-        icons: Dict[str, QtGui.QPixmap] = {}
+    def _load_action_icons(cls) -> dict[str, QtGui.QPixmap]:
+        icons: dict[str, QtGui.QPixmap] = {}
         for key, fname in ACTION_ICON_MAP.items():
             path = ICON_DIR / fname
             with resources.as_file(path) as file_path:
