@@ -1,3 +1,5 @@
+"""Buffalo Rifle card from the Dodge City expansion. Bang any player regardless of distance."""
+
 from __future__ import annotations
 
 from .card import BaseCard

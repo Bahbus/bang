@@ -1,3 +1,5 @@
+"""Card module exports for Bang! base game and expansions."""
+
 from .card import BaseCard
 from .bang import BangCard
 from .beer import BeerCard

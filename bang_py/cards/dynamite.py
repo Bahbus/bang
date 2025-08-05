@@ -1,3 +1,6 @@
+"""Dynamite card from the base game. Passes around; at the start of your turn draw a card, and if it
+is a spade between 2 and 9, Dynamite explodes for 3 damage."""
+
 from __future__ import annotations
 
 from .card import BaseCard

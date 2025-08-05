@@ -1,3 +1,6 @@
+"""Train Arrival card from the High Noon expansion. During their draw phase, each player draws an
+additional card."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

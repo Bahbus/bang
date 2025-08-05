@@ -1,3 +1,5 @@
+"""Gatling card from the base game. Bang every other player once."""
+
 from __future__ import annotations
 
 from .card import BaseCard

@@ -1,3 +1,5 @@
+"""Curse card from the High Noon expansion. All cards are Spades"""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

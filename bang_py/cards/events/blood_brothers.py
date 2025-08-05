@@ -1,3 +1,6 @@
+"""Blood Brothers card from the Fistful of Cards expansion. At the beginning of his turn, each
+player may choose to lose 1 life (but not their last life) to give 1 life point to any player."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

@@ -1,3 +1,5 @@
+"""Hideout card from the Dodge City expansion. Opponents see you at +1 distance."""
+
 from __future__ import annotations
 
 from .card import BaseCard

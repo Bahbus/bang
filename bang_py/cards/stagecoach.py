@@ -1,3 +1,5 @@
+"""Stagecoach card from the base game. Draw two cards."""
+
 from __future__ import annotations
 
 from .card import BaseCard

@@ -1,3 +1,6 @@
+"""Handcuffs card from the High Noon expansion. After their draw phase, each player announces a suit
+and can only play that suit for the rest of their turn."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

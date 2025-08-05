@@ -1,3 +1,5 @@
+"""Springfield card from the Dodge City expansion. Discard another card to Bang! any player."""
+
 from __future__ import annotations
 
 from .card import BaseCard

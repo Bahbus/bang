@@ -1,3 +1,5 @@
+"""Canteen card from the Dodge City expansion. Heal 1 health."""
+
 from __future__ import annotations
 
 from .card import BaseCard

@@ -1,3 +1,5 @@
+"""Outlaw role from the base game; wins by eliminating the Sheriff."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,3 +1,5 @@
+"""Sheriff role from the base game; wins by eliminating all Outlaws and the Renegade."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

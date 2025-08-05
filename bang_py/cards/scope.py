@@ -1,3 +1,5 @@
+"""Scope card from the base game. Increases your attack range by 1."""
+
 from __future__ import annotations
 
 from .card import BaseCard

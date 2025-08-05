@@ -1,3 +1,5 @@
+"""The Reverend card from the High Noon expansion. Beer cannot be played"""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

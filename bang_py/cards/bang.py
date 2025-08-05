@@ -1,3 +1,5 @@
+"""Bang! card from the base game. Basic attack that deals 1 damage unless dodged."""
+
 from __future__ import annotations
 
 from .card import BaseCard

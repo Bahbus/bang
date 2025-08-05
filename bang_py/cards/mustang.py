@@ -1,3 +1,5 @@
+"""Mustang card from the base game. Opponents see you at 1 greater distance."""
+
 from __future__ import annotations
 
 from .card import BaseCard

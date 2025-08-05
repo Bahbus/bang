@@ -1,3 +1,5 @@
+"""Barrel card from the base game. Draw when targeted by Bang!; on Heart, ignore it."""
+
 from __future__ import annotations
 
 from .card import BaseCard

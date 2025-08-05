@@ -1,3 +1,5 @@
+"""Wells Fargo card from the base game. Draw three cards."""
+
 from __future__ import annotations
 
 from .card import BaseCard

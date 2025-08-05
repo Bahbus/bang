@@ -1,3 +1,5 @@
+"""Missed! card from the base game. Negates one Bang! targeting you."""
+
 from __future__ import annotations
 
 from .card import BaseCard

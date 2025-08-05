@@ -1,3 +1,6 @@
+"""Tequila card from the Fistful of Cards expansion. Discard another card with Tequila to heal 1
+health."""
+
 from __future__ import annotations
 
 from .card import BaseCard

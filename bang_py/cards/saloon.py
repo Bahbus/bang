@@ -1,3 +1,5 @@
+"""Saloon card from the base game. All players heal 1 health."""
+
 from __future__ import annotations
 
 from .card import BaseCard

@@ -1,3 +1,5 @@
+"""Renegade role from the base game; aims to be last alive after the Sheriff falls."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

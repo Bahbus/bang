@@ -1,3 +1,5 @@
+"""Bible card from the Dodge City expansion. Play as Missed! and then draw one card."""
+
 from __future__ import annotations
 
 from .card import BaseCard

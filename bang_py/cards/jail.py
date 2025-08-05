@@ -1,3 +1,5 @@
+"""Jail card from the base game. Skip your turn unless you draw a Heart."""
+
 from __future__ import annotations
 
 from .card import BaseCard

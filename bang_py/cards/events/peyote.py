@@ -1,3 +1,6 @@
+"""Peyote card from the Fistful of Cards expansion. During their draw phase, each player guesses red
+or black. They reveal the top card; if correct they repeat until wrong."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

@@ -1,3 +1,5 @@
+"""Ranch card from the Fistful of Cards expansion. Optional discard and redraw"""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

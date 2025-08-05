@@ -1,3 +1,5 @@
+"""Knife card from the Dodge City expansion. Attack at distance 1 that can be dodged."""
+
 from __future__ import annotations
 
 from .card import BaseCard

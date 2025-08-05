@@ -1,3 +1,5 @@
+"""Howitzer card from the Dodge City expansion. Bang all opponents ignoring distance."""
+
 from __future__ import annotations
 
 from .card import BaseCard

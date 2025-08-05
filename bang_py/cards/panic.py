@@ -1,3 +1,6 @@
+"""Panic! card from the base game. Range 1: choose a card from the target's hand or in play and take
+it."""
+
 from __future__ import annotations
 from .card import BaseCard
 from ..player import Player
