@@ -12,19 +12,20 @@ from typing import Any
 from PySide6 import QtCore
 
 try:  # Optional websockets import for test environments
-    from websockets.asyncio.client import connect, WebSocketClientProtocol
+    from websockets.asyncio.client import ClientConnection, connect
     from websockets.exceptions import WebSocketException
-except ModuleNotFoundError:  # pragma: no cover - fall back to legacy API
+    WSConnection = ClientConnection
+except (ModuleNotFoundError, ImportError):  # pragma: no cover - fall back to legacy API
     try:
         from websockets import connect
         from websockets.exceptions import WebSocketException
         try:
-            from websockets.legacy.client import WebSocketClientProtocol
+            from websockets.legacy.client import WebSocketClientProtocol as WSConnection
         except ModuleNotFoundError:  # pragma: no cover - older versions
-            from websockets.client import WebSocketClientProtocol  # type: ignore[no-redef]
+            from websockets.client import WebSocketClientProtocol as WSConnection  # type: ignore[no-redef]
     except ModuleNotFoundError:  # pragma: no cover - handled in _run()
         connect = None  # type: ignore[assignment]
-        WebSocketClientProtocol = Any  # type: ignore[assignment]
+        WSConnection = Any  # type: ignore[assignment]
         WebSocketException = Exception  # type: ignore[assignment]
 
 from ..network.server import BangServer
@@ -93,7 +94,7 @@ class ClientThread(QtCore.QThread):
         self.name = name
         self.cafile = cafile
         self.loop = asyncio.new_event_loop()
-        self.websocket: WebSocketClientProtocol | None = None
+        self.websocket: WSConnection | None = None
 
     def run(self) -> None:  # type: ignore[override]
         asyncio.set_event_loop(self.loop)
