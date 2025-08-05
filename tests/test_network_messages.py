@@ -8,15 +8,19 @@ pytest.importorskip("cryptography")
 from bang_py.network.server import BangServer, MAX_MESSAGE_SIZE
 
 websockets = pytest.importorskip("websockets")
+try:  # Prefer the modern asyncio API
+    from websockets.asyncio.client import connect
+    from websockets.asyncio.server import serve
+except ModuleNotFoundError:  # pragma: no cover - older websockets versions
+    connect = websockets.connect  # type: ignore[attr-defined]
+    serve = websockets.serve  # type: ignore[attr-defined]
 
 
 def test_oversized_message_closes_connection() -> None:
     async def run_flow() -> None:
         server = BangServer(host="localhost", port=8770, room_code="z999")
-        async with websockets.serve(
-            server.handler, server.host, server.port, max_size=MAX_MESSAGE_SIZE
-        ):
-            async with websockets.connect("ws://localhost:8770") as ws:
+        async with serve(server.handler, server.host, server.port, max_size=MAX_MESSAGE_SIZE):
+            async with connect("ws://localhost:8770") as ws:
                 await ws.recv()
                 await ws.send("z999")
                 await ws.recv()
@@ -36,8 +40,8 @@ def test_oversized_message_closes_connection() -> None:
 def test_malformed_message_ignored() -> None:
     async def run_flow() -> None:
         server = BangServer(host="localhost", port=8771, room_code="z998")
-        async with websockets.serve(server.handler, server.host, server.port):
-            async with websockets.connect("ws://localhost:8771") as ws:
+        async with serve(server.handler, server.host, server.port):
+            async with connect("ws://localhost:8771") as ws:
                 await ws.recv()
                 await ws.send("z998")
                 await ws.recv()
@@ -55,8 +59,8 @@ def test_malformed_message_ignored() -> None:
 def test_invalid_payload_rejected() -> None:
     async def run_flow() -> None:
         server = BangServer(host="localhost", port=8772, room_code="z997")
-        async with websockets.serve(server.handler, server.host, server.port):
-            async with websockets.connect("ws://localhost:8772") as ws:
+        async with serve(server.handler, server.host, server.port):
+            async with connect("ws://localhost:8772") as ws:
                 await ws.recv()
                 await ws.send("z997")
                 await ws.recv()
