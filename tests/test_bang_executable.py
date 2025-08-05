@@ -11,10 +11,13 @@ pytest.importorskip(
     "PySide6", reason="PySide6 not installed; skipping executable test"
 )
 
-pytestmark = pytest.mark.skipif(
-    os.getenv("CI") == "true" or shutil.which("pyinstaller") is None,
-    reason="Skipping executable test on CI or when PyInstaller is missing",
-)
+pytestmark = [
+    pytest.mark.skipif(
+        os.getenv("CI") == "true" or shutil.which("pyinstaller") is None,
+        reason="Skipping executable test on CI or when PyInstaller is missing",
+    ),
+    pytest.mark.slow,
+]
 
 def test_bang_executable_exits(tmp_path):
     try:

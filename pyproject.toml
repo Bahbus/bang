@@ -32,3 +32,9 @@ bang-ui = "bang_py.ui:main"
     "assets/*.md",
     "qml/*.qml",
 ]
+
+[tool.pytest.ini_options]
+addopts = "-m 'not slow'"
+markers = [
+    "slow: marks tests that are slow and require manual invocation",
+]
