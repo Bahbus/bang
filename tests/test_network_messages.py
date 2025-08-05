@@ -8,12 +8,8 @@ pytest.importorskip("cryptography")
 from bang_py.network.server import BangServer, MAX_MESSAGE_SIZE
 
 websockets = pytest.importorskip("websockets")
-try:  # Prefer the modern asyncio API
-    from websockets.asyncio.client import connect
-    from websockets.asyncio.server import serve
-except ModuleNotFoundError:  # pragma: no cover - older websockets versions
-    connect = websockets.connect  # type: ignore[attr-defined]
-    serve = websockets.serve  # type: ignore[attr-defined]
+from websockets.asyncio.client import connect
+from websockets.asyncio.server import serve
 
 
 def test_oversized_message_closes_connection() -> None:
@@ -30,10 +26,7 @@ def test_oversized_message_closes_connection() -> None:
                 await ws.send("x" * (MAX_MESSAGE_SIZE + 1))
                 with pytest.raises(websockets.exceptions.ConnectionClosed) as exc:
                     await ws.recv()
-                if hasattr(exc.value, "rcvd"):
-                    assert exc.value.rcvd.code == 1009
-                else:  # pragma: no cover - older websockets versions
-                    assert exc.value.code == 1009
+                assert exc.value.rcvd.code == 1009
     asyncio.run(run_flow())
 
 

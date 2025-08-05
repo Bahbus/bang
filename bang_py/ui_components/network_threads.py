@@ -7,26 +7,10 @@ import json
 import logging
 import ssl
 
-from typing import Any
-
 from PySide6 import QtCore
 
-try:  # Optional websockets import for test environments
-    from websockets.asyncio.client import ClientConnection, connect
-    from websockets.exceptions import WebSocketException
-    WSConnection = ClientConnection
-except (ModuleNotFoundError, ImportError):  # pragma: no cover - fall back to legacy API
-    try:
-        from websockets import connect
-        from websockets.exceptions import WebSocketException
-        try:
-            from websockets.legacy.client import WebSocketClientProtocol as WSConnection
-        except ModuleNotFoundError:  # pragma: no cover - older versions
-            from websockets.client import WebSocketClientProtocol as WSConnection  # type: ignore[no-redef]
-    except ModuleNotFoundError:  # pragma: no cover - handled in _run()
-        connect = None  # type: ignore[assignment]
-        WSConnection = Any  # type: ignore[assignment]
-        WebSocketException = Exception  # type: ignore[assignment]
+from websockets.asyncio.client import ClientConnection, connect
+from websockets.exceptions import WebSocketException
 
 from ..network.server import BangServer
 
@@ -94,7 +78,7 @@ class ClientThread(QtCore.QThread):
         self.name = name
         self.cafile = cafile
         self.loop = asyncio.new_event_loop()
-        self.websocket: WSConnection | None = None
+        self.websocket: ClientConnection | None = None
 
     def run(self) -> None:  # type: ignore[override]
         asyncio.set_event_loop(self.loop)
@@ -113,11 +97,6 @@ class ClientThread(QtCore.QThread):
             self.loop.call_soon_threadsafe(self.loop.stop)
 
     async def _run(self) -> None:
-        if connect is None:
-            msg = "websockets package is required for networking"
-            logging.error(msg)
-            self.message_received.emit(msg)
-            return
         try:
             ssl_ctx = None
             if self.uri.startswith("wss://") or self.cafile:

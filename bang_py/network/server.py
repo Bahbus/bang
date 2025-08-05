@@ -11,13 +11,8 @@ import logging
 
 from cryptography.fernet import Fernet
 
-try:  # Optional websockets import for test environments
-    from websockets.asyncio.server import serve, ServerConnection
-    from websockets.exceptions import WebSocketException
-except ModuleNotFoundError:  # pragma: no cover - handled in start()
-    serve = None  # type: ignore[assignment]
-    ServerConnection = Any  # type: ignore[assignment]
-    WebSocketException = Exception  # type: ignore[assignment]
+from websockets.asyncio.server import serve, ServerConnection
+from websockets.exceptions import WebSocketException
 
 from ..game_manager import GameManager
 from ..player import Player
@@ -659,8 +654,6 @@ class BangServer:
 
     async def start(self) -> None:
         """Start the websocket server and run until cancelled."""
-        if serve is None:
-            raise RuntimeError("websockets package is required to run the server")
         async with serve(
             self.handler,
             self.host,

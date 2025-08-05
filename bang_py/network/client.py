@@ -5,20 +5,8 @@ import json
 import logging
 import ssl
 
-try:  # Optional websockets import for test environments
-    from websockets.asyncio.client import connect
-    from websockets.exceptions import WebSocketException
-    import websockets  # re-exported for tests
-except (ModuleNotFoundError, ImportError):  # pragma: no cover - fall back to legacy API
-    try:
-        import websockets
-        from websockets.exceptions import WebSocketException
-
-        connect = websockets.connect
-    except ModuleNotFoundError:  # pragma: no cover - handled in main()
-        connect = None  # type: ignore[assignment]
-        websockets = None  # type: ignore[assignment]
-        WebSocketException = Exception  # type: ignore[assignment]
+from websockets.asyncio.client import connect
+from websockets.exceptions import WebSocketException
 
 from .server import parse_join_token
 
@@ -57,9 +45,6 @@ async def main(
     Incoming messages are parsed as JSON when possible and printed to the
     console along with the list of players.
     """
-    if connect is None:
-        logging.error("websockets package is required for networking")
-        return
 
     if token:
         host, port, room_code = parse_join_token(

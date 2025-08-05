@@ -28,6 +28,7 @@ from .characters.suzy_lafayette import SuzyLafayette
 from .characters.vulture_sam import VultureSam
 from .characters.willy_the_kid import WillyTheKid
 from .helpers import RankSuitIconLoader
+from .network.server import BangServer
 
 __all__ = [
     "GameManager",
@@ -57,10 +58,5 @@ __all__ = [
     "WillyTheKid",
     "create_standard_deck",
     "RankSuitIconLoader",
+    "BangServer",
 ]
-try:
-    from .network.server import BangServer
-except Exception:  # Server requires optional websockets dependency
-    BangServer = None
-else:
-    __all__.append("BangServer")
