@@ -54,7 +54,7 @@ def test_server_client_play_flow() -> None:
                 assert "eliminated" in data["message"]
                 assert not alice.is_alive()
 
-asyncio.run(run_flow())
+    asyncio.run(run_flow())
 
 
 def test_server_client_ssl(tmp_path) -> None:
