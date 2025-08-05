@@ -14,10 +14,17 @@ from PySide6 import QtCore
 try:  # Optional websockets import for test environments
     from websockets.asyncio.client import connect, WebSocketClientProtocol
     from websockets.exceptions import WebSocketException
-except ModuleNotFoundError:  # pragma: no cover - handled in _run()
-    connect = None  # type: ignore[assignment]
-    WebSocketClientProtocol = Any  # type: ignore[assignment]
-    WebSocketException = Exception  # type: ignore[assignment]
+except ModuleNotFoundError:  # pragma: no cover - fall back to legacy API
+    try:
+        import websockets
+        from websockets.exceptions import WebSocketException
+        from websockets.legacy.client import WebSocketClientProtocol
+
+        connect = websockets.connect
+    except ModuleNotFoundError:  # pragma: no cover - handled in _run()
+        connect = None  # type: ignore[assignment]
+        WebSocketClientProtocol = Any  # type: ignore[assignment]
+        WebSocketException = Exception  # type: ignore[assignment]
 
 from ..network.server import BangServer
 
