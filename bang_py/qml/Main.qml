@@ -65,12 +65,44 @@ Item {
         standardButtons: Dialog.Ok | Dialog.Cancel
         contentItem: Column {
             spacing: 8
-            TextField { id: portField; placeholderText: "Port"; text: "8765" }
-            TextField { id: maxField; placeholderText: "Max Players"; text: "7" }
+            TextField {
+                id: portField
+                placeholderText: "Port (1-65535)"
+                text: "8765"
+                validator: IntValidator { bottom: 1; top: 65535 }
+            }
+            Label {
+                text: "Enter a valid port"
+                color: "red"
+                visible: !portField.acceptableInput
+            }
+            TextField {
+                id: maxField
+                placeholderText: "Max Players (2-8)"
+                text: "7"
+                validator: IntValidator { bottom: 2; top: 8 }
+            }
+            Label {
+                text: "Players must be 2-8"
+                color: "red"
+                visible: !maxField.acceptableInput
+            }
             TextField { id: certField; placeholderText: "Certificate" }
             TextField { id: keyField; placeholderText: "Key File" }
         }
-        onAccepted: root.hostRequested(menu.nameText, portField.text, maxField.text, certField.text, keyField.text)
+        onAccepted: {
+            if (!portField.acceptableInput || !maxField.acceptableInput) {
+                hostDialog.open()
+                return
+            }
+            root.hostRequested(
+                menu.nameText,
+                portField.text,
+                maxField.text,
+                certField.text,
+                keyField.text,
+            )
+        }
     }
 
     Dialog {
@@ -80,17 +112,65 @@ Item {
         standardButtons: Dialog.Ok | Dialog.Cancel
         contentItem: Column {
             spacing: 8
-            TextField { id: tokenField; placeholderText: "Token" }
+            TextField {
+                id: tokenField
+                placeholderText: "Token"
+                validator: RegExpValidator { regExp: /^[A-Za-z0-9+\/_=-]{0,256}$/ }
+            }
+            Label {
+                text: "Invalid token"
+                color: "red"
+                visible: tokenField.text !== "" && !tokenField.acceptableInput
+            }
             TextField { id: addrField; placeholderText: "Host Address"; text: "localhost" }
-            TextField { id: portJoinField; placeholderText: "Port"; text: "8765" }
-            TextField { id: codeField; placeholderText: "Room Code" }
+            TextField {
+                id: portJoinField
+                placeholderText: "Port (1-65535)"
+                text: "8765"
+                validator: IntValidator { bottom: 1; top: 65535 }
+            }
+            Label {
+                text: "Enter a valid port"
+                color: "red"
+                visible: !portJoinField.acceptableInput
+            }
+            TextField {
+                id: codeField
+                placeholderText: "Room Code (6 hex)"
+                validator: RegExpValidator { regExp: /^[0-9A-Fa-f]{6}$/ }
+            }
+            Label {
+                text: "Code must be 6 hex chars"
+                color: "red"
+                visible: codeField.text !== "" && !codeField.acceptableInput
+            }
             TextField { id: cafileField; placeholderText: "CA File" }
         }
         onAccepted: {
             if (tokenField.text !== "") {
-                root.joinRequested(menu.nameText, "", 0, tokenField.text, cafileField.text)
+                if (!tokenField.acceptableInput) {
+                    joinDialog.open()
+                    return
+                }
+                root.joinRequested(
+                    menu.nameText,
+                    "",
+                    0,
+                    tokenField.text,
+                    cafileField.text,
+                )
             } else {
-                root.joinRequested(menu.nameText, addrField.text, portJoinField.text, codeField.text, cafileField.text)
+                if (!portJoinField.acceptableInput || !codeField.acceptableInput) {
+                    joinDialog.open()
+                    return
+                }
+                root.joinRequested(
+                    menu.nameText,
+                    addrField.text,
+                    portJoinField.text,
+                    codeField.text,
+                    cafileField.text,
+                )
             }
         }
     }
