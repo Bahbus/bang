@@ -16,11 +16,12 @@ try:  # Optional websockets import for test environments
     from websockets.exceptions import WebSocketException
 except ModuleNotFoundError:  # pragma: no cover - fall back to legacy API
     try:
-        import websockets
+        from websockets import connect
         from websockets.exceptions import WebSocketException
-        from websockets.legacy.client import WebSocketClientProtocol
-
-        connect = websockets.connect
+        try:
+            from websockets.legacy.client import WebSocketClientProtocol
+        except ModuleNotFoundError:  # pragma: no cover - older versions
+            from websockets.client import WebSocketClientProtocol  # type: ignore[no-redef]
     except ModuleNotFoundError:  # pragma: no cover - handled in _run()
         connect = None  # type: ignore[assignment]
         WebSocketClientProtocol = Any  # type: ignore[assignment]

@@ -8,7 +8,7 @@ import ssl
 try:  # Optional websockets import for test environments
     from websockets.asyncio.client import connect
     from websockets.exceptions import WebSocketException
-    import websockets  # re-exported for compatibility
+    import websockets  # re-exported for tests
 except ModuleNotFoundError:  # pragma: no cover - fall back to legacy API
     try:
         import websockets
