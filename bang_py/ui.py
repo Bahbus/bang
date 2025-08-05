@@ -1,156 +1,120 @@
+"""Qt Quick based interface for the Bang card game."""
+
+from __future__ import annotations
+
 import json
-import secrets
-from pathlib import Path
 import os
+import secrets
+from importlib import resources
 
-from PySide6 import QtCore, QtGui, QtWidgets, QtQuickWidgets
+from PySide6 import QtCore, QtWidgets, QtQuick
 
-if __package__ in {None, ""}:
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    __package__ = "bang_py"
-
-from .ui_components import (
-    HostJoinDialog,
-    GameView,
-    ServerThread,
-    ClientThread,
-)
-from .theme import get_stylesheet, get_current_theme
+from .ui_components import ClientThread, ServerThread
+from .ui_components.card_images import get_loader
+from .theme import get_current_theme
 from .network.server import parse_join_token
 from cryptography.fernet import InvalidToken
 
 
-class BangUI(QtWidgets.QMainWindow):
-    """Qt GUI for hosting, joining and playing a Bang game."""
+class BangUI(QtCore.QObject):
+    """Interface controller backed by a QML scene."""
 
     def __init__(self, theme: str | None = None) -> None:
         super().__init__()
-        self.setWindowTitle("Bang!")
-        self.resize(1024, 768)
-        self.stack = QtWidgets.QStackedWidget()
-        self.setCentralWidget(self.stack)
         self.theme = theme or get_current_theme()
-        self.setStyleSheet(get_stylesheet(self.theme))
-
+        self.view = QtQuick.QQuickView()
+        self.view.setResizeMode(QtQuick.QQuickView.SizeRootObjectToView)
+        qml_dir = resources.files("bang_py") / "qml"
+        with resources.as_file(qml_dir / "Main.qml") as qml_path:
+            self.view.setSource(QtCore.QUrl.fromLocalFile(str(qml_path)))
+        self.root = self.view.rootObject()
+        if self.root is not None:
+            self.root.setProperty("theme", self.theme)
+            self.root.hostRequested.connect(self._host_menu)
+            self.root.joinRequested.connect(self._join_menu)
+            self.root.settingsChanged.connect(self._settings_changed)
+            self.root.drawCard.connect(lambda: self._send_action({"action": "draw"}))
+            self.root.discardCard.connect(
+                lambda: self._send_action({"action": "discard"})
+            )
+            self.root.endTurn.connect(self._end_turn)
+            self.root.playCard.connect(
+                lambda i: self._send_action({"action": "play_card", "card_index": int(i)})
+            )
+            self.root.discardFromHand.connect(
+                lambda i: self._send_action({"action": "discard", "card_index": int(i)})
+            )
         self.client: ClientThread | None = None
         self.server_thread: ServerThread | None = None
         self.room_code = ""
         self.local_name = ""
-        self.menu_root: QtCore.QObject | None = None
+        self.game_root: QtCore.QObject | None = None
 
-        self._build_start_menu()
+    # Menu callbacks --------------------------------------------------
+    def _host_menu(
+        self,
+        name: str,
+        port_text: str,
+        max_players_text: str,
+        cert: str,
+        key: str,
+    ) -> None:
+        name = name.strip()
+        if not self._validate_name(name):
+            QtWidgets.QMessageBox.critical(None, "Error", "Please enter a valid name")
+            return
+        try:
+            port = int(port_text)
+            max_players = int(max_players_text)
+        except ValueError:
+            QtWidgets.QMessageBox.critical(None, "Error", "Invalid settings")
+            return
+        cert = cert.strip() or None
+        key = key.strip() or None
+        self.local_name = name
+        self._start_host(port, max_players, cert, key)
 
-    def _get_player_name(self) -> str:
-        if self.menu_root is not None:
-            name = self.menu_root.property("nameText")
-            if isinstance(name, str):
-                name = name.strip()
-                if name and len(name) <= 20 and name.isprintable():
-                    return name
-        return ""
-
-    def _transition_to(self, widget: QtWidgets.QWidget) -> None:
-        """Fade in the given widget on the stacked layout."""
-        if self.stack.indexOf(widget) == -1:
-            self.stack.addWidget(widget)
-        self.stack.setCurrentWidget(widget)
-        effect = QtWidgets.QGraphicsOpacityEffect(widget)
-        widget.setGraphicsEffect(effect)
-        effect.setOpacity(0)
-        anim = QtCore.QPropertyAnimation(effect, b"opacity", self)
-        anim.setDuration(300)
-        anim.setStartValue(0.0)
-        anim.setEndValue(1.0)
-        anim.start(QtCore.QAbstractAnimation.DeleteWhenStopped)
-        self._current_anim = anim
-
-    # Menu screens -----------------------------------------------------
-    def _build_start_menu(self) -> None:
-        qml_dir = Path(__file__).resolve().parent / "qml"
-        self.start_menu = QtQuickWidgets.QQuickWidget()
-        self.start_menu.setResizeMode(QtQuickWidgets.QQuickWidget.SizeRootObjectToView)
-        self.start_menu.setSource(
-            QtCore.QUrl.fromLocalFile(str(qml_dir / "MainMenu.qml"))
-        )
-        root = self.start_menu.rootObject()
-        if root is not None:
-            root.setProperty("theme", self.theme)
-            root.setProperty("scale", 1.0)
-            root.hostGame.connect(self._host_menu)
-            root.joinGame.connect(self._join_menu)
-            root.settings.connect(self._settings_dialog)
-        self.menu_root = root
-        self._transition_to(self.start_menu)
-
-    def _host_menu(self) -> None:
-        dialog = HostJoinDialog("host", self)
-        if dialog.exec() == QtWidgets.QDialog.Accepted:
-            try:
-                port = int(dialog.port_edit.text())
-                max_players = int(dialog.max_players_edit.text())
-            except ValueError:
-                QtWidgets.QMessageBox.critical(self, "Error", "Invalid settings")
+    def _join_menu(
+        self,
+        name: str,
+        addr: str,
+        port_text: str,
+        code: str,
+        cafile: str,
+    ) -> None:
+        name = name.strip()
+        if not self._validate_name(name):
+            QtWidgets.QMessageBox.critical(None, "Error", "Please enter a valid name")
+            return
+        cafile = cafile.strip() or None
+        if not addr and port_text == "0":
+            token = code.strip()
+            if not token:
+                QtWidgets.QMessageBox.critical(None, "Error", "Missing token")
                 return
-            cert = dialog.cert_edit.text().strip() or None
-            key = dialog.key_edit.text().strip() or None
-            self._start_host(port, max_players, cert, key)
+            try:
+                addr, port, code = parse_join_token(token)
+            except InvalidToken:
+                QtWidgets.QMessageBox.critical(None, "Error", "Invalid token")
+                return
+        else:
+            try:
+                port = int(port_text)
+            except ValueError:
+                QtWidgets.QMessageBox.critical(None, "Error", "Invalid port")
+                return
+        self.local_name = name
+        self._start_join(addr or "localhost", port, code.strip(), cafile)
 
-    def _join_menu(self) -> None:
-        dialog = HostJoinDialog("join", self)
-        if dialog.exec() == QtWidgets.QDialog.Accepted:
-            token = dialog.token_edit.text().strip()
-            if token:
-                try:
-                    addr, port, code = parse_join_token(token)
-                except InvalidToken:
-                    QtWidgets.QMessageBox.critical(self, "Error", "Invalid token")
-                    return
-            else:
-                addr = dialog.addr_edit.text().strip()
-                code = dialog.code_edit.text().strip()
-                try:
-                    port = int(dialog.port_edit.text())
-                except ValueError:
-                    QtWidgets.QMessageBox.critical(self, "Error", "Invalid port")
-                    return
-            cafile = dialog.cafile_edit.text().strip() or None
-            self._start_join(addr, port, code, cafile)
+    def _settings_changed(self, theme: str) -> None:
+        self.theme = theme
+        os.environ["BANG_THEME"] = theme
+        if self.root is not None:
+            self.root.setProperty("theme", theme)
+        if self.game_root is not None:
+            self.game_root.setProperty("theme", theme)
 
-    def _settings_dialog(self) -> None:
-        dialog = QtWidgets.QDialog(self)
-        dialog.setWindowTitle("Settings")
-        layout = QtWidgets.QFormLayout(dialog)
-        theme_combo = QtWidgets.QComboBox()
-        theme_combo.addItems(["light", "dark"])
-        theme_combo.setCurrentText(self.theme)
-        layout.addRow("Theme:", theme_combo)
-
-        buttons = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel
-        )
-        buttons.accepted.connect(dialog.accept)
-        buttons.rejected.connect(dialog.reject)
-        layout.addWidget(buttons)
-        if dialog.exec() == QtWidgets.QDialog.Accepted:
-            self.theme = theme_combo.currentText()
-            os.environ["BANG_THEME"] = self.theme
-            self.setStyleSheet(get_stylesheet(self.theme))
-            if self.menu_root is not None:
-                self.menu_root.setProperty("theme", self.theme)
-            if hasattr(self, "game_root") and self.game_root is not None:
-                self.game_root.setProperty("theme", self.theme)
-
-    # Game view --------------------------------------------------------
-    def _build_game_view(self) -> None:
-        self.game_view = GameView(self.theme)
-        self.game_view.action_signal.connect(self._send_action)
-        self.game_view.end_turn_signal.connect(self._end_turn)
-        self.game_root = self.game_view.root_obj
-        self._transition_to(self.game_view)
-
-    # Networking -------------------------------------------------------
+    # Networking ------------------------------------------------------
     def _start_host(
         self,
         port: int,
@@ -158,12 +122,6 @@ class BangUI(QtWidgets.QMainWindow):
         certfile: str | None = None,
         keyfile: str | None = None,
     ) -> None:
-        name = self._get_player_name()
-        if not name:
-            QtWidgets.QMessageBox.critical(
-                self, "Error", "Please enter a valid name"
-            )
-            return
         room_code = secrets.token_hex(3)
         self.server_thread = ServerThread(
             "",
@@ -178,50 +136,44 @@ class BangUI(QtWidgets.QMainWindow):
         scheme = "wss" if certfile else "ws"
         uri = f"{scheme}://localhost:{port}"
         self._start_client(uri, room_code, cafile=certfile)
-        self.setWindowTitle(f"Bang! - {room_code}")
 
     def _start_join(
         self, addr: str, port: int, code: str, cafile: str | None = None
     ) -> None:
-        name = self._get_player_name()
-        if not name:
-            QtWidgets.QMessageBox.critical(
-                self, "Error", "Please enter a valid name"
-            )
-            return
         scheme = "wss" if cafile else "ws"
         uri = f"{scheme}://{addr}:{port}"
         self._start_client(uri, code, cafile)
 
     def _start_client(self, uri: str, code: str, cafile: str | None = None) -> None:
         self.room_code = code
-        self.client = ClientThread(
-            uri,
-            code,
-            self._get_player_name(),
-            cafile,
-        )
+        self.client = ClientThread(uri, code, self.local_name, cafile)
         self.client.message_received.connect(self._append_message)
         self.client.start()
-        self.local_name = self._get_player_name()
         self._build_game_view()
+
+    # QML interaction -------------------------------------------------
+    def _build_game_view(self) -> None:
+        if self.root is not None:
+            QtCore.QMetaObject.invokeMethod(self.root, "showGame")
+            self.game_root = self.root.property("gameBoardItem")
+            if self.game_root is not None:
+                self.game_root.setProperty("theme", self.theme)
 
     def _append_message(self, msg: str) -> None:
         try:
             data = json.loads(msg)
         except json.JSONDecodeError:
-            if hasattr(self, "game_root") and self.game_root is not None:
+            if self.game_root is not None:
                 cur = self.game_root.property("logText") or ""
                 self.game_root.setProperty("logText", cur + msg + "\n")
             return
 
         if isinstance(data, dict):
-            if "message" in data:
-                if hasattr(self, "game_root") and self.game_root is not None:
-                    cur = self.game_root.property("logText") or ""
-                    self.game_root.setProperty(
-                        "logText", cur + str(data["message"]) + "\n"
-                    )
+            if "message" in data and self.game_root is not None:
+                cur = self.game_root.property("logText") or ""
+                self.game_root.setProperty(
+                    "logText", cur + str(data["message"]) + "\n"
+                )
             if "players" in data:
                 self._update_players(data["players"])
             if "hand" in data:
@@ -229,7 +181,7 @@ class BangUI(QtWidgets.QMainWindow):
             if "prompt" in data:
                 self._show_prompt(data["prompt"], data)
         else:
-            if hasattr(self, "game_root") and self.game_root is not None:
+            if self.game_root is not None:
                 cur = self.game_root.property("logText") or ""
                 self.game_root.setProperty("logText", cur + str(data) + "\n")
 
@@ -242,18 +194,43 @@ class BangUI(QtWidgets.QMainWindow):
             self.client.send_json(payload)
 
     def _update_players(self, players: list[dict]) -> None:
-        if hasattr(self, "game_view"):
-            self.game_view.update_players(players, self.local_name)
+        if self.game_root is not None:
+            self.game_root.setProperty("players", players)
+            self.game_root.setProperty("selfName", self.local_name)
 
-    def _update_hand(self, cards: list[str]) -> None:
-        if hasattr(self, "game_view"):
-            self.game_view.update_hand(cards)
+    def _update_hand(self, cards: list[object]) -> None:
+        if self.game_root is None:
+            return
+        loader = get_loader()
+        hand: list[dict[str, object]] = []
+        for card in cards:
+            if isinstance(card, str):
+                name = card
+                ctype = "action"
+                rank = suit = cset = None
+            else:
+                name = getattr(card, "card_name", str(card))
+                ctype = getattr(card, "card_type", "action")
+                rank = getattr(card, "rank", None)
+                suit = getattr(card, "suit", None)
+                cset = getattr(card, "card_set", None)
+            pix = loader.compose_card(ctype, rank, suit, cset, name)
+            if not pix.isNull():
+                buffer = QtCore.QBuffer()
+                buffer.open(QtCore.QIODevice.WriteOnly)
+                pix.save(buffer, "PNG")
+                encoded = QtCore.QByteArray(buffer.data()).toBase64().data().decode()
+                source = f"data:image/png;base64,{encoded}"
+            else:
+                source = ""
+            hand.append({"name": name, "source": source})
+        self.game_root.setProperty("hand", hand)
 
     def _show_prompt(self, prompt: str, data: dict) -> None:
         if prompt == "general_store":
             cards = data.get("cards", [])
             item, ok = QtWidgets.QInputDialog.getItem(
-                self, "General Store", "Pick a card:", cards, 0, False
+                None, "General Store", "Pick a card:", cards, 0, False
             )
             if ok:
                 index = cards.index(item)
@@ -261,7 +238,7 @@ class BangUI(QtWidgets.QMainWindow):
         elif "options" in data:
             opts = [o.get("name", str(i)) for i, o in enumerate(data["options"])]
             item, ok = QtWidgets.QInputDialog.getItem(
-                self, prompt.replace("_", " ").title(), "Choose:", opts, 0, False
+                None, prompt.replace("_", " ").title(), "Choose:", opts, 0, False
             )
             if ok:
                 idx = opts.index(item)
@@ -273,23 +250,18 @@ class BangUI(QtWidgets.QMainWindow):
                     }
                 )
         else:
-            if hasattr(self, "game_root") and self.game_root is not None:
+            if self.game_root is not None:
                 cur = self.game_root.property("logText") or ""
                 self.game_root.setProperty("logText", cur + f"Prompt: {prompt}\n")
 
-    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        """Toggle full-screen mode when F11 is pressed."""
-        if event.key() == QtCore.Qt.Key_F11:
-            fs = QtCore.Qt.WindowFullScreen
-            if self.windowState() & fs:
-                self.setWindowState(self.windowState() & ~fs)
-            else:
-                self.setWindowState(self.windowState() | fs)
-        else:
-            super().keyPressEvent(event)
+    def _validate_name(self, name: str) -> bool:
+        return bool(name and len(name) <= 20 and name.isprintable())
 
-    def closeEvent(self, event: QtGui.QCloseEvent) -> None:  # noqa: D401
-        """Handle window close and stop threads."""
+    def show(self) -> None:
+        self.view.setTitle("Bang!")
+        self.view.show()
+
+    def close(self) -> None:
         if self.client:
             self.client.stop()
             self.client.wait(1000)
@@ -299,16 +271,13 @@ class BangUI(QtWidgets.QMainWindow):
             self.server_thread.wait(1000)
             self.server_thread = None
         QtWidgets.QApplication.quit()
-        super().closeEvent(event)
 
 
 def main() -> None:
-    """Start the Qt interface."""
-    app = QtWidgets.QApplication.instance()
-    if app is None:
-        app = QtWidgets.QApplication([])
+    """Launch the QML interface."""
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
     ui = BangUI()
-    ui.showMaximized()
+    ui.show()
     if os.getenv("BANG_AUTO_CLOSE"):
         QtCore.QTimer.singleShot(100, ui.close)
     app.exec()

@@ -60,11 +60,10 @@ This networking layer is experimental and only demonstrates joining the game and
 
 ## Graphical Interface
 
-The original Tkinter UI has been replaced with a Qt interface written for
-PyQt/PySide. The game board, player list and log panel are now layered directly
-inside ``GameBoard.qml`` using QML items. The main window starts maximized and
-you can press ``F11`` to toggle true full-screen mode. Both the main menu and
-the game board are rendered from the QML scenes in ``bang_py/qml``.
+The interface now runs entirely on Qt Quick. A single ``QQuickView`` loads
+``Main.qml`` which handles both the main menu and the in-game board. Navigation
+between screens and the **Settings** dialog are implemented in QML and expose
+signals that the Python backend connects to.
 
 Install the Qt requirements first (PySide6 6.9.1 or newer):
 
