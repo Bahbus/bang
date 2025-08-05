@@ -5,15 +5,17 @@ import ssl
 import pytest
 
 pytest.importorskip("cryptography")
+pytest.importorskip("trustme")
+pytest.importorskip("websockets")
 
-from bang_py.network.server import BangServer
-from bang_py.cards.bang import BangCard
-
-trustme = pytest.importorskip("trustme")
-
-websockets = pytest.importorskip("websockets")
+import trustme
 from websockets.asyncio.client import connect
 from websockets.asyncio.server import serve
+
+from bang_py.cards.bang import BangCard
+from bang_py.network.server import BangServer
+
+pytestmark = pytest.mark.slow
 
 
 def test_server_client_play_flow() -> None:

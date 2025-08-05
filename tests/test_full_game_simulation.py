@@ -1,8 +1,21 @@
 import random
 from typing import List
 
-from bang_py.game_manager import GameManager
-from bang_py.player import Player
+import pytest
+
+from bang_py.cards import (
+    BangCard,
+    BeerCard,
+    StagecoachCard,
+    WellsFargoCard,
+    CatBalouCard,
+    PanicCard,
+    IndiansCard,
+    DuelCard,
+    GeneralStoreCard,
+    SaloonCard,
+    GatlingCard,
+)
 from bang_py.cards.roles import (
     SheriffRoleCard,
     DeputyRoleCard,
@@ -25,19 +38,8 @@ from bang_py.characters.slab_the_killer import SlabTheKiller
 from bang_py.characters.suzy_lafayette import SuzyLafayette
 from bang_py.characters.vulture_sam import VultureSam
 from bang_py.characters.willy_the_kid import WillyTheKid
-from bang_py.cards import (
-    BangCard,
-    BeerCard,
-    StagecoachCard,
-    WellsFargoCard,
-    CatBalouCard,
-    PanicCard,
-    IndiansCard,
-    DuelCard,
-    GeneralStoreCard,
-    SaloonCard,
-    GatlingCard,
-)
+from bang_py.game_manager import GameManager
+from bang_py.player import Player
 
 CHAR_CLASSES = [
     BartCassidy,
@@ -191,7 +193,8 @@ def simulate_game(num_players: int) -> str:
     return result[0]
 
 
-def test_full_game_simulation() -> None:
-    for n in range(4, 8):
-        outcome = simulate_game(n)
-        assert "win" in outcome
+@pytest.mark.slow
+@pytest.mark.parametrize("num_players", range(4, 8))
+def test_full_game_simulation(num_players: int) -> None:
+    outcome = simulate_game(num_players)
+    assert "win" in outcome
