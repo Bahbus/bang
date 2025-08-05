@@ -1,3 +1,5 @@
+"""Ricochet card from the Fistful of Cards expansion. Bang! to discard cards in play"""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

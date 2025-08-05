@@ -1,3 +1,5 @@
+"""Iron Plate card from the Dodge City expansion. Counts as a Missed!"""
+
 from __future__ import annotations
 
 from .missed import MissedCard

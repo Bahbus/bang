@@ -1,3 +1,5 @@
+"""Derringer card from the Dodge City expansion. Bang at range 1, then draw a card."""
+
 from __future__ import annotations
 
 from .card import BaseCard

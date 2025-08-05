@@ -1,3 +1,6 @@
+"""Law of the West card from the Fistful of Cards expansion. During their draw phase, each player
+must reveal the second card they drew and play it immediately if possible."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

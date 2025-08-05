@@ -1,3 +1,5 @@
+"""Hard Liquor card from the Fistful of Cards expansion. Skip draw to heal 1"""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

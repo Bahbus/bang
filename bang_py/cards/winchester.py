@@ -1,3 +1,5 @@
+"""Winchester card from the base game. Gun with range 5."""
+
 from __future__ import annotations
 
 from .card import BaseCard

@@ -1,3 +1,5 @@
+"""Indians! card from the base game. Others discard Bang! or suffer 1 damage."""
+
 from __future__ import annotations
 
 from .card import BaseCard

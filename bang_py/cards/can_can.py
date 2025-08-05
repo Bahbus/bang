@@ -1,3 +1,5 @@
+"""Can Can card from the Dodge City expansion. Choose a card to discard from any one player."""
+
 from __future__ import annotations
 
 from .card import BaseCard

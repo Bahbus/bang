@@ -1,3 +1,5 @@
+"""Volcanic card from the base game. Gun with range 1. Allows unlimited Bang! cards per turn."""
+
 from __future__ import annotations
 
 from .card import BaseCard

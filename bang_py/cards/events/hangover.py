@@ -1,3 +1,5 @@
+"""Hangover card from the High Noon expansion. All characters lose their abilities."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

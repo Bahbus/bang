@@ -1,3 +1,5 @@
+"""Pepperbox card from the Dodge City expansion. Acts as a normal Bang!"""
+
 from __future__ import annotations
 
 from .card import BaseCard

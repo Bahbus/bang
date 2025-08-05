@@ -1,3 +1,6 @@
+"""Gold Rush card from the High Noon expansion. The game proceeds counter-clockwise, but card
+effects still proceed clockwise."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

@@ -1,3 +1,5 @@
+"""Base class for event deck cards used by various expansions."""
+
 from __future__ import annotations
 
 from ...player import Player

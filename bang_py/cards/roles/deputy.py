@@ -1,3 +1,5 @@
+"""Deputy role from the base game; wins with the Sheriff when all enemies are gone."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,3 +1,5 @@
+"""Brawl card from the Dodge City expansion. Discard a card to make all others discard one."""
+
 from __future__ import annotations
 
 from .card import BaseCard

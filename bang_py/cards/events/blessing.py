@@ -1,3 +1,5 @@
+"""Blessing card from the High Noon expansion. All cards are Hearts"""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

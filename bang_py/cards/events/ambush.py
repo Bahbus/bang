@@ -1,3 +1,6 @@
+"""Ambush card from the Fistful of Cards expansion. The distance between any two players is 1. Only
+other cards in play may modify this."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

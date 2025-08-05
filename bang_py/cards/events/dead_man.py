@@ -1,3 +1,6 @@
+"""Dead Man card from the Fistful of Cards expansion. During his turn, the player that was
+eliminated first comes back with 2 life and 2 cards."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

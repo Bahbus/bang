@@ -1,3 +1,5 @@
+"""Punch card from the Dodge City expansion. Deal 1 damage if the target is within distance 1."""
+
 from __future__ import annotations
 
 from .card import BaseCard

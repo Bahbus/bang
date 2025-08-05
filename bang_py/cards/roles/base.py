@@ -1,3 +1,5 @@
+"""Base class for role cards defining victory conditions in the base game."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

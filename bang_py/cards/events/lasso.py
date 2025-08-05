@@ -1,3 +1,6 @@
+"""Lasso card from the Fistful of Cards expansion. Cards in play in front of players have no
+effect."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

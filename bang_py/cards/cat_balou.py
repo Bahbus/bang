@@ -1,3 +1,6 @@
+"""Cat Balou card from the base game. Choose a card from the target's hand or in play and discard
+it."""
+
 from __future__ import annotations
 from .card import BaseCard
 from ..player import Player

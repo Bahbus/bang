@@ -1,3 +1,5 @@
+"""Beer card from the base game. Heals 1 health if allowed by the game rules."""
+
 from __future__ import annotations
 
 from .card import BaseCard

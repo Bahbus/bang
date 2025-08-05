@@ -1,3 +1,6 @@
+"""Shootout card from the High Noon expansion. Each player may play a second Bang! card during their
+turn."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

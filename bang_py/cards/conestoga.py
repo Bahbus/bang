@@ -1,3 +1,5 @@
+"""Conestoga card from the Dodge City expansion. Steal a card from any player."""
+
 from __future__ import annotations
 
 from .card import BaseCard

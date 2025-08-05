@@ -1,3 +1,6 @@
+"""The Doctor card from the High Noon expansion. When The Doctor enters play, the player(s) still in
+the game with the fewest life points regain 1 life point."""
+
 from __future__ import annotations
 
 from .base import BaseEventCard

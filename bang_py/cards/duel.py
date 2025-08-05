@@ -1,3 +1,5 @@
+"""Duel card from the base game. Players alternate discarding Bang! cards; loser takes 1 damage."""
+
 from __future__ import annotations
 
 from .card import BaseCard

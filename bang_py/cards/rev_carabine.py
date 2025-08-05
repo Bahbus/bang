@@ -1,3 +1,5 @@
+"""Rev. Carabine card from the Dodge City expansion. Gun with range 4."""
+
 from __future__ import annotations
 
 from .card import BaseCard

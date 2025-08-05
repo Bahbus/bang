@@ -1,3 +1,5 @@
+"""Role card exports defining player objectives."""
+
 from .base import BaseRole
 from .sheriff import SheriffRoleCard
 from .deputy import DeputyRoleCard

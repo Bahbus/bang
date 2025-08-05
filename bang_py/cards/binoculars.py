@@ -1,3 +1,5 @@
+"""Binoculars card from the Dodge City expansion. Increases attack range by 1."""
+
 from __future__ import annotations
 
 from .card import BaseCard

@@ -1,3 +1,5 @@
+"""High Noon card from the High Noon expansion. Event: everyone draws one card."""
+
 from __future__ import annotations
 
 from .card import BaseCard

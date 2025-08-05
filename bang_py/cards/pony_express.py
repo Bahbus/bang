@@ -1,3 +1,5 @@
+"""Pony Express card from the Fistful of Cards expansion. Draw three cards."""
+
 from __future__ import annotations
 
 from .card import BaseCard
