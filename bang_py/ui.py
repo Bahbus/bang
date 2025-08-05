@@ -15,6 +15,8 @@ from .theme import get_current_theme
 from .network.server import parse_join_token
 from cryptography.fernet import InvalidToken
 
+CHARACTER_ASSETS = resources.files("bang_py") / "assets" / "characters"
+
 
 class BangUI(QtCore.QObject):
     """Interface controller backed by a QML scene."""
@@ -205,9 +207,20 @@ class BangUI(QtCore.QObject):
             self.client.send_json(payload)
 
     def _update_players(self, players: list[dict]) -> None:
-        if self.game_root is not None:
-            self.game_root.setProperty("players", players)
-            self.game_root.setProperty("selfName", self.local_name)
+        if self.game_root is None:
+            return
+        updated: list[dict[str, object]] = []
+        for pl in players:
+            portrait = ""
+            character = pl.get("character", "")
+            if character:
+                slug = character.lower().replace(" ", "_")
+                filename = f"{slug}.webp"
+                if (CHARACTER_ASSETS / filename).is_file():
+                    portrait = f"../assets/characters/{filename}"
+            updated.append({**pl, "portrait": portrait})
+        self.game_root.setProperty("players", updated)
+        self.game_root.setProperty("selfName", self.local_name)
 
     def _update_hand(self, cards: list[object]) -> None:
         if self.game_root is None:
