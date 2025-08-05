@@ -12,13 +12,12 @@ from typing import Any
 from PySide6 import QtCore
 
 try:  # Optional websockets import for test environments
-    import websockets
+    from websockets.asyncio.client import connect, WebSocketClientProtocol
     from websockets.exceptions import WebSocketException
-    from websockets.legacy.client import WebSocketClientProtocol
 except ModuleNotFoundError:  # pragma: no cover - handled in _run()
-    websockets = None  # type: ignore[assignment]
-    WebSocketException = Exception  # type: ignore[assignment]
+    connect = None  # type: ignore[assignment]
     WebSocketClientProtocol = Any  # type: ignore[assignment]
+    WebSocketException = Exception  # type: ignore[assignment]
 
 from ..network.server import BangServer
 
@@ -105,7 +104,7 @@ class ClientThread(QtCore.QThread):
             self.loop.call_soon_threadsafe(self.loop.stop)
 
     async def _run(self) -> None:
-        if websockets is None:
+        if connect is None:
             msg = "websockets package is required for networking"
             logging.error(msg)
             self.message_received.emit(msg)
@@ -117,7 +116,7 @@ class ClientThread(QtCore.QThread):
                 if self.cafile:
                     ssl_ctx.load_verify_locations(self.cafile)
 
-            self.websocket = await websockets.connect(self.uri, ssl=ssl_ctx)
+            self.websocket = await connect(self.uri, ssl=ssl_ctx)
             await self.websocket.recv()
             await self.websocket.send(self.room_code)
             response = await self.websocket.recv()
