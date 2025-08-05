@@ -26,7 +26,10 @@ def test_oversized_message_closes_connection() -> None:
                 await ws.send("x" * (MAX_MESSAGE_SIZE + 1))
                 with pytest.raises(websockets.exceptions.ConnectionClosed) as exc:
                     await ws.recv()
-                assert exc.value.rcvd.code == 1009
+                if hasattr(exc.value, "rcvd"):
+                    assert exc.value.rcvd.code == 1009
+                else:  # pragma: no cover - older websockets versions
+                    assert exc.value.code == 1009
     asyncio.run(run_flow())
 
 
