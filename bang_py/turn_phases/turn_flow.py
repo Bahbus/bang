@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from ..characters.jesse_jones import JesseJones
 from ..characters.jose_delgado import JoseDelgado
@@ -18,13 +18,13 @@ if TYPE_CHECKING:  # pragma: no cover - imported for type checking
 class TurnFlowMixin:
     """Manage turn progression for :class:`GameManager`."""
 
-    _players: List['Player']
-    turn_order: List[int]
+    _players: list['Player']
+    turn_order: list[int]
     current_turn: int
     phase: str
-    draw_phase_listeners: List
-    play_phase_listeners: List
-    turn_started_listeners: List
+    draw_phase_listeners: list
+    play_phase_listeners: list
+    turn_started_listeners: list
     discard_pile: list
     deck: object
     event_flags: dict
@@ -103,7 +103,7 @@ class TurnFlowMixin:
             return True
         return False
 
-    def _begin_turn(self: 'GameManager', *, blood_target: Optional['Player'] = None) -> None:
+    def _begin_turn(self: 'GameManager', *, blood_target: 'Player' | None = None) -> None:
         if not self.turn_order:
             return
         self.current_turn %= len(self.turn_order)
@@ -122,7 +122,7 @@ class TurnFlowMixin:
 
     def _run_start_turn_checks(
         self: 'GameManager', player: 'Player'
-    ) -> Optional['Player']:
+    ) -> 'Player' | None:
         """Apply start-of-turn effects returning the acting player or ``None``."""
         player = self._apply_event_start_effects(player)
         if not player:
