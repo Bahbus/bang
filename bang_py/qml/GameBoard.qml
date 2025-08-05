@@ -118,6 +118,12 @@ Item {
                 border.color: "black"
                 radius: 4 * scale
             }
+            Image {
+                anchors.fill: parent
+                source: pl.portrait
+                fillMode: Image.PreserveAspectFit
+                visible: pl.portrait !== ""
+            }
             Row {
                 id: bullets
                 spacing: 2 * scale

@@ -28,6 +28,7 @@ from PySide6 import QtWidgets, QtCore  # noqa: E402
 @pytest.fixture
 def qt_app():
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    os.environ.setdefault("BANG_AUTO_CLOSE", "1")
     app = QtWidgets.QApplication.instance()
     created = app is None
     if created:
@@ -58,14 +59,14 @@ def test_broadcast_state_updates_ui(qt_app):
                 "health": 4,
                 "role": "Sheriff",
                 "equipment": [],
-                "character": "",
+                "character": "Lucky Duke",
             },
             {
                 "name": "Bob",
                 "health": 3,
                 "role": "Outlaw",
                 "equipment": [],
-                "character": "",
+                "character": "Jesse Jones",
             },
         ],
         "hand": ["Bang", "Missed"],
@@ -75,7 +76,9 @@ def test_broadcast_state_updates_ui(qt_app):
     ui._append_message(json.dumps(state))
     root = ui.game_root
     assert root is not None
-    assert root.property("players") == state["players"]
+    players = root.property("players")
+    assert players[0]["portrait"] == "../assets/characters/lucky_duke.webp"
+    assert players[1]["portrait"] == "../assets/characters/jesse_jones.webp"
     hand_prop = root.property("hand")
     assert isinstance(hand_prop, list)
     assert len(hand_prop) == 2
