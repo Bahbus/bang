@@ -171,9 +171,20 @@ class BangUI(QtCore.QObject):
         if isinstance(data, dict):
             if "message" in data and self.game_root is not None:
                 cur = self.game_root.property("logText") or ""
-                self.game_root.setProperty(
-                    "logText", cur + str(data["message"]) + "\n"
-                )
+                text = str(data["message"])
+                self.game_root.setProperty("logText", cur + text + "\n")
+                if "BangCard" in text:
+                    QtCore.QMetaObject.invokeMethod(self.game_root, "playBang")
+                if "GatlingCard" in text:
+                    QtCore.QMetaObject.invokeMethod(
+                        self.game_root, "playManyBangs"
+                    )
+                if "IndiansCard" in text:
+                    QtCore.QMetaObject.invokeMethod(
+                        self.game_root, "playIndians"
+                    )
+                if "MissedCard" in text:
+                    QtCore.QMetaObject.invokeMethod(self.game_root, "playMissed")
             if "players" in data:
                 self._update_players(data["players"])
             if "hand" in data:
