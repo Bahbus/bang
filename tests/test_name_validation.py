@@ -7,12 +7,8 @@ pytest.importorskip("cryptography")
 from bang_py.network.server import BangServer
 
 websockets = pytest.importorskip("websockets")
-try:  # Prefer the modern asyncio API
-    from websockets.asyncio.client import connect
-    from websockets.asyncio.server import serve
-except ModuleNotFoundError:  # pragma: no cover - older websockets versions
-    connect = websockets.connect  # type: ignore[attr-defined]
-    serve = websockets.serve  # type: ignore[attr-defined]
+from websockets.asyncio.client import connect
+from websockets.asyncio.server import serve
 
 
 def test_name_too_long_rejected() -> None:
