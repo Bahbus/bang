@@ -1,7 +1,7 @@
 from bang_py.game_manager import GameManager
 from bang_py.player import Player
 from bang_py.cards.roles import SheriffRoleCard, OutlawRoleCard
-from bang_py.event_decks import create_high_noon_deck, create_fistful_deck
+from bang_py.events.event_decks import create_high_noon_deck, create_fistful_deck
 from bang_py.cards.events import (
     HandcuffsEventCard,
     NewIdentityEventCard,

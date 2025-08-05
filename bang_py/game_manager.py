@@ -8,14 +8,14 @@ from typing import Callable, List, Optional, Sequence
 from .deck import Deck
 from .cards.card import BaseCard
 from .player import Player
-from .event_decks import EventCard
-from .event_logic import EventLogicMixin
+from .events.event_decks import EventCard
+from .events.event_logic import EventLogicMixin
 from .card_handlers import CardHandlersMixin
 from .general_store import GeneralStoreMixin
 from .turn_phases import TurnPhasesMixin
 from .deck_manager import DeckManagerMixin
 from .ability_dispatch import AbilityDispatchMixin
-from .event_hooks import EventHooksMixin
+from .events.event_hooks import EventHooksMixin
 
 
 @dataclass

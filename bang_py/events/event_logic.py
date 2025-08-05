@@ -6,11 +6,11 @@ from typing import List, Optional, TYPE_CHECKING
 import random
 
 from .event_decks import EventCard, create_high_noon_deck, create_fistful_deck
-from .cards.roles import SheriffRoleCard
-from .player import Player
+from ..cards.roles import SheriffRoleCard
+from ..player import Player
 
 if TYPE_CHECKING:
-    from .game_manager import GameManager
+    from ..game_manager import GameManager
 
 
 class EventLogicMixin:

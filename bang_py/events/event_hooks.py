@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import List, Optional, TYPE_CHECKING
 
-from .cards.roles import SheriffRoleCard
-from .cards.card import BaseCard
+from ..cards.roles import SheriffRoleCard
+from ..cards.card import BaseCard
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
-    from .player import Player
-    from .game_manager import GameManager
+    from ..player import Player
+    from ..game_manager import GameManager
 
 
 class EventHooksMixin:

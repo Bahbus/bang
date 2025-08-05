@@ -1,4 +1,4 @@
-from bang_py.event_decks import (
+from bang_py.events.event_decks import (
     EventCard,
     _thirst,
     _fistful,
