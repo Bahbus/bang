@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, Sequence
+from collections.abc import Callable, Sequence
 from collections import deque
 
 from .deck import Deck
