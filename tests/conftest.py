@@ -1,3 +1,4 @@
+import os
 import pathlib
 import importlib.util
 
@@ -37,4 +38,23 @@ def generate_assets() -> None:
 def _set_token_key(monkeypatch: pytest.MonkeyPatch) -> None:
     if DEFAULT_TOKEN_KEY is not None:
         monkeypatch.setenv("BANG_TOKEN_KEY", DEFAULT_TOKEN_KEY.decode())
+
+
+@pytest.fixture
+def qt_app() -> "QtWidgets.QApplication":
+    """Create a ``QApplication`` instance for Qt tests."""
+    pytest.importorskip("PySide6")
+    pytest.importorskip("PySide6.QtWidgets")
+    from PySide6 import QtWidgets
+
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    os.environ.setdefault("BANG_AUTO_CLOSE", "1")
+
+    app = QtWidgets.QApplication.instance()
+    created = app is None
+    if created:
+        app = QtWidgets.QApplication([])
+    yield app
+    if created:
+        app.quit()
 
