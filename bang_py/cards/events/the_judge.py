@@ -1,5 +1,7 @@
-"""The Judge card from the Fistful of Cards expansion. Players cannot play cards in front of
-themselves or others."""
+"""The Judge card from the Fistful of Cards expansion.
+
+Players cannot play cards in front of themselves or others.
+"""
 
 from __future__ import annotations
 
