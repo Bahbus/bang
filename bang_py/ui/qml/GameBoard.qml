@@ -70,7 +70,7 @@ Item {
         radius: 4 * scale
     }
     StyledButton {
-        text: "Draw"
+        text: qsTr("Draw")
         theme: root.theme
         scale: root.scale
         iconSource: "../assets/icons/draw.svg"
@@ -90,7 +90,7 @@ Item {
         radius: 4 * scale
     }
     StyledButton {
-        text: "Discard"
+        text: qsTr("Discard")
         theme: root.theme
         scale: root.scale
         iconSource: "../assets/icons/discard.svg"
@@ -176,7 +176,7 @@ Item {
     }
 
     StyledButton {
-        text: "End Turn"
+        text: qsTr("End Turn")
         theme: root.theme
         scale: root.scale
         iconSource: "../assets/icons/end_turn.svg"

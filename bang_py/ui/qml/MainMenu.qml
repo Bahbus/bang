@@ -21,14 +21,14 @@ Rectangle {
         spacing: 10 * scale
 
         Text {
-            text: "Bang!"
+            text: qsTr("Bang!")
             font.pointSize: 24
             color: theme === "dark" ? "white" : "black"
         }
 
         TextField {
             id: nameField
-            placeholderText: "Name (max 20 chars)"
+            placeholderText: qsTr("Name (max 20 chars)")
             width: 200 * scale
             color: theme === "dark" ? "white" : "black"
             background: Rectangle {
@@ -38,13 +38,13 @@ Rectangle {
         }
 
         Label {
-            text: "Use up to 20 printable characters"
+            text: qsTr("Use up to 20 printable characters")
             color: "red"
             visible: nameField.text !== "" && !nameField.acceptableInput
         }
 
         StyledButton {
-            text: "Host Game"
+            text: qsTr("Host Game")
             theme: root.theme
             scale: root.scale
             width: 200 * root.scale
@@ -52,7 +52,7 @@ Rectangle {
             onClicked: root.hostGame()
         }
         StyledButton {
-            text: "Join Game"
+            text: qsTr("Join Game")
             theme: root.theme
             scale: root.scale
             width: 200 * root.scale
@@ -60,7 +60,7 @@ Rectangle {
             onClicked: root.joinGame()
         }
         StyledButton {
-            text: "Settings"
+            text: qsTr("Settings")
             theme: root.theme
             scale: root.scale
             width: 200 * root.scale

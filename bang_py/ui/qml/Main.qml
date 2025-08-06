@@ -61,34 +61,34 @@ Item {
     Dialog {
         id: hostDialog
         modal: true
-        title: "Host Game"
+        title: qsTr("Host Game")
         standardButtons: Dialog.Ok | Dialog.Cancel
         contentItem: Column {
             spacing: 8
             TextField {
                 id: portField
-                placeholderText: "Port (1-65535)"
+                placeholderText: qsTr("Port (1-65535)")
                 text: "8765"
                 validator: IntValidator { bottom: 1; top: 65535 }
             }
             Label {
-                text: "Enter a valid port"
+                text: qsTr("Enter a valid port")
                 color: "red"
                 visible: !portField.acceptableInput
             }
             TextField {
                 id: maxField
-                placeholderText: "Max Players (2-8)"
+                placeholderText: qsTr("Max Players (2-8)")
                 text: "7"
                 validator: IntValidator { bottom: 2; top: 8 }
             }
             Label {
-                text: "Players must be 2-8"
+                text: qsTr("Players must be 2-8")
                 color: "red"
                 visible: !maxField.acceptableInput
             }
-            TextField { id: certField; placeholderText: "Certificate" }
-            TextField { id: keyField; placeholderText: "Key File" }
+            TextField { id: certField; placeholderText: qsTr("Certificate") }
+            TextField { id: keyField; placeholderText: qsTr("Key File") }
         }
         onAccepted: {
             if (!portField.acceptableInput || !maxField.acceptableInput) {
@@ -108,43 +108,43 @@ Item {
     Dialog {
         id: joinDialog
         modal: true
-        title: "Join Game"
+        title: qsTr("Join Game")
         standardButtons: Dialog.Ok | Dialog.Cancel
         contentItem: Column {
             spacing: 8
             TextField {
                 id: tokenField
-                placeholderText: "Token"
+                placeholderText: qsTr("Token")
                 validator: RegExpValidator { regExp: /^[A-Za-z0-9+\/_=-]{0,256}$/ }
             }
             Label {
-                text: "Invalid token"
+                text: qsTr("Invalid token")
                 color: "red"
                 visible: tokenField.text !== "" && !tokenField.acceptableInput
             }
-            TextField { id: addrField; placeholderText: "Host Address"; text: "localhost" }
+            TextField { id: addrField; placeholderText: qsTr("Host Address"); text: "localhost" }
             TextField {
                 id: portJoinField
-                placeholderText: "Port (1-65535)"
+                placeholderText: qsTr("Port (1-65535)")
                 text: "8765"
                 validator: IntValidator { bottom: 1; top: 65535 }
             }
             Label {
-                text: "Enter a valid port"
+                text: qsTr("Enter a valid port")
                 color: "red"
                 visible: !portJoinField.acceptableInput
             }
             TextField {
                 id: codeField
-                placeholderText: "Room Code (6 hex)"
+                placeholderText: qsTr("Room Code (6 hex)")
                 validator: RegExpValidator { regExp: /^[0-9A-Fa-f]{6}$/ }
             }
             Label {
-                text: "Code must be 6 hex chars"
+                text: qsTr("Code must be 6 hex chars")
                 color: "red"
                 visible: codeField.text !== "" && !codeField.acceptableInput
             }
-            TextField { id: cafileField; placeholderText: "CA File" }
+            TextField { id: cafileField; placeholderText: qsTr("CA File") }
         }
         onAccepted: {
             if (tokenField.text !== "") {
@@ -178,13 +178,13 @@ Item {
     Dialog {
         id: settingsDialog
         modal: true
-        title: "Settings"
+        title: qsTr("Settings")
         standardButtons: Dialog.Ok | Dialog.Cancel
         contentItem: Column {
             spacing: 8
             ComboBox {
                 id: themeCombo
-                model: ["light", "dark"]
+                model: [qsTr("light"), qsTr("dark")]
                 currentIndex: root.theme === "dark" ? 1 : 0
             }
         }
