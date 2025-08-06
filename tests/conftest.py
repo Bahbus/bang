@@ -5,7 +5,7 @@ import pytest
 
 try:
     from bang_py.network.server import DEFAULT_TOKEN_KEY
-except Exception:
+except ImportError:
     DEFAULT_TOKEN_KEY = None
 
 
@@ -22,7 +22,7 @@ def generate_assets() -> None:
         return
     try:
         from PySide6 import QtCore, QtGui, QtWidgets  # noqa: F401
-    except Exception:
+    except ImportError:
         return
     script_path = root / "scripts" / "generate_assets.py"
     spec = importlib.util.spec_from_file_location("generate_assets", script_path)

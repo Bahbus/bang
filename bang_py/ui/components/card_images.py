@@ -2,15 +2,17 @@ from __future__ import annotations
 
 from importlib import resources
 
+from contextlib import suppress
+
 from PySide6 import QtCore, QtGui, QtWidgets
 try:
     from PySide6 import QtMultimedia  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
+except ImportError:  # pragma: no cover - optional dependency
     QtMultimedia = None
 
 try:
     from PySide6 import QtSvg  # type: ignore
-except Exception:  # pragma: no cover - optional dependency
+except ImportError:  # pragma: no cover - optional dependency
     QtSvg = None
 
 from ...helpers import RankSuitIconLoader
@@ -114,10 +116,8 @@ def load_sound(name: str, parent: QtCore.QObject | None = None) -> QtCore.QObjec
         """Small helper to ensure playback stops when deleted."""
 
         def __del__(self) -> None:  # pragma: no cover - best effort
-            try:
+            with suppress(Exception):
                 self.stop()
-            except Exception:
-                pass
     base = name.lower().replace(" ", "_")
     path = None
     for ext in (".mp3", ".wav", ".ogg"):

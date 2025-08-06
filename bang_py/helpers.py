@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Type
 
 try:  # Qt is optional for non-UI use
     from PySide6 import QtCore, QtGui, QtSvg
-except Exception:  # pragma: no cover - Qt may not be installed
+except ImportError:  # pragma: no cover - Qt may not be installed
     QtCore = QtGui = QtSvg = None  # type: ignore
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
