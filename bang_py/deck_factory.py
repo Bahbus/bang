@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import random
-from typing import Iterable, List, Tuple, Type
+from typing import Iterable
 
 from .deck import Deck
 from .cards import (
@@ -54,7 +54,7 @@ from .cards import (
 from .cards.card import BaseCard
 
 
-CARD_COUNTS: List[Tuple[Type[BaseCard], int]] = [
+CARD_COUNTS: list[tuple[type[BaseCard], int]] = [
     (BangCard, 25),
     (MissedCard, 12),
     (BeerCard, 6),
@@ -80,7 +80,7 @@ CARD_COUNTS: List[Tuple[Type[BaseCard], int]] = [
 ]
 
 # Additional cards provided by expansions
-DODGE_CITY_COUNTS: List[Tuple[Type[BaseCard], int]] = [
+DODGE_CITY_COUNTS: list[tuple[type[BaseCard], int]] = [
     (PunchCard, 4),
     (HideoutCard, 2),
     (BinocularsCard, 2),
@@ -101,14 +101,14 @@ DODGE_CITY_COUNTS: List[Tuple[Type[BaseCard], int]] = [
     (RevCarabineCard, 1),
 ]
 
-FISTFUL_COUNTS: List[Tuple[Type[BaseCard], int]] = [
+FISTFUL_COUNTS: list[tuple[type[BaseCard], int]] = [
     (WhiskyCard, 2),
     (TequilaCard, 3),
     (PonyExpressCard, 2),
     (RagTimeCard, 2),
 ]
 
-HIGH_NOON_COUNTS: List[Tuple[Type[BaseCard], int]] = [
+HIGH_NOON_COUNTS: list[tuple[type[BaseCard], int]] = [
     (HighNoonCard, 1),
 ]
 
@@ -119,11 +119,11 @@ EXPANSION_CARDS = {
 }
 
 
-def _generate_suits(count: int) -> List[str]:
+def _generate_suits(count: int) -> list[str]:
     """Return a shuffled list of suits with nearly even distribution."""
     base = count // 4
     extra = count % 4
-    suits_pool: List[str] = []
+    suits_pool: list[str] = []
     for i, suit in enumerate(["Hearts", "Diamonds", "Clubs", "Spades"]):
         suits_pool.extend([suit] * (base + (1 if i < extra else 0)))
     random.shuffle(suits_pool)
@@ -148,7 +148,7 @@ def create_standard_deck(expansions: Iterable[str] | None = None) -> Deck:
     ranks = list(range(1, 14)) * (total // 13 + 1)
     random.shuffle(ranks)
 
-    cards: List[BaseCard] = []
+    cards: list[BaseCard] = []
     idx = 0
     for card_cls, count in card_counts:
         for _ in range(count):

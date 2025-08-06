@@ -3,7 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Dict, List, Sequence, TYPE_CHECKING
+from typing import Sequence, TYPE_CHECKING
 
 from .cards.roles import (
     BaseRole,
@@ -62,8 +62,8 @@ class Player:
     max_health: int = 4
     _health: int = field(init=False, repr=False)
     _metadata: PlayerMetadata = field(default_factory=PlayerMetadata, init=False, repr=False)
-    _equipment: Dict[str, "BaseCard"] = field(default_factory=dict, init=False, repr=False)
-    hand: List["BaseCard"] = field(default_factory=list)
+    _equipment: dict[str, "BaseCard"] = field(default_factory=dict, init=False, repr=False)
+    hand: list["BaseCard"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Initialize max health from role and character."""
@@ -75,7 +75,7 @@ class Player:
         return self._metadata
 
     @property
-    def equipment(self) -> Dict[str, "BaseCard"]:
+    def equipment(self) -> dict[str, "BaseCard"]:
         """Mapping of currently equipped cards (read-only)."""
         return MappingProxyType(self._equipment)
 

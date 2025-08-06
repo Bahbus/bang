@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable, List, Optional, Sequence
+from typing import Callable, Sequence
 
 from .deck import Deck
 from .cards.card import BaseCard
@@ -30,13 +30,13 @@ class GameManager(
 ):
     """Coordinate game state, players and turn progression."""
 
-    _players: List[Player] = field(default_factory=list)
+    _players: list[Player] = field(default_factory=list)
     deck: Deck | None = None
-    expansions: List[str] = field(default_factory=list)
-    discard_pile: List[BaseCard] = field(default_factory=list)
+    expansions: list[str] = field(default_factory=list)
+    discard_pile: list[BaseCard] = field(default_factory=list)
     current_turn: int = 0
-    turn_order: List[int] = field(default_factory=list)
-    event_deck: List[EventCard] | None = None
+    turn_order: list[int] = field(default_factory=list)
+    event_deck: list[EventCard] | None = None
     current_event: EventCard | None = None
     event_flags: dict = field(default_factory=dict)
     first_eliminated: Player | None = None
@@ -44,32 +44,32 @@ class GameManager(
     phase: str = "draw"
 
     # General Store state
-    general_store_cards: List[BaseCard] | None = None
-    general_store_order: List[Player] | None = None
+    general_store_cards: list[BaseCard] | None = None
+    general_store_order: list[Player] | None = None
     general_store_index: int = 0
 
     # Event listeners
-    draw_phase_listeners: List[Callable[[Player, object], bool]] = field(
+    draw_phase_listeners: list[Callable[[Player, object], bool]] = field(
         default_factory=list
     )
-    player_damaged_listeners: List[Callable[[Player, Optional[Player]], None]] = field(
+    player_damaged_listeners: list[Callable[[Player, Player | None], None]] = field(
         default_factory=list
     )
-    player_healed_listeners: List[Callable[[Player], None]] = field(
+    player_healed_listeners: list[Callable[[Player], None]] = field(
         default_factory=list
     )
-    player_death_listeners: List[Callable[[Player, Optional[Player]], None]] = field(
+    player_death_listeners: list[Callable[[Player, Player | None], None]] = field(
         default_factory=list
     )
-    turn_started_listeners: List[Callable[[Player], None]] = field(default_factory=list)
-    game_over_listeners: List[Callable[[str], None]] = field(default_factory=list)
-    card_play_checks: List[Callable[[Player, BaseCard, Optional[Player]], bool]] = field(
+    turn_started_listeners: list[Callable[[Player], None]] = field(default_factory=list)
+    game_over_listeners: list[Callable[[str], None]] = field(default_factory=list)
+    card_play_checks: list[Callable[[Player, BaseCard, Player | None], bool]] = field(
         default_factory=list
     )
-    card_played_listeners: List[
-        Callable[[Player, BaseCard, Optional[Player]], None]
+    card_played_listeners: list[
+        Callable[[Player, BaseCard, Player | None], None]
     ] = field(default_factory=list)
-    play_phase_listeners: List[Callable[[Player], None]] = field(default_factory=list)
+    play_phase_listeners: list[Callable[[Player], None]] = field(default_factory=list)
     _duel_counts: dict | None = field(default=None, init=False, repr=False)
 
     @property

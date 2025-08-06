@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import random
 
 from .deck import Deck
@@ -26,12 +26,12 @@ class DeckManagerMixin:
     """Handle deck setup and player turn ordering."""
 
     deck: Deck | None
-    expansions: List[str]
-    _players: List['Player']
-    discard_pile: List[BaseCard]
+    expansions: list[str]
+    _players: list['Player']
+    discard_pile: list[BaseCard]
     event_flags: dict
     current_turn: int
-    turn_order: List[int]
+    turn_order: list[int]
 
     def _initialize_main_deck(self: 'GameManager') -> None:
         """Create the main deck if needed and ensure event flags exist."""
@@ -75,7 +75,7 @@ class DeckManagerMixin:
 
     # ------------------------------------------------------------------
     # Setup helpers
-    def _build_role_deck(self: 'GameManager') -> List[BaseRole]:
+    def _build_role_deck(self: 'GameManager') -> list[BaseRole]:
         role_map = {
             3: [DeputyRoleCard, OutlawRoleCard, RenegadeRoleCard],
             4: [SheriffRoleCard, RenegadeRoleCard, OutlawRoleCard, OutlawRoleCard],
@@ -119,7 +119,7 @@ class DeckManagerMixin:
             raise ValueError("Unsupported player count")
         return [cls() for cls in classes]
 
-    def _build_character_deck(self: 'GameManager') -> List[type[BaseCharacter]]:
+    def _build_character_deck(self: 'GameManager') -> list[type[BaseCharacter]]:
         from . import characters
 
         return [
@@ -129,7 +129,7 @@ class DeckManagerMixin:
         ]
 
     def choose_character(
-        self, player: 'Player', options: List[BaseCharacter]
+        self, player: 'Player', options: list[BaseCharacter]
     ) -> BaseCharacter:
         """Select which character a player will use. Defaults to the first."""
         return options[0]
@@ -152,7 +152,7 @@ class DeckManagerMixin:
             player.character.ability(self, player)
             player.metadata.game = self
 
-    def _next_alive_player(self: 'GameManager', player: 'Player') -> Optional['Player']:
+    def _next_alive_player(self: 'GameManager', player: 'Player') -> 'Player' | None:
         """Return the next living player to the left."""
         if player not in self._players:
             return None
@@ -185,7 +185,7 @@ class DeckManagerMixin:
         ]
 
     def _reset_current_turn(
-        self: 'GameManager', current_obj: Optional['Player'] | None
+        self: 'GameManager', current_obj: 'Player' | None
     ) -> None:
         """Update ``current_turn`` after player removal."""
         if current_obj and current_obj in self._players:
@@ -195,11 +195,11 @@ class DeckManagerMixin:
                 return
         self.current_turn %= len(self.turn_order)
 
-    def _get_player_by_index(self: 'GameManager', idx: int) -> Optional['Player']:
+    def _get_player_by_index(self: 'GameManager', idx: int) -> 'Player' | None:
         if 0 <= idx < len(self._players):
             return self._players[idx]
         return None
 
-    def get_player_by_index(self: 'GameManager', idx: int) -> Optional['Player']:
+    def get_player_by_index(self: 'GameManager', idx: int) -> 'Player' | None:
         """Return the player at ``idx`` if it exists."""
         return self._get_player_by_index(idx)

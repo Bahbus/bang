@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
@@ -20,7 +20,7 @@ class AbilityDispatchMixin:
     """Implement miscellaneous character abilities."""
 
     event_flags: dict
-    discard_pile: List[BaseCard]
+    discard_pile: list[BaseCard]
 
     def chuck_wengam_ability(self: 'GameManager', player: 'Player') -> None:
         """Lose 1 life to draw 2 cards, usable multiple times per turn."""
@@ -31,7 +31,7 @@ class AbilityDispatchMixin:
         self.draw_card(player, 2)
 
     def doc_holyday_ability(
-        self, player: 'Player', indices: List[int] | None = None
+        self, player: 'Player', indices: list[int] | None = None
     ) -> None:
         """Discard two cards to gain a Bang! that doesn't count toward the limit."""
         if player.metadata.doc_used:

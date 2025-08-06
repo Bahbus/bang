@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from random import shuffle
-from typing import List
 
 from .cards.card import BaseCard
 
@@ -9,8 +8,8 @@ from .cards.card import BaseCard
 class Deck:
     """Simple deck of cards supporting drawing."""
 
-    def __init__(self, cards: List[BaseCard] | None = None) -> None:
-        self.cards: List[BaseCard] = cards[:] if cards else []
+    def __init__(self, cards: list[BaseCard] | None = None) -> None:
+        self.cards: list[BaseCard] = cards[:] if cards else []
         shuffle(self.cards)
 
     def draw(self) -> BaseCard | None:
