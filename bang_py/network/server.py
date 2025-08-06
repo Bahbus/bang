@@ -5,8 +5,9 @@ import json
 import os
 import secrets
 import ssl
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Sequence
+from typing import Any
 import logging
 
 from cryptography.fernet import Fernet

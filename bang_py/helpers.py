@@ -5,7 +5,7 @@ from .player import Player
 from .characters.base import BaseCharacter
 from .characters.vera_custer import VeraCuster
 from pathlib import Path
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING
 
 try:  # Qt is optional for non-UI use
     from PySide6 import QtCore, QtGui, QtSvg
@@ -29,7 +29,7 @@ def is_spade_between(card: BaseCard | None, low: int, high: int) -> bool:
     return rank is not None and low <= rank <= high
 
 
-def has_ability(player: Player, char_cls: Type[BaseCharacter]) -> bool:
+def has_ability(player: Player, char_cls: type[BaseCharacter]) -> bool:
     """Return True if the player effectively has the given character ability."""
     game = getattr(player.metadata, "game", None)
     if game and game.event_flags.get("no_abilities"):
