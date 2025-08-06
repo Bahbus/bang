@@ -137,6 +137,10 @@ class CardImageLoader:
         self.card_backs = self._load_card_backs(width, height)
         self.rank_loader = RankSuitIconLoader()
         self.action_icons = self._load_action_icons()
+        self._compose_cache: dict[
+            tuple[str, int | str | None, str | None, str | None, str | None],
+            QtGui.QPixmap,
+        ] = {}
 
     @staticmethod
     def _fallback_pixmap(width: int, height: int) -> QtGui.QPixmap:
@@ -161,7 +165,12 @@ class CardImageLoader:
             if pix.isNull():
                 pix = cls._fallback_pixmap(width, height)
             else:
-                pix = pix.scaled(width, height, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+                pix = pix.scaled(
+                    width,
+                    height,
+                    QtCore.Qt.KeepAspectRatio,
+                    QtCore.Qt.SmoothTransformation,
+                )
             templates[key] = pix
         return templates
 
@@ -205,6 +214,17 @@ class CardImageLoader:
         """Return a card back pixmap for ``name``."""
         return self.card_backs.get(name, self._fallback_pixmap(self.width, self.height))
 
+    def clear_cache(self) -> None:
+        """Remove all cached composed card pixmaps."""
+        self._compose_cache.clear()
+
+    def reload_assets(self) -> None:
+        """Reload templates and icons, invalidating the compose cache."""
+        self.templates = self._load_templates(self.width, self.height)
+        self.card_backs = self._load_card_backs(self.width, self.height)
+        self.action_icons = self._load_action_icons()
+        self.clear_cache()
+
     def compose_card(
         self,
         card_type: str,
@@ -214,6 +234,10 @@ class CardImageLoader:
         name: str | None = None,
     ) -> QtGui.QPixmap:
         """Return a card pixmap with optional rank/suit and action icon overlays."""
+        key = (card_type, rank, suit, card_set, name)
+        cached = self._compose_cache.get(key)
+        if cached is not None:
+            return cached
         template_name = self._template_for(card_type, card_set)
         base = self.get_template(template_name).copy()
         painter = QtGui.QPainter(base)
@@ -229,8 +253,8 @@ class CardImageLoader:
             y = (self.height - icon.height()) // 2
             painter.drawPixmap(x, y, icon)
         if name:
-            key = name.lower().replace("!", "").replace(" ", "_")
-            action_icon = self.action_icons.get(key)
+            action_key = name.lower().replace("!", "").replace(" ", "_")
+            action_icon = self.action_icons.get(action_key)
             if action_icon and not action_icon.isNull():
                 action_icon = action_icon.scaled(
                     int(self.width * 0.35),
@@ -242,6 +266,7 @@ class CardImageLoader:
                 y = self.height - action_icon.height()
                 painter.drawPixmap(x, y, action_icon)
         painter.end()
+        self._compose_cache[key] = base
         return base
 
     @staticmethod

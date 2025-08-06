@@ -93,3 +93,26 @@ def test_action_icons_loaded(key, qt_app):
     loader = CardImageLoader()
     icon = loader.action_icons.get(key)
     assert icon is not None and not icon.isNull()
+
+
+def test_compose_card_uses_cache(qt_app):
+    loader = CardImageLoader()
+    first = loader.compose_card("brown", rank="A", suit="Spades")
+    second = loader.compose_card("brown", rank="A", suit="Spades")
+    assert first is second
+
+
+def test_clear_cache_invalidates(qt_app):
+    loader = CardImageLoader()
+    first = loader.compose_card("brown", rank="A", suit="Spades")
+    loader.clear_cache()
+    second = loader.compose_card("brown", rank="A", suit="Spades")
+    assert first is not second
+
+
+def test_reload_assets_clears_cache(qt_app):
+    loader = CardImageLoader()
+    first = loader.compose_card("brown", rank="A", suit="Spades")
+    loader.reload_assets()
+    second = loader.compose_card("brown", rank="A", suit="Spades")
+    assert first is not second
