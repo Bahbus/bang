@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 import ssl
+from typing import override
 
 from PySide6 import QtCore
 
@@ -39,7 +40,8 @@ class ServerThread(QtCore.QThread):
         self.loop = asyncio.new_event_loop()
         self.server_task: asyncio.Task | None = None
 
-    def run(self) -> None:  # type: ignore[override]
+    @override
+    def run(self) -> None:
         asyncio.set_event_loop(self.loop)
         server = BangServer(
             self.host,
@@ -80,7 +82,8 @@ class ClientThread(QtCore.QThread):
         self.loop = asyncio.new_event_loop()
         self.websocket: ClientConnection | None = None
 
-    def run(self) -> None:  # type: ignore[override]
+    @override
+    def run(self) -> None:
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self._run())
         self.loop.close()
