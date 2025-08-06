@@ -7,7 +7,7 @@ import secrets
 import ssl
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TypedDict, Literal
 import logging
 
 from cryptography.fernet import Fernet
@@ -80,6 +80,91 @@ class Connection:
     websocket: ServerConnection
     player: Player
     tasks: set[asyncio.Task] = field(default_factory=set)
+
+
+class DrawPayload(TypedDict, total=False):
+    action: Literal["draw"]
+    num: int
+
+
+class DiscardPayload(TypedDict):
+    action: Literal["discard"]
+    card_index: int
+
+
+class PlayCardPayload(TypedDict, total=False):
+    action: Literal["play_card"]
+    card_index: int
+    target: int
+
+
+class GeneralStorePickPayload(TypedDict):
+    action: Literal["general_store_pick"]
+    index: int
+
+
+class UseAbilityPayload(TypedDict, total=False):
+    action: Literal["use_ability"]
+    ability: str
+    indices: list[int]
+    target: int
+    card_index: int
+    discard: int
+    equipment: int
+    card: int
+    use_discard: bool
+    enabled: bool
+
+
+class SetAutoMissPayload(TypedDict, total=False):
+    action: Literal["set_auto_miss"]
+    enabled: bool
+
+
+class SidKetchumPayload(TypedDict, total=False):
+    indices: list[int]
+
+
+class ChuckWengamPayload(TypedDict, total=False):
+    pass
+
+
+class DocHolydayPayload(TypedDict, total=False):
+    indices: list[int]
+
+
+class VeraCusterPayload(TypedDict, total=False):
+    target: int
+
+
+class JesseJonesPayload(TypedDict, total=False):
+    target: int
+    card_index: int
+
+
+class KitCarlsonPayload(TypedDict, total=False):
+    discard: int
+
+
+class PedroRamirezPayload(TypedDict, total=False):
+    use_discard: bool
+
+
+class JoseDelgadoPayload(TypedDict, total=False):
+    equipment: int
+
+
+class PatBrennanPayload(TypedDict, total=False):
+    target: int
+    card: int
+
+
+class LuckyDukePayload(TypedDict, total=False):
+    card_index: int
+
+
+class UncleWillPayload(TypedDict, total=False):
+    card_index: int
 
 
 def _serialize_players(players: Sequence[Player]) -> list[dict]:
@@ -212,7 +297,7 @@ class BangServer:
                     await asyncio.gather(*conn.tasks, return_exceptions=True)
             await self.broadcast_state()
 
-    def _validate_payload(self, data: dict[str, Any]) -> bool:
+    def _validate_payload(self, data: dict[str, object]) -> bool:
         """Validate that ``data`` conforms to the expected schema."""
         action = data.get("action")
         if not isinstance(action, str):
@@ -292,7 +377,7 @@ class BangServer:
             await self._handle_set_auto_miss(websocket, data)
 
     async def _handle_draw(
-        self, websocket: ServerConnection, data: dict[str, Any]
+        self, websocket: ServerConnection, data: DrawPayload
     ) -> None:
         num = int(data.get("num", 1))
         player = self.connections[websocket].player
@@ -300,7 +385,7 @@ class BangServer:
         await self.broadcast_state()
 
     async def _handle_discard(
-        self, websocket: ServerConnection, data: dict[str, Any]
+        self, websocket: ServerConnection, data: DiscardPayload
     ) -> None:
         idx = data.get("card_index")
         player = self.connections[websocket].player
@@ -310,7 +395,7 @@ class BangServer:
             await self.broadcast_state()
 
     async def _handle_play_card(
-        self, websocket: ServerConnection, data: dict[str, Any]
+        self, websocket: ServerConnection, data: PlayCardPayload
     ) -> None:
         idx = data.get("card_index")
         target_idx = data.get("target")
@@ -345,7 +430,7 @@ class BangServer:
             await self.broadcast_state(desc)
 
     async def _handle_general_store_pick(
-        self, websocket: ServerConnection, data: dict[str, Any]
+        self, websocket: ServerConnection, data: GeneralStorePickPayload
     ) -> None:
         idx = data.get("index")
         player = self.connections[websocket].player
@@ -369,7 +454,7 @@ class BangServer:
                     self._create_send_task(conn, payload)
 
     async def _handle_use_ability(
-        self, websocket: ServerConnection, data: dict[str, Any]
+        self, websocket: ServerConnection, data: UseAbilityPayload
     ) -> None:
         ability = data.get("ability")
         player = self.connections[websocket].player
@@ -380,37 +465,43 @@ class BangServer:
         if not skip:
             await self.broadcast_state()
 
-    async def _ability_sid_ketchum(self, player: Player, data: dict[str, Any]) -> bool:
+    async def _ability_sid_ketchum(self, player: Player, data: SidKetchumPayload) -> bool:
         idxs = data.get("indices") or []
         self.game.sid_ketchum_ability(player, idxs)
         return False
 
     async def _ability_chuck_wengam(
-        self, player: Player, _data: dict[str, Any]
+        self, player: Player, _data: ChuckWengamPayload
     ) -> bool:
         self.game.chuck_wengam_ability(player)
         return False
 
-    async def _ability_doc_holyday(self, player: Player, data: dict[str, Any]) -> bool:
+    async def _ability_doc_holyday(
+        self, player: Player, data: DocHolydayPayload
+    ) -> bool:
         idxs = data.get("indices") or []
         self.game.doc_holyday_ability(player, idxs)
         return False
 
-    async def _ability_vera_custer(self, player: Player, data: dict[str, Any]) -> bool:
+    async def _ability_vera_custer(self, player: Player, data: VeraCusterPayload) -> bool:
         idx = data.get("target")
         target = self.game.get_player_by_index(idx) if idx is not None else None
         if target:
             self.game.vera_custer_copy(player, target)
         return False
 
-    async def _ability_jesse_jones(self, player: Player, data: dict[str, Any]) -> bool:
+    async def _ability_jesse_jones(
+        self, player: Player, data: JesseJonesPayload
+    ) -> bool:
         idx = data.get("target")
         card_idx = data.get("card_index")
         target = self.game.get_player_by_index(idx) if idx is not None else None
         self.game.draw_phase(player, jesse_target=target, jesse_card=card_idx)
         return False
 
-    async def _ability_kit_carlson(self, player: Player, data: dict[str, Any]) -> bool:
+    async def _ability_kit_carlson(
+        self, player: Player, data: KitCarlsonPayload
+    ) -> bool:
         discard = data.get("discard")
         cards = player.metadata.kit_cards
         player.metadata.kit_cards = None
@@ -425,25 +516,31 @@ class BangServer:
         return False
 
     async def _ability_pedro_ramirez(
-        self, player: Player, data: dict[str, Any]
+        self, player: Player, data: PedroRamirezPayload
     ) -> bool:
         use_discard = bool(data.get("use_discard", True))
         self.game.draw_phase(player, pedro_use_discard=use_discard)
         return False
 
-    async def _ability_jose_delgado(self, player: Player, data: dict[str, Any]) -> bool:
+    async def _ability_jose_delgado(
+        self, player: Player, data: JoseDelgadoPayload
+    ) -> bool:
         eq_idx = data.get("equipment")
         self.game.draw_phase(player, jose_equipment=eq_idx)
         return False
 
-    async def _ability_pat_brennan(self, player: Player, data: dict[str, Any]) -> bool:
+    async def _ability_pat_brennan(
+        self, player: Player, data: PatBrennanPayload
+    ) -> bool:
         idx = data.get("target")
         card = data.get("card")
         target = self.game.get_player_by_index(idx) if idx is not None else None
         self.game.draw_phase(player, pat_target=target, pat_card=card)
         return False
 
-    async def _ability_lucky_duke(self, player: Player, data: dict[str, Any]) -> bool:
+    async def _ability_lucky_duke(
+        self, player: Player, data: LuckyDukePayload
+    ) -> bool:
         idx = data.get("card_index", 0)
         cards = player.metadata.lucky_cards or []
         player.metadata.lucky_cards = []
@@ -458,7 +555,9 @@ class BangServer:
             self.game.draw_phase(player)
         return False
 
-    async def _ability_uncle_will(self, player: Player, data: dict[str, Any]) -> bool:
+    async def _ability_uncle_will(
+        self, player: Player, data: UncleWillPayload
+    ) -> bool:
         cidx = data.get("card_index")
         if cidx is not None and 0 <= cidx < len(player.hand):
             card = player.hand[cidx]
@@ -468,7 +567,7 @@ class BangServer:
         return False
 
     async def _handle_set_auto_miss(
-        self, websocket: ServerConnection, data: dict[str, Any]
+        self, websocket: ServerConnection, data: SetAutoMissPayload
     ) -> None:
         enabled = bool(data.get("enabled", True))
         self.connections[websocket].player.metadata.auto_miss = enabled
