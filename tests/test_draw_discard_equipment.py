@@ -7,11 +7,12 @@ from bang_py.cards.mustang import MustangCard
 from bang_py.cards.iron_plate import IronPlateCard
 from bang_py.characters.black_jack import BlackJack
 from bang_py.characters.sid_ketchum import SidKetchum
+from collections import deque
 
 
 def test_draw_phase_black_jack_extra_card():
     deck = Deck([])
-    deck.cards = [BangCard(), BangCard(suit="Hearts"), BangCard()]
+    deck.cards = deque([BangCard(), BangCard(suit="Hearts"), BangCard()])
     gm = GameManager(deck=deck)
     p = Player("BJ", character=BlackJack())
     gm.add_player(p)

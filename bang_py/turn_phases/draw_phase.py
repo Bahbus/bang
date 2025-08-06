@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 import random
+from collections import deque
 
 from ..cards.card import BaseCard
 from ..characters.jesse_jones import JesseJones
@@ -39,7 +40,9 @@ class DrawPhaseMixin:
         if card is None and self.discard_pile:
             self.deck.cards.extend(self.discard_pile)
             self.discard_pile.clear()
-            random.shuffle(self.deck.cards)
+            cards = list(self.deck.cards)
+            random.shuffle(cards)
+            self.deck.cards = deque(cards)
             card = self.deck.draw()
         return card
 

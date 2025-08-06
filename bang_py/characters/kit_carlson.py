@@ -32,7 +32,7 @@ class KitCarlson(BaseCharacter):
                 if c is None:
                     continue
                 if i == back_index:
-                    gm.deck.cards.insert(0, c)
+                    gm.deck.cards.appendleft(c)
                 else:
                     player.hand.append(c)
             return True
