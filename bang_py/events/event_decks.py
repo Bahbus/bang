@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections import deque
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -189,9 +190,9 @@ class EventCard:
             self.apply(game)
 
 
-def create_high_noon_deck() -> list[BaseEventCard]:
+def create_high_noon_deck() -> deque[BaseEventCard]:
     """Return a simple High Noon event deck."""
-    return [
+    return deque([
         BlessingEventCard(),
         CurseEventCard(),
         GhostTownEventCard(),
@@ -207,12 +208,12 @@ def create_high_noon_deck() -> list[BaseEventCard]:
         TrainArrivalEventCard(),
         HandcuffsEventCard(),
         NewIdentityEventCard(),
-    ]
+    ])
 
 
-def create_fistful_deck() -> list[BaseEventCard]:
+def create_fistful_deck() -> deque[BaseEventCard]:
     """Return a simple Fistful of Cards event deck."""
-    return [
+    return deque([
         AbandonedMineEventCard(),
         AmbushEventCard(),
         BloodBrothersEventCard(),
@@ -228,4 +229,4 @@ def create_fistful_deck() -> list[BaseEventCard]:
         TheJudgeEventCard(),
         VendettaEventCard(),
         FistfulOfCardsEventCard(),
-    ]
+    ])

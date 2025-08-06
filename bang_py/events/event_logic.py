@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import List, Optional, TYPE_CHECKING
 import random
+from collections import deque
 
 from .event_decks import EventCard, create_high_noon_deck, create_fistful_deck
 from ..cards.roles import SheriffRoleCard
@@ -16,7 +17,7 @@ if TYPE_CHECKING:
 class EventLogicMixin:
     """Mixin providing event deck helpers for :class:`GameManager`."""
 
-    event_deck: List[EventCard] | None
+    event_deck: deque[EventCard] | None
     current_event: EventCard | None
     event_flags: dict
     expansions: List[str]
@@ -31,7 +32,7 @@ class EventLogicMixin:
         """Draw and apply the next event card."""
         if not self.event_deck:
             return
-        self.current_event = self.event_deck.pop(0)
+        self.current_event = self.event_deck.popleft()
         self.event_flags.clear()
         self.current_event.apply(self)
 
@@ -42,28 +43,34 @@ class EventLogicMixin:
         elif "fistful_of_cards" in self.expansions:
             self.event_deck = self._prepare_fistful_deck()
         elif self.event_deck:
-            random.shuffle(self.event_deck)
+            deck_list = list(self.event_deck)
+            random.shuffle(deck_list)
+            self.event_deck = deque(deck_list)
 
-    def _prepare_high_noon_deck(self: 'GameManager') -> List[EventCard] | None:
+    def _prepare_high_noon_deck(self: 'GameManager') -> deque[EventCard] | None:
         """Create and shuffle the High Noon event deck."""
         deck = create_high_noon_deck()
         if deck:
-            final = next((c for c in deck if c.name == "High Noon"), None)
+            deck_list = list(deck)
+            final = next((c for c in deck_list if c.name == "High Noon"), None)
             if final:
-                deck.remove(final)
-                random.shuffle(deck)
-                deck.append(final)
+                deck_list.remove(final)
+                random.shuffle(deck_list)
+                deck_list.append(final)
+            deck = deque(deck_list)
         return deck
 
-    def _prepare_fistful_deck(self: 'GameManager') -> List[EventCard] | None:
+    def _prepare_fistful_deck(self: 'GameManager') -> deque[EventCard] | None:
         """Create and shuffle the Fistful of Cards event deck."""
         deck = create_fistful_deck()
         if deck:
-            final = next((c for c in deck if c.name == "A Fistful of Cards"), None)
+            deck_list = list(deck)
+            final = next((c for c in deck_list if c.name == "A Fistful of Cards"), None)
             if final:
-                deck.remove(final)
-                random.shuffle(deck)
-                deck.append(final)
+                deck_list.remove(final)
+                random.shuffle(deck_list)
+                deck_list.append(final)
+            deck = deque(deck_list)
         return deck
 
     def _apply_event_start_effects(self: 'GameManager', player: Player) -> Player | None:
