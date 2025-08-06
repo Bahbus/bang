@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from ..cards.card import BaseCard
 
@@ -15,7 +15,7 @@ class DiscardPhaseMixin:
     """Provide discard phase logic for :class:`GameManager`."""
 
     deck: object
-    discard_pile: List[BaseCard]
+    discard_pile: list[BaseCard]
     event_flags: dict
 
     def discard_phase(self: 'GameManager', player: 'Player') -> None:

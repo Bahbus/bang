@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..game_manager import GameManager
@@ -22,7 +22,7 @@ class GeneralStoreCard(BaseCard):
         target: Player,
         player: Player | None = None,
         game: GameManager | None = None,
-        choices: List[int] | None = None,
+        choices: list[int] | None = None,
     ) -> None:
         """Reveal cards equal to players and let each choose in order."""
         if not game or not player:

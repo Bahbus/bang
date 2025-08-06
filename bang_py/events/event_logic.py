@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import random
 from collections import deque
 
@@ -20,13 +20,13 @@ class EventLogicMixin:
     event_deck: deque[EventCard] | None
     current_event: EventCard | None
     event_flags: dict
-    expansions: List[str]
+    expansions: list[str]
     deck: object
-    discard_pile: List[object]
-    _players: List[object]
-    turn_order: List[int]
+    discard_pile: list[object]
+    _players: list[object]
+    turn_order: list[int]
     current_turn: int
-    first_eliminated: Optional[object]
+    first_eliminated: object | None
 
     def draw_event_card(self: 'GameManager') -> None:
         """Draw and apply the next event card."""
