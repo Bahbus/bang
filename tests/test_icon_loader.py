@@ -1,4 +1,3 @@
-import os
 import pytest
 
 pytest.importorskip(
@@ -14,20 +13,8 @@ pytest.importorskip(
     reason="QtGui unavailable; skipping GUI tests",
     exc_type=ImportError,
 )
-from PySide6 import QtWidgets, QtGui
+from PySide6 import QtGui
 from bang_py.helpers import RankSuitIconLoader
-
-
-@pytest.fixture
-def qt_app():
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    app = QtWidgets.QApplication.instance()
-    created = app is None
-    if created:
-        app = QtWidgets.QApplication([])
-    yield app
-    if created:
-        app.quit()
 
 
 def test_loader_returns_pixmap(qt_app):

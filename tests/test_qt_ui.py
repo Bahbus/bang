@@ -1,4 +1,3 @@
-import os
 import json
 
 import pytest
@@ -22,20 +21,7 @@ pytest.importorskip(
     exc_type=ImportError,
 )
 
-from PySide6 import QtWidgets, QtCore  # noqa: E402
-
-
-@pytest.fixture
-def qt_app():
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    os.environ.setdefault("BANG_AUTO_CLOSE", "1")
-    app = QtWidgets.QApplication.instance()
-    created = app is None
-    if created:
-        app = QtWidgets.QApplication([])
-    yield app
-    if created:
-        app.quit()
+from PySide6 import QtWidgets  # noqa: E402
 
 
 def test_bang_ui_creation(qt_app):
