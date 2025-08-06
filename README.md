@@ -2,6 +2,22 @@
 
 This repository now contains a Python implementation of the Bang card game along with a very small websocket server to experiment with multiplayer connectivity.
 
+## Development
+
+This project uses [pre-commit](https://pre-commit.com/) to run linters and
+formatters. Install the hooks with:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Run the checks on changed files before committing:
+
+```bash
+pre-commit run --files <path> [<path> ...]
+```
+
 ## Running the server
 
 Install the package using **Python 3.13+**. This pulls in
