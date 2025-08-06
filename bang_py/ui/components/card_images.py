@@ -1,3 +1,5 @@
+"""Load card images, templates, action icons and audio used by the Bang UI."""
+
 from __future__ import annotations
 
 from importlib import resources
