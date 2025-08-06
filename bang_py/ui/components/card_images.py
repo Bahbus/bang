@@ -8,13 +8,14 @@ from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
+
 try:
-    from PySide6 import QtMultimedia, QtSvg
+    from PySide6 import QtMultimedia
 except ImportError:  # pragma: no cover - optional dependency
-    QtMultimedia = QtSvg = None
+    QtMultimedia = None
 
 if TYPE_CHECKING:
-    from PySide6 import QtMultimedia, QtSvg
+    from PySide6 import QtMultimedia
 
 from ...helpers import RankSuitIconLoader
 
@@ -25,11 +26,18 @@ AUDIO_DIR = ASSETS_DIR / "audio"
 ICON_DIR = ASSETS_DIR / "icons"
 
 _pixmap_cache: dict[str, QtGui.QPixmap] = {}
+_sound_cache: dict[str, QtCore.QObject] = {}
 
 
 def clear_pixmap_cache() -> None:
     """Clear the module level pixmap cache."""
     _pixmap_cache.clear()
+
+
+def clear_sound_cache() -> None:
+    """Clear the module level sound cache."""
+    _sound_cache.clear()
+
 
 # Mapping of card/ability identifiers to icon filenames.
 ACTION_ICON_MAP = {
@@ -113,13 +121,18 @@ def load_sound(name: str, parent: QtCore.QObject | None = None) -> QtCore.QObjec
     if QtMultimedia is None:
         return None
 
+    base = name.lower().replace(" ", "_")
+    cached = _sound_cache.get(base)
+    if cached is not None:
+        return cached
+
     class _MediaPlayer(QtMultimedia.QMediaPlayer):
         """Small helper to ensure playback stops when deleted."""
 
         def __del__(self) -> None:  # pragma: no cover - best effort
             with suppress(Exception):
                 self.stop()
-    base = name.lower().replace(" ", "_")
+
     path = None
     for ext in (".mp3", ".wav", ".ogg"):
         candidate = AUDIO_DIR / f"{base}{ext}"
@@ -135,9 +148,11 @@ def load_sound(name: str, parent: QtCore.QObject | None = None) -> QtCore.QObjec
         audio_out = QtMultimedia.QAudioOutput(player)
         player.setAudioOutput(audio_out)
         player.setSource(url)
+        _sound_cache[base] = player
         return player
     effect = QtMultimedia.QSoundEffect(parent)
     effect.setSource(url)
+    _sound_cache[base] = effect
     return effect
 
 
@@ -168,9 +183,7 @@ class CardImageLoader:
         return pix
 
     @classmethod
-    def _load_templates(
-        cls, width: int, height: int
-    ) -> dict[str, QtGui.QPixmap]:
+    def _load_templates(cls, width: int, height: int) -> dict[str, QtGui.QPixmap]:
         templates: dict[str, QtGui.QPixmap] = {}
         for key, fname in _TEMPLATE_FILES.items():
             path = ASSETS_DIR / fname
@@ -189,9 +202,7 @@ class CardImageLoader:
         return templates
 
     @classmethod
-    def _load_card_backs(
-        cls, width: int, height: int
-    ) -> dict[str, QtGui.QPixmap]:
+    def _load_card_backs(cls, width: int, height: int) -> dict[str, QtGui.QPixmap]:
         backs: dict[str, QtGui.QPixmap] = {}
         for key, fname in _CARD_BACK_FILES.items():
             path = ASSETS_DIR / fname
@@ -321,4 +332,3 @@ def get_loader() -> CardImageLoader:
     if _card_image_loader is None:
         _card_image_loader = CardImageLoader(*DEFAULT_SIZE)
     return _card_image_loader
-
