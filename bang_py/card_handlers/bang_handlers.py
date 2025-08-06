@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from ..cards.bang import BangCard
 from ..cards.missed import MissedCard
@@ -21,7 +21,7 @@ class BangHandlersMixin:
         self: "GameManager",
         player: "Player",
         card: BangCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> None:
         """Resolve playing a Bang! card with event and equipment modifiers."""
         ignore_eq = player.metadata.ignore_others_equipment
