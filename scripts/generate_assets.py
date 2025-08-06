@@ -107,7 +107,7 @@ def create_beep(path: Path, freq: int = 440) -> None:
     raw = b"".join(frames)
     try:  # Attempt MP3 export
         from pydub import AudioSegment  # type: ignore
-    except Exception:
+    except ImportError:  # pydub not installed; skip MP3 export
         return
     audio = AudioSegment(
         data=raw,
