@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from ..cards.roles import SheriffRoleCard
 from ..cards.card import BaseCard
@@ -15,19 +15,19 @@ if TYPE_CHECKING:  # pragma: no cover - imported for type checking
 class EventHooksMixin:
     """Provide event callbacks and win condition checks."""
 
-    _players: List['Player']
-    turn_order: List[int]
+    _players: list[Player]
+    turn_order: list[int]
     current_turn: int
     event_flags: dict
-    discard_pile: List[BaseCard]
-    first_eliminated: Optional['Player']
-    game_over_listeners: List
-    player_damaged_listeners: List
-    player_death_listeners: List
-    player_healed_listeners: List
+    discard_pile: list[BaseCard]
+    first_eliminated: Player | None
+    game_over_listeners: list
+    player_damaged_listeners: list
+    player_death_listeners: list
+    player_healed_listeners: list
 
     def on_player_damaged(
-        self, player: 'Player', source: Optional['Player'] = None
+        self, player: Player, source: Player | None = None
     ) -> None:
         """Handle player damage and determine if they are eliminated."""
         self._notify_damage_listeners(player, source)
@@ -41,39 +41,39 @@ class EventHooksMixin:
         self._check_win_conditions()
 
     def _notify_damage_listeners(
-        self, player: 'Player', source: Optional['Player']
+        self, player: Player, source: Player | None
     ) -> None:
         for cb in self.player_damaged_listeners:
             cb(player, source)
 
-    def _bounty_reward(self, source: Optional['Player']) -> None:
+    def _bounty_reward(self, source: Player | None) -> None:
         if source and self.event_flags.get("bounty"):
             self.draw_card(source, 2)
 
     def _notify_death_listeners(
-        self, player: 'Player', source: Optional['Player']
+        self, player: Player, source: Player | None
     ) -> None:
         for cb in self.player_death_listeners:
             cb(player, source)
 
-    def _handle_ghost_town_revive(self, player: 'Player') -> bool:
+    def _handle_ghost_town_revive(self, player: Player) -> bool:
         """Revive a Ghost Town player if possible."""
         if self.event_flags.get("ghost_town") and player.metadata.ghost_revived:
             player.health = 1
             return True
         return False
 
-    def _record_first_elimination(self, player: 'Player') -> None:
+    def _record_first_elimination(self, player: Player) -> None:
         if self.first_eliminated is None:
             self.first_eliminated = player
 
-    def on_player_healed(self, player: 'Player') -> None:
+    def on_player_healed(self, player: Player) -> None:
         """Notify listeners that ``player`` has regained health."""
         for cb in self.player_healed_listeners:
             cb(player)
 
     def blood_brothers_transfer(
-        self, donor: 'Player', target: 'Player'
+        self, donor: Player, target: Player
     ) -> bool:
         """Transfer one life from ``donor`` to ``target`` if allowed."""
         if not self.event_flags.get("blood_brothers"):
@@ -88,7 +88,7 @@ class EventHooksMixin:
         self.on_player_healed(target)
         return True
 
-    def _check_win_conditions(self) -> Optional[str]:
+    def _check_win_conditions(self) -> str | None:
         alive = [p for p in self._players if p.is_alive()]
         self._update_turn_order_post_death()
         has_sheriff = any(
@@ -111,8 +111,8 @@ class EventHooksMixin:
             self.current_turn = 0
 
     def _determine_winner(
-        self, alive: List['Player'], has_sheriff: bool
-    ) -> Optional[str]:
+        self, alive: list[Player], has_sheriff: bool
+    ) -> str | None:
         """Return a victory message if a win condition is met."""
         if not has_sheriff and len(self._players) == 3:
             if len(alive) == 1 and alive[0].role:
@@ -123,7 +123,7 @@ class EventHooksMixin:
                 return player.role.victory_message
         return None
 
-    def get_hand(self, viewer: 'Player', target: 'Player') -> list[str]:
+    def get_hand(self, viewer: Player, target: Player) -> list[str]:
         """Return the visible hand of ``target`` for ``viewer``."""
         if viewer is target or self.event_flags.get("revealed_hands"):
             return [c.card_name for c in target.hand]
