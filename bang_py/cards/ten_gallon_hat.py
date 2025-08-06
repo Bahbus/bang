@@ -1,6 +1,8 @@
-"""Ten Gallon Hat card from the Dodge City expansion. Counts as a Missed!"""
+"""Ten Gallon Hat card from the Dodge City expansion. Counts as a Missed card."""
 
 from __future__ import annotations
+
+from typing import override
 
 from .missed import MissedCard
 from ..player import Player
@@ -14,5 +16,6 @@ class TenGallonHatCard(MissedCard):
     card_set = "dodge_city"
     description = "Counts as a Missed!"
 
-    def play(self, target: Player) -> None:  # type: ignore[override]
-        super().play(target)
+    @override
+    def play(self, target: Player | None, **kwargs) -> None:
+        super().play(target, **kwargs)
