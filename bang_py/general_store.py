@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .cards.card import BaseCard
 
@@ -14,23 +14,23 @@ if TYPE_CHECKING:
 class GeneralStoreMixin:
     """Mixin implementing General Store management."""
 
-    general_store_cards: List[BaseCard] | None
-    general_store_order: List['Player'] | None
+    general_store_cards: list[BaseCard] | None
+    general_store_order: list['Player'] | None
     general_store_index: int
     deck: object
-    discard_pile: List[BaseCard]
-    _players: List['Player']
+    discard_pile: list[BaseCard]
+    _players: list['Player']
 
-    def start_general_store(self: 'GameManager', player: 'Player') -> List[str]:
+    def start_general_store(self: 'GameManager', player: 'Player') -> list[str]:
         if not self.deck:
             return []
         self.general_store_cards = self._deal_general_store_cards()
         self._set_general_store_order(player)
         return [c.card_name for c in self.general_store_cards]
 
-    def _deal_general_store_cards(self: 'GameManager') -> List[BaseCard]:
+    def _deal_general_store_cards(self: 'GameManager') -> list[BaseCard]:
         alive = [p for p in self._players if p.is_alive()]
-        cards: List[BaseCard] = []
+        cards: list[BaseCard] = []
         for _ in range(len(alive)):
             card = self._draw_from_deck()
             if card:
@@ -39,7 +39,7 @@ class GeneralStoreMixin:
 
     def _set_general_store_order(self: 'GameManager', player: 'Player') -> None:
         start_idx = self._players.index(player)
-        order: List['Player'] = []
+        order: list['Player'] = []
         for i in range(len(self._players)):
             p = self._players[(start_idx + i) % len(self._players)]
             if p.is_alive():

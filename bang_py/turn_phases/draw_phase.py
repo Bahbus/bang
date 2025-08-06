@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 import random
 
 from ..cards.card import BaseCard
@@ -21,15 +21,15 @@ class DrawPhaseMixin:
     """Provide draw phase logic for :class:`GameManager`."""
 
     deck: object
-    discard_pile: List[BaseCard]
+    discard_pile: list[BaseCard]
     event_flags: dict
-    _players: List['Player']
-    turn_order: List[int]
+    _players: list['Player']
+    turn_order: list[int]
     current_turn: int
     phase: str
-    draw_phase_listeners: List
-    play_phase_listeners: List
-    turn_started_listeners: List
+    draw_phase_listeners: list
+    play_phase_listeners: list
+    turn_started_listeners: list
 
     # ------------------------------------------------------------------
     # Deck helpers
