@@ -75,7 +75,8 @@ def parse_join_token(
     return obj["host"], int(obj["port"]), obj["code"]
 
 
-@dataclass
+# Use slots to reduce memory footprint and prevent dynamic attribute assignment.
+@dataclass(slots=True)
 class Connection:
     websocket: ServerConnection
     player: Player
