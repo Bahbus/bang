@@ -1,9 +1,9 @@
-import secrets
 import pytest
+import secrets
 
 pytest.importorskip("cryptography")
 
-from bang_py.network.server import BangServer
+from bang_py.network.server import BangServer  # noqa: E402
 
 
 def test_default_room_code_format(monkeypatch) -> None:
