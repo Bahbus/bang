@@ -7,7 +7,8 @@ registration of handler groups.
 from __future__ import annotations
 
 from importlib import import_module
-from typing import TYPE_CHECKING, Iterable, Optional
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from ..cards.bang import BangCard
 from ..cards.missed import MissedCard
@@ -48,7 +49,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> None:
         card.play(player, game=self)
 
@@ -56,7 +57,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> None:
         if target:
             card.play(target, game=self)
@@ -65,7 +66,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> None:
         if target:
             card.play(target, player, game=self)
@@ -74,7 +75,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> None:
         card.play(player, player, game=self)
 
@@ -82,7 +83,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> None:
         card.play(target or player, player, game=self)
 
@@ -90,7 +91,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> None:
         if target:
             card.play(target, player)
@@ -106,7 +107,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> None:
         if self._handle_missed_as_bang(player, card, target):
             return
@@ -120,7 +121,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> bool:
         if player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target:
             handler = self._card_handlers.get(BangCard)
@@ -132,7 +133,7 @@ class DispatchMixin:
     # ------------------------------------------------------------------
     # Card play utilities
     def _pre_card_checks(
-        self, player: "Player", card: BaseCard, target: Optional["Player"]
+        self, player: "Player", card: BaseCard, target: "Player" | None
     ) -> bool:
         return (
             self._card_in_hand(player, card)
@@ -146,7 +147,7 @@ class DispatchMixin:
         return card in player.hand
 
     def _run_card_play_checks(
-        self, player: "Player", card: BaseCard, target: Optional["Player"]
+        self, player: "Player", card: BaseCard, target: "Player" | None
     ) -> bool:
         """Execute registered pre-play checks."""
         for cb in self.card_play_checks:
@@ -155,7 +156,7 @@ class DispatchMixin:
         return True
 
     def _check_target_restrictions(
-        self, player: "Player", card: BaseCard, target: Optional["Player"]
+        self, player: "Player", card: BaseCard, target: "Player" | None
     ) -> bool:
         """Validate distance and target based limitations."""
         return (
@@ -170,7 +171,7 @@ class DispatchMixin:
         self,
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> bool:
         """Check range and sniper restrictions for Bang! cards."""
         if not (isinstance(card, BangCard) and target):
@@ -183,7 +184,7 @@ class DispatchMixin:
         return True
 
     def _panic_target_valid(
-        self, player: "Player", card: BaseCard, target: Optional["Player"]
+        self, player: "Player", card: BaseCard, target: "Player" | None
     ) -> bool:
         """Panic can only target players within distance 1."""
         if isinstance(card, PanicCard) and target:
@@ -191,7 +192,7 @@ class DispatchMixin:
         return True
 
     def _jail_target_valid(
-        self, card: BaseCard, target: Optional["Player"]
+        self, card: BaseCard, target: "Player" | None
     ) -> bool:
         """Jail cannot be played on the sheriff."""
         if isinstance(card, JailCard) and target and isinstance(target.role, SheriffRoleCard):
@@ -224,7 +225,7 @@ class DispatchMixin:
         return player is active and getattr(card, "suit", None) != self.event_flags["turn_suit"]
 
     def _is_bang(
-        self, player: "Player", card: BaseCard, target: Optional["Player"]
+        self, player: "Player", card: BaseCard, target: "Player" | None
     ) -> bool:
         return isinstance(card, BangCard) or (
             player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target
@@ -248,7 +249,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"] = None,
+        target: "Player" | None = None,
     ) -> None:
         """Play ``card`` from ``player`` against ``target`` if allowed."""
         if not self._pre_card_checks(player, card, target):
@@ -268,7 +269,7 @@ class DispatchMixin:
         self: "GameManager",
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
+        target: "Player" | None,
     ) -> None:
         """Call registered card played listeners."""
         for cb in self.card_played_listeners:
@@ -278,8 +279,8 @@ class DispatchMixin:
         self,
         player: "Player",
         card: BaseCard,
-        target: Optional["Player"],
-        before: Optional[int],
+        target: "Player" | None,
+        before: int | None,
         is_bang: bool,
     ) -> None:
         """Handle damage, discard and Bang! bookkeeping."""
@@ -290,7 +291,7 @@ class DispatchMixin:
         self._draw_if_empty(player)
 
     def _apply_damage_and_healing(
-        self, source: "Player", target: Optional["Player"], before: Optional[int]
+        self, source: "Player", target: "Player" | None, before: int | None
     ) -> None:
         """Trigger damage or heal callbacks if ``target`` changed health."""
         if target and before is not None:
