@@ -13,7 +13,7 @@ try:
 except Exception:  # pragma: no cover - optional dependency
     QtSvg = None
 
-from ..helpers import RankSuitIconLoader
+from ...helpers import RankSuitIconLoader
 
 DEFAULT_SIZE = (60, 90)
 ASSETS_DIR = resources.files("bang_py") / "assets"

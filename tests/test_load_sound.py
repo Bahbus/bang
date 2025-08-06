@@ -13,7 +13,7 @@ pytest.importorskip(
 )
 
 from PySide6 import QtWidgets
-from bang_py.ui_components.card_images import load_sound
+from bang_py.ui.components.card_images import load_sound
 
 
 def test_load_sound_mp3():

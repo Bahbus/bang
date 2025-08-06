@@ -30,7 +30,7 @@ bang-ui = "bang_py.ui:main"
     "assets/audio/*.mp3",
     "assets/audio/*.wav",
     "assets/*.md",
-    "qml/*.qml",
+    "ui/qml/*.qml",
 ]
 
 [tool.pytest.ini_options]

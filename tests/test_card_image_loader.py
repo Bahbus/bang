@@ -16,7 +16,7 @@ pytest.importorskip(
 )
 
 from PySide6 import QtWidgets, QtGui
-from bang_py.ui_components.card_images import CardImageLoader, ACTION_ICON_MAP
+from bang_py.ui.components.card_images import CardImageLoader, ACTION_ICON_MAP
 
 @pytest.fixture
 def qt_app():
@@ -42,7 +42,7 @@ def qt_app():
     ],
 )
 def test_compose_card_returns_pixmap(card_type, kwargs, qt_app):
-    from bang_py.ui_components.card_images import CardImageLoader
+    from bang_py.ui.components.card_images import CardImageLoader
 
     loader = CardImageLoader()
     pix = loader.compose_card(card_type, **kwargs)
@@ -52,7 +52,7 @@ def test_compose_card_returns_pixmap(card_type, kwargs, qt_app):
 
 @pytest.mark.parametrize("name", ["other", "role", "character"])
 def test_get_card_back_returns_pixmap(name, qt_app):
-    from bang_py.ui_components.card_images import CardImageLoader
+    from bang_py.ui.components.card_images import CardImageLoader
 
     loader = CardImageLoader()
     pix = loader.get_card_back(name)
