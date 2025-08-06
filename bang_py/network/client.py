@@ -6,9 +6,8 @@ import logging
 import ssl
 
 from websockets.asyncio.client import connect
-from websockets.exceptions import WebSocketException
 
-from .server import parse_join_token
+from .token_utils import parse_join_token
 
 
 async def main(
@@ -47,9 +46,7 @@ async def main(
     """
 
     if token:
-        host, port, room_code = parse_join_token(
-            token, token_key.encode() if token_key else None
-        )
+        host, port, room_code = parse_join_token(token, token_key.encode() if token_key else None)
         uri = f"ws://{host}:{port}"
 
     ssl_ctx = None
