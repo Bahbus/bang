@@ -7,12 +7,14 @@ from .player import Player
 from .characters.base import BaseCharacter
 from .characters.vera_custer import VeraCuster
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 try:  # Qt is optional for non-UI use
     from PySide6 import QtCore, QtGui, QtSvg
 except ImportError:  # pragma: no cover - Qt may not be installed
-    QtCore = QtGui = QtSvg = None  # type: ignore
+    QtCore = cast(Any, None)
+    QtGui = cast(Any, None)
+    QtSvg = cast(Any, None)
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from .game_manager import GameManager
