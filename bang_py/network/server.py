@@ -54,9 +54,7 @@ def _token_key_bytes(key: bytes | str | None) -> bytes:
     return key if isinstance(key, bytes) else key.encode()
 
 
-def generate_join_token(
-    host: str, port: int, code: str, key: bytes | str | None = None
-) -> str:
+def generate_join_token(host: str, port: int, code: str, key: bytes | str | None = None) -> str:
     """Return an encrypted token identifying a game room."""
 
     key_bytes = _token_key_bytes(key)
@@ -64,9 +62,7 @@ def generate_join_token(
     return Fernet(key_bytes).encrypt(data).decode()
 
 
-def parse_join_token(
-    token: str, key: bytes | str | None = None
-) -> tuple[str, int, str]:
+def parse_join_token(token: str, key: bytes | str | None = None) -> tuple[str, int, str]:
     """Decode ``token`` and return ``(host, port, code)``."""
 
     key_bytes = _token_key_bytes(key)
@@ -80,7 +76,7 @@ def parse_join_token(
 class Connection:
     websocket: ServerConnection
     player: Player
-    tasks: set[asyncio.Task] = field(default_factory=set)
+    task_group: asyncio.TaskGroup = field(default_factory=asyncio.TaskGroup)
 
 
 class DrawPayload(TypedDict, total=False):
@@ -228,9 +224,7 @@ class BangServer:
     def generate_join_token(self) -> str:
         """Return an encoded join token for this server."""
 
-        return generate_join_token(
-            self.host, self.port, self.room_code, self.token_key
-        )
+        return generate_join_token(self.host, self.port, self.room_code, self.token_key)
 
     def parse_join_token(self, token: str) -> tuple[str, int, str]:
         """Decode ``token`` using the server's join token key."""
@@ -238,7 +232,7 @@ class BangServer:
         return parse_join_token(token, self.token_key)
 
     def _create_send_task(self, conn: Connection, payload: str) -> None:
-        """Create a task to send ``payload`` and track its lifecycle."""
+        """Create a supervised task to send ``payload``."""
 
         async def _send() -> None:
             try:
@@ -249,13 +243,7 @@ class BangServer:
             except WebSocketException as exc:  # pragma: no cover - network
                 logger.exception("Send to %s failed", conn.player.name, exc_info=exc)
 
-        task = asyncio.create_task(_send())
-        conn.tasks.add(task)
-
-        def _remove(t: asyncio.Task) -> None:
-            conn.tasks.discard(t)
-
-        task.add_done_callback(_remove)
+        conn.task_group.create_task(_send())
 
     async def handler(self, websocket: ServerConnection) -> None:
         """Register a new client and process game commands sent over the socket."""
@@ -277,26 +265,24 @@ class BangServer:
 
         player = Player(name)
         player.metadata.auto_miss = True
-        self.game.add_player(player)
-        self.connections[websocket] = Connection(websocket, player)
-        await websocket.send(f"Joined game as {player.name}")
-        await self.broadcast_state()
+        conn = Connection(websocket, player)
+        self.connections[websocket] = conn
 
-        try:
-            async for message in websocket:
-                if len(message) > MAX_MESSAGE_SIZE:
-                    await websocket.close(code=1009, reason="Message too large")
-                    break
-                await self._process_message(websocket, message)
-        finally:
-            self.game.remove_player(player)
-            conn = self.connections.pop(websocket, None)
-            if conn:
-                for task in list(conn.tasks):
-                    task.cancel()
-                if conn.tasks:
-                    await asyncio.gather(*conn.tasks, return_exceptions=True)
+        async with conn.task_group:
+            self.game.add_player(player)
+            await websocket.send(f"Joined game as {player.name}")
             await self.broadcast_state()
+
+            try:
+                async for message in websocket:
+                    if len(message) > MAX_MESSAGE_SIZE:
+                        await websocket.close(code=1009, reason="Message too large")
+                        break
+                    await self._process_message(websocket, message)
+            finally:
+                self.game.remove_player(player)
+                self.connections.pop(websocket, None)
+                await self.broadcast_state()
 
     def _validate_payload(self, data: dict[str, object]) -> bool:
         """Validate that ``data`` conforms to the expected schema."""
@@ -334,17 +320,13 @@ class BangServer:
             if expected is None:
                 return False
             if key == "indices":
-                if not isinstance(value, list) or not all(
-                    isinstance(v, int) for v in value
-                ):
+                if not isinstance(value, list) or not all(isinstance(v, int) for v in value):
                     return False
             elif not isinstance(value, expected):
                 return False
         return True
 
-    async def _process_message(
-        self, websocket: ServerConnection, message: str | bytes
-    ) -> None:
+    async def _process_message(self, websocket: ServerConnection, message: str | bytes) -> None:
         """Parse and route a single message from ``websocket``."""
         try:
             data = json.loads(message)
@@ -377,17 +359,13 @@ class BangServer:
         elif action == "set_auto_miss":
             await self._handle_set_auto_miss(websocket, data)
 
-    async def _handle_draw(
-        self, websocket: ServerConnection, data: DrawPayload
-    ) -> None:
+    async def _handle_draw(self, websocket: ServerConnection, data: DrawPayload) -> None:
         num = int(data.get("num", 1))
         player = self.connections[websocket].player
         self.game.draw_card(player, num)
         await self.broadcast_state()
 
-    async def _handle_discard(
-        self, websocket: ServerConnection, data: DiscardPayload
-    ) -> None:
+    async def _handle_discard(self, websocket: ServerConnection, data: DiscardPayload) -> None:
         idx = data.get("card_index")
         player = self.connections[websocket].player
         if idx is not None and 0 <= idx < len(player.hand):
@@ -395,9 +373,7 @@ class BangServer:
             self.game.discard_card(player, card)
             await self.broadcast_state()
 
-    async def _handle_play_card(
-        self, websocket: ServerConnection, data: PlayCardPayload
-    ) -> None:
+    async def _handle_play_card(self, websocket: ServerConnection, data: PlayCardPayload) -> None:
         idx = data.get("card_index")
         target_idx = data.get("target")
         player = self.connections[websocket].player
@@ -447,9 +423,7 @@ class BangServer:
                     payload = json.dumps(
                         {
                             "prompt": "general_store",
-                            "cards": [
-                                c.card_name for c in self.game.general_store_cards
-                            ],
+                            "cards": [c.card_name for c in self.game.general_store_cards],
                         }
                     )
                     self._create_send_task(conn, payload)
@@ -471,15 +445,11 @@ class BangServer:
         self.game.sid_ketchum_ability(player, idxs)
         return False
 
-    async def _ability_chuck_wengam(
-        self, player: Player, _data: ChuckWengamPayload
-    ) -> bool:
+    async def _ability_chuck_wengam(self, player: Player, _data: ChuckWengamPayload) -> bool:
         self.game.chuck_wengam_ability(player)
         return False
 
-    async def _ability_doc_holyday(
-        self, player: Player, data: DocHolydayPayload
-    ) -> bool:
+    async def _ability_doc_holyday(self, player: Player, data: DocHolydayPayload) -> bool:
         idxs = data.get("indices") or []
         self.game.doc_holyday_ability(player, idxs)
         return False
@@ -491,18 +461,14 @@ class BangServer:
             self.game.vera_custer_copy(player, target)
         return False
 
-    async def _ability_jesse_jones(
-        self, player: Player, data: JesseJonesPayload
-    ) -> bool:
+    async def _ability_jesse_jones(self, player: Player, data: JesseJonesPayload) -> bool:
         idx = data.get("target")
         card_idx = data.get("card_index")
         target = self.game.get_player_by_index(idx) if idx is not None else None
         self.game.draw_phase(player, jesse_target=target, jesse_card=card_idx)
         return False
 
-    async def _ability_kit_carlson(
-        self, player: Player, data: KitCarlsonPayload
-    ) -> bool:
+    async def _ability_kit_carlson(self, player: Player, data: KitCarlsonPayload) -> bool:
         discard = data.get("discard")
         cards = player.metadata.kit_cards
         player.metadata.kit_cards = None
@@ -516,32 +482,24 @@ class BangServer:
             self.game.draw_phase(player, kit_back=discard)
         return False
 
-    async def _ability_pedro_ramirez(
-        self, player: Player, data: PedroRamirezPayload
-    ) -> bool:
+    async def _ability_pedro_ramirez(self, player: Player, data: PedroRamirezPayload) -> bool:
         use_discard = bool(data.get("use_discard", True))
         self.game.draw_phase(player, pedro_use_discard=use_discard)
         return False
 
-    async def _ability_jose_delgado(
-        self, player: Player, data: JoseDelgadoPayload
-    ) -> bool:
+    async def _ability_jose_delgado(self, player: Player, data: JoseDelgadoPayload) -> bool:
         eq_idx = data.get("equipment")
         self.game.draw_phase(player, jose_equipment=eq_idx)
         return False
 
-    async def _ability_pat_brennan(
-        self, player: Player, data: PatBrennanPayload
-    ) -> bool:
+    async def _ability_pat_brennan(self, player: Player, data: PatBrennanPayload) -> bool:
         idx = data.get("target")
         card = data.get("card")
         target = self.game.get_player_by_index(idx) if idx is not None else None
         self.game.draw_phase(player, pat_target=target, pat_card=card)
         return False
 
-    async def _ability_lucky_duke(
-        self, player: Player, data: LuckyDukePayload
-    ) -> bool:
+    async def _ability_lucky_duke(self, player: Player, data: LuckyDukePayload) -> bool:
         idx = data.get("card_index", 0)
         cards = player.metadata.lucky_cards or []
         player.metadata.lucky_cards = []
@@ -556,9 +514,7 @@ class BangServer:
             self.game.draw_phase(player)
         return False
 
-    async def _ability_uncle_will(
-        self, player: Player, data: UncleWillPayload
-    ) -> bool:
+    async def _ability_uncle_will(self, player: Player, data: UncleWillPayload) -> bool:
         cidx = data.get("card_index")
         if cidx is not None and 0 <= cidx < len(player.hand):
             card = player.hand[cidx]
@@ -583,9 +539,7 @@ class BangServer:
             try:
                 await conn.websocket.send(json.dumps(payload))
             except (OSError, WebSocketException, asyncio.CancelledError) as exc:
-                logger.exception(
-                    "Failed to send state to %s", conn.player.name, exc_info=exc
-                )
+                logger.exception("Failed to send state to %s", conn.player.name, exc_info=exc)
                 # Remove the player from the game if their websocket is no
                 # longer reachable before dropping the connection entirely.
                 try:
@@ -719,9 +673,7 @@ class BangServer:
         for i, p in enumerate(self.game.players):
             if p is player or not p.equipment:
                 continue
-            targets.append(
-                {"index": i, "cards": [c.card_name for c in p.equipment.values()]}
-            )
+            targets.append({"index": i, "cards": [c.card_name for c in p.equipment.values()]})
         if targets:
             payload = json.dumps({"prompt": "pat_brennan", "targets": targets})
             self._create_send_task(conn, payload)
@@ -787,9 +739,7 @@ def main() -> None:
     parser.add_argument("--certfile", help="Path to SSL certificate", default=None)
     parser.add_argument("--keyfile", help="Path to SSL key", default=None)
     parser.add_argument("--token-key", help="Key for join tokens", default=None)
-    parser.add_argument(
-        "--show-token", action="store_true", help="Display join token and exit"
-    )
+    parser.add_argument("--show-token", action="store_true", help="Display join token and exit")
     args = parser.parse_args()
 
     server = BangServer(
