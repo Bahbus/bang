@@ -34,3 +34,25 @@ script, document the source, creator, and licensing details here.
 The icons in `icons/` are sourced from Google's Material Design Icons, which
 are licensed under the Apache License 2.0. See https://fonts.google.com/icons
 for details.
+The following icon files are included:
+
+- `all_players_icon.webp` – used when an effect targets all players.
+- `any_player_icon.webp` – used when an effect can target any player.
+- `any_reachable_player_icon.webp` – used when an effect can target any reachable player.
+- `bang_icon.webp` – overlay icon for BANG! cards.
+- `discard_another_card_icon.webp` – overlay icon for discarding an additional card.
+- `discard_card_icon.webp` – overlay icon for discard actions.
+- `draw_card_icon.webp` – overlay icon for draw actions.
+- `gain_life_icon.webp` – overlay icon for gaining life.
+- `missed_icon.webp` – overlay icon for Missed! cards.
+- `range_1_icon.webp` – indicates range 1.
+- `range_2_icon.webp` – indicates range 2.
+- `range_3_icon.webp` – indicates range 3.
+- `range_4_icon.webp` – indicates range 4.
+- `range_5_icon.webp` – indicates range 5.
+- `draw.svg` – draw button icon on the game board.
+- `discard.svg` – discard button icon on the game board.
+- `end_turn.svg` – end turn button icon on the game board.
+- `host.svg` – host button icon on the main menu.
+- `join.svg` – join button icon on the main menu.
+- `settings.svg` – settings button icon on the main menu.
