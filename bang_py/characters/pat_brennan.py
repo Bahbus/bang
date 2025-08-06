@@ -1,3 +1,4 @@
+"""Draw a card from play instead of the deck. Dodge City expansion."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

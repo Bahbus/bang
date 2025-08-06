@@ -1,3 +1,4 @@
+"""Draw a card whenever you lose a life point. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

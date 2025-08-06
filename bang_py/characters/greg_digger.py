@@ -1,3 +1,4 @@
+"""Gain 2 life when another player dies. Dodge City expansion."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

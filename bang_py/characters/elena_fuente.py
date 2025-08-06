@@ -1,3 +1,4 @@
+"""Any hand card may be played as Missed!. Dodge City expansion."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

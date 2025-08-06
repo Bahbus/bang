@@ -1,3 +1,4 @@
+"""May draw the top discard instead of from the deck. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

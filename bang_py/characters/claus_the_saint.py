@@ -1,3 +1,4 @@
+"""Draw for all, keep two, gift the rest. Bullet expansion exclusive."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

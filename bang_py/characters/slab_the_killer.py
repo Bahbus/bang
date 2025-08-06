@@ -1,3 +1,4 @@
+"""Your Bang! requires two Missed! to avoid. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

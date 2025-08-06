@@ -1,3 +1,4 @@
+"""Discard a blue card to draw two more. Dodge City expansion."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

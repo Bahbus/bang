@@ -1,3 +1,4 @@
+"""Ignore other players' equipment on your turn. Dodge City expansion."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,3 +1,4 @@
+"""Lose 1 life to draw 2 cards during your turn. Dodge City expansion."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
