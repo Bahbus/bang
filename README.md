@@ -18,6 +18,13 @@ Run the checks on changed files before committing:
 pre-commit run --files <path> [<path> ...]
 ```
 
+Alternatively, use the Makefile targets:
+
+```bash
+make lint FILES="<path> [<path> ...]"  # run pre-commit on specific files
+make test                              # execute the test suite
+```
+
 ## Running the server
 
 Install the package using **Python 3.13+**. This pulls in

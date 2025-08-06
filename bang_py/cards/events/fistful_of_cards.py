@@ -1,5 +1,8 @@
-"""A Fistful of Cards card from the Fistful of Cards expansion. At the beginning of his turn, each
-player is the target of as many Bangs! as cards in their hand."""
+"""A Fistful of Cards card from the Fistful of Cards expansion.
+
+At the beginning of his turn, each player is the target of as many Bangs! as
+cards in their hand.
+"""
 
 from __future__ import annotations
 

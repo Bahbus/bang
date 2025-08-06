@@ -1,5 +1,7 @@
-"""Cat Balou card from the base game. Choose a card from the target's hand or in play and discard
-it."""
+"""Cat Balou card from the base game.
+
+Choose a card from the target's hand or in play and discard it.
+"""
 
 from __future__ import annotations
 from .card import BaseCard
@@ -15,9 +17,7 @@ class CatBalouCard(BaseCard):
     card_name = "Cat Balou"
     card_type = "action"
     card_set = "base"
-    description = (
-        "Choose a card from the target's hand or in play and discard it."
-    )
+    description = "Choose a card from the target's hand or in play and discard it."
 
     def play(
         self,
