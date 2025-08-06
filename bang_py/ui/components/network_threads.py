@@ -12,7 +12,7 @@ from PySide6 import QtCore
 from websockets.asyncio.client import ClientConnection, connect
 from websockets.exceptions import WebSocketException
 
-from ..network.server import BangServer
+from ...network.server import BangServer
 
 
 class ServerThread(QtCore.QThread):

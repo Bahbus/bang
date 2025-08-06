@@ -9,10 +9,10 @@ from importlib import resources
 
 from PySide6 import QtCore, QtWidgets, QtQuick
 
-from .ui_components import ClientThread, ServerThread
-from .ui_components.card_images import get_loader
+from .components import ClientThread, ServerThread
+from .components.card_images import get_loader
 from .theme import get_current_theme
-from .network.server import parse_join_token
+from ..network.server import parse_join_token
 from cryptography.fernet import InvalidToken
 
 CHARACTER_ASSETS = resources.files("bang_py") / "assets" / "characters"
@@ -26,7 +26,7 @@ class BangUI(QtCore.QObject):
         self.theme = theme or get_current_theme()
         self.view = QtQuick.QQuickView()
         self.view.setResizeMode(QtQuick.QQuickView.SizeRootObjectToView)
-        qml_dir = resources.files("bang_py") / "qml"
+        qml_dir = resources.files("bang_py.ui") / "qml"
         with resources.as_file(qml_dir / "Main.qml") as qml_path:
             self.view.setSource(QtCore.QUrl.fromLocalFile(str(qml_path)))
         self.root = self.view.rootObject()
