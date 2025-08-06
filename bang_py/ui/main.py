@@ -12,7 +12,7 @@ from PySide6 import QtCore, QtWidgets, QtQuick
 from .components import ClientThread, ServerThread
 from .components.card_images import get_loader
 from .theme import get_current_theme
-from ..network.server import parse_join_token
+from ..network.token_utils import parse_join_token
 from cryptography.fernet import InvalidToken
 
 CHARACTER_ASSETS = resources.files("bang_py") / "assets" / "characters"
@@ -36,9 +36,7 @@ class BangUI(QtCore.QObject):
             self.root.joinRequested.connect(self._join_menu)
             self.root.settingsChanged.connect(self._settings_changed)
             self.root.drawCard.connect(lambda: self._send_action({"action": "draw"}))
-            self.root.discardCard.connect(
-                lambda: self._send_action({"action": "discard"})
-            )
+            self.root.discardCard.connect(lambda: self._send_action({"action": "discard"}))
             self.root.endTurn.connect(self._end_turn)
             self.root.playCard.connect(
                 lambda i: self._send_action({"action": "play_card", "card_index": int(i)})
@@ -139,9 +137,7 @@ class BangUI(QtCore.QObject):
         uri = f"{scheme}://localhost:{port}"
         self._start_client(uri, room_code, cafile=certfile)
 
-    def _start_join(
-        self, addr: str, port: int, code: str, cafile: str | None = None
-    ) -> None:
+    def _start_join(self, addr: str, port: int, code: str, cafile: str | None = None) -> None:
         scheme = "wss" if cafile else "ws"
         uri = f"{scheme}://{addr}:{port}"
         self._start_client(uri, code, cafile)
@@ -178,13 +174,9 @@ class BangUI(QtCore.QObject):
                 if "BangCard" in text:
                     QtCore.QMetaObject.invokeMethod(self.game_root, "playBang")
                 if "GatlingCard" in text:
-                    QtCore.QMetaObject.invokeMethod(
-                        self.game_root, "playManyBangs"
-                    )
+                    QtCore.QMetaObject.invokeMethod(self.game_root, "playManyBangs")
                 if "IndiansCard" in text:
-                    QtCore.QMetaObject.invokeMethod(
-                        self.game_root, "playIndians"
-                    )
+                    QtCore.QMetaObject.invokeMethod(self.game_root, "playIndians")
                 if "MissedCard" in text:
                     QtCore.QMetaObject.invokeMethod(self.game_root, "playMissed")
             if "players" in data:

@@ -5,7 +5,7 @@ import importlib.util
 import pytest
 
 try:
-    from bang_py.network.server import DEFAULT_TOKEN_KEY
+    from bang_py.network.token_utils import DEFAULT_TOKEN_KEY
 except ImportError:
     DEFAULT_TOKEN_KEY = None
 
@@ -41,7 +41,7 @@ def _set_token_key(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def qt_app() -> "QtWidgets.QApplication":
+def qt_app() -> "QtWidgets.QApplication":  # noqa: F821
     """Create a ``QApplication`` instance for Qt tests."""
     pytest.importorskip("PySide6")
     pytest.importorskip("PySide6.QtWidgets")
@@ -57,4 +57,3 @@ def qt_app() -> "QtWidgets.QApplication":
     yield app
     if created:
         app.quit()
-

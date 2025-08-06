@@ -2,15 +2,12 @@
 
 import asyncio
 import json
-import os
 import secrets
 import ssl
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import TypedDict, Literal
+from typing import Literal, TypedDict
 import logging
-
-from cryptography.fernet import Fernet
 
 from websockets.asyncio.server import serve, ServerConnection
 from websockets.exceptions import WebSocketException
@@ -25,50 +22,14 @@ from ..characters.pat_brennan import PatBrennan
 from ..characters.pedro_ramirez import PedroRamirez
 from ..characters.vera_custer import VeraCuster
 from ..cards.general_store import GeneralStoreCard
+from .token_utils import _token_key_bytes, generate_join_token, parse_join_token
 
 logger = logging.getLogger(__name__)
 
 # Maximum allowed size for incoming websocket messages
 MAX_MESSAGE_SIZE = 4096
 
-# Default key for join tokens used in tests and examples.
-DEFAULT_TOKEN_KEY = b"xPv7Sx0hWCLo5A9HhF_zvg87gdRSB8OYBjWM7lV-H2I="
-
-ENV_TOKEN_KEY = "BANG_TOKEN_KEY"
-
-
-def _token_key_bytes(key: bytes | str | None) -> bytes:
-    """Return ``key`` as bytes or read it from ``BANG_TOKEN_KEY``.
-
-    Raises:
-        ValueError: if no key is provided and the environment variable is unset.
-    """
-
-    if key is None:
-        env = os.getenv(ENV_TOKEN_KEY)
-        if env is None:
-            raise ValueError(
-                "Token key not provided and BANG_TOKEN_KEY environment variable is missing"
-            )
-        key = env
-    return key if isinstance(key, bytes) else key.encode()
-
-
-def generate_join_token(host: str, port: int, code: str, key: bytes | str | None = None) -> str:
-    """Return an encrypted token identifying a game room."""
-
-    key_bytes = _token_key_bytes(key)
-    data = json.dumps({"host": host, "port": port, "code": code}).encode()
-    return Fernet(key_bytes).encrypt(data).decode()
-
-
-def parse_join_token(token: str, key: bytes | str | None = None) -> tuple[str, int, str]:
-    """Decode ``token`` and return ``(host, port, code)``."""
-
-    key_bytes = _token_key_bytes(key)
-    data = Fernet(key_bytes).decrypt(token.encode())
-    obj = json.loads(data.decode())
-    return obj["host"], int(obj["port"]), obj["code"]
+__all__ = ["BangServer", "generate_join_token", "parse_join_token"]
 
 
 # Use slots to reduce memory footprint and prevent dynamic attribute assignment.
@@ -225,11 +186,6 @@ class BangServer:
         """Return an encoded join token for this server."""
 
         return generate_join_token(self.host, self.port, self.room_code, self.token_key)
-
-    def parse_join_token(self, token: str) -> tuple[str, int, str]:
-        """Decode ``token`` using the server's join token key."""
-
-        return parse_join_token(token, self.token_key)
 
     def _create_send_task(self, conn: Connection, payload: str) -> None:
         """Create a supervised task to send ``payload``."""
