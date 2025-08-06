@@ -11,3 +11,7 @@
     Execute it with `pytest -m slow tests/test_network_messages.py`.
   - `test_server_task_cleanup` ensures server tasks shut down cleanly after a disconnect.
     Execute it with `pytest -m slow tests/test_server_task_cleanup.py`.
+
+- `test_audio_usage` verifies that every file in `bang_py/assets/audio/` is
+  referenced by the codebase. Any intentionally unused audio must be added to
+  `KNOWN_UNUSED` within `tests/test_audio_usage.py`.
