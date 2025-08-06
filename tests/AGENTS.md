@@ -10,4 +10,4 @@
   - `test_network_messages` checks server handling of malformed or oversized messages.
     Execute it with `pytest -m slow tests/test_network_messages.py`.
   - `test_server_task_cleanup` ensures server tasks shut down cleanly after a disconnect.
-    Run it with `pytest -m slow tests/test_server_task_cleanup.py`.
+    Execute it with `pytest -m slow tests/test_server_task_cleanup.py`.

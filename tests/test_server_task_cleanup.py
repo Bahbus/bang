@@ -1,13 +1,15 @@
 import asyncio
 import pytest
 
+pytestmark = pytest.mark.slow
+
 pytest.importorskip("cryptography")
 
-from bang_py.network.server import BangServer
+from bang_py.network.server import BangServer  # noqa: E402
 
 websockets = pytest.importorskip("websockets")
-from websockets.asyncio.client import connect
-from websockets.asyncio.server import serve
+from websockets.asyncio.client import connect  # noqa: E402
+from websockets.asyncio.server import serve  # noqa: E402
 
 
 def test_disconnect_cleans_tasks(capsys) -> None:
