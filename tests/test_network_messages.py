@@ -3,6 +3,8 @@ import json
 
 import pytest
 
+pytestmark = pytest.mark.slow
+
 pytest.importorskip("cryptography")
 
 from bang_py.network.server import BangServer, MAX_MESSAGE_SIZE
