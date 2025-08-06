@@ -95,6 +95,15 @@ def _serialize_players(players: Sequence[Player]) -> list[dict]:
     ]
 
 
+def validate_player_name(name: str) -> bool:
+    """Return ``True`` if ``name`` is a valid player name."""
+
+    if not isinstance(name, str):
+        return False
+    name = name.strip()
+    return bool(name) and len(name) <= 20 and name.isprintable()
+
+
 class BangServer:
     """Run a websocket server for a single Bang game and manage clients."""
 
@@ -171,13 +180,10 @@ class BangServer:
 
         await websocket.send("Enter your name:")
         name = await websocket.recv()
-        if not isinstance(name, str):
+        if not validate_player_name(name):
             await websocket.send("Invalid name")
             return
         name = name.strip()
-        if not name or len(name) > 20 or not name.isprintable():
-            await websocket.send("Invalid name")
-            return
         if len(self.game.players) >= self.max_players:
             await websocket.send("Game full")
             return
