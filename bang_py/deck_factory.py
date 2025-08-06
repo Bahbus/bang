@@ -1,3 +1,5 @@
+"""Create decks with balanced suits and optional expansion cards for Bang!."""
+
 from __future__ import annotations
 
 import random

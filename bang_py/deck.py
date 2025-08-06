@@ -1,3 +1,5 @@
+"""Define a minimal shuffled deck supporting card draws and additions."""
+
 from __future__ import annotations
 
 from random import shuffle

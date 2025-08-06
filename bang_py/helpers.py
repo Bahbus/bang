@@ -1,3 +1,5 @@
+"""Utility helpers for card checks, ability resolution, and loading rank or suit icons."""
+
 from __future__ import annotations
 
 from .cards.card import BaseCard
