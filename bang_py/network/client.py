@@ -1,4 +1,8 @@
-"""Console client for connecting to a Bang websocket server."""
+"""Console client for the Bang websocket server.
+
+When a join token is provided, ``parse_join_token`` extracts the host, port, and
+room.
+"""
 
 import asyncio
 import json
