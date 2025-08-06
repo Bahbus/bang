@@ -1,5 +1,22 @@
 from bang_py.game_manager import GameManager
 from bang_py.player import Player
+from bang_py.deck_factory import create_standard_deck
+from bang_py.cards.bang import BangCard
+
+
+def test_drawing_and_playing() -> None:
+    deck = create_standard_deck()
+    deck.cards.extend([BangCard(), BangCard()])
+    gm = GameManager(deck=deck)
+    p1 = Player("A")
+    p2 = Player("B")
+    gm.add_player(p1)
+    gm.add_player(p2)
+    gm.draw_card(p1)
+    assert len(p1.hand) == 1
+    gm.play_card(p1, p1.hand[0], p2)
+    assert len(gm.discard_pile) == 1
+    assert p2.health == p2.max_health - 1
 
 
 def test_start_game_initializes_turn_order_and_calls_listener():
