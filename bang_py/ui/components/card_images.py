@@ -21,6 +21,13 @@ CHARACTER_DIR = ASSETS_DIR / "characters"
 AUDIO_DIR = ASSETS_DIR / "audio"
 ICON_DIR = ASSETS_DIR / "icons"
 
+_pixmap_cache: dict[str, QtGui.QPixmap] = {}
+
+
+def clear_pixmap_cache() -> None:
+    """Clear the module level pixmap cache."""
+    _pixmap_cache.clear()
+
 # Mapping of card/ability identifiers to icon filenames.
 ACTION_ICON_MAP = {
     "bang": "bang_icon.webp",
@@ -59,6 +66,10 @@ _TEMPLATE_FILES = {
 def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.QPixmap:
     """Return a portrait pixmap for ``name`` or a default image."""
     base = name.lower().replace(" ", "_")
+    cache_key = f"{base}:{width}x{height}"
+    if cache_key in _pixmap_cache:
+        return _pixmap_cache[cache_key]
+
     for ext in (".webp", ".png", ".jpg", ".jpeg"):
         path = CHARACTER_DIR / f"{base}{ext}"
         if path.exists():
@@ -68,6 +79,7 @@ def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.
     if not path.exists():
         pix = QtGui.QPixmap(width, height)
         pix.fill(QtGui.QColor("gray"))
+        _pixmap_cache[cache_key] = pix
         return pix
     with resources.as_file(path) as file_path:
         pix = QtGui.QPixmap(str(file_path))
@@ -81,6 +93,7 @@ def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.
             QtCore.Qt.KeepAspectRatio,
             QtCore.Qt.SmoothTransformation,
         )
+    _pixmap_cache[cache_key] = pix
     return pix
 
 
