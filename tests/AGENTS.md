@@ -7,3 +7,5 @@
     Execute it via `pytest -m slow tests/test_full_game_simulation.py`.
   - `test_network_integration` exercises websocket server/client flow and SSL. Run it
     with `pytest -m slow tests/test_network_integration.py`.
+  - `test_network_messages` checks server handling of malformed or oversized messages.
+    Execute it with `pytest -m slow tests/test_network_messages.py`.
