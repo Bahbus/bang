@@ -1,3 +1,4 @@
+"""Draw two cards when someone else is eliminated. Dodge City expansion."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

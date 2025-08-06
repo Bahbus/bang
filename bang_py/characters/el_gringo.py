@@ -1,3 +1,4 @@
+"""Steal a card from your attacker when wounded. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

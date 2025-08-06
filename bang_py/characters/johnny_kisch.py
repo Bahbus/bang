@@ -1,3 +1,4 @@
+"""Play a card and discard all copies in play. Bullet expansion exclusive."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

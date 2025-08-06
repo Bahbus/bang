@@ -1,3 +1,4 @@
+"""Draw a card when you empty your hand. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

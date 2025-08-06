@@ -1,3 +1,4 @@
+"""Discard two cards to heal one life. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

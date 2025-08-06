@@ -1,3 +1,4 @@
+"""Once per turn, any card becomes a General Store. Bullet expansion exclusive."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

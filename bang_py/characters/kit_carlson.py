@@ -1,3 +1,4 @@
+"""View top 3 cards; keep 2 and return 1 to the deck. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,3 +1,4 @@
+"""Play Bang! as Missed! and vice versa. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

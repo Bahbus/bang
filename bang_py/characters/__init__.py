@@ -1,3 +1,4 @@
+"""Character classes from the core, Dodge City, and Bullet expansions."""
 from .base import BaseCharacter
 from .apache_kid import ApacheKid
 from .bart_cassidy import BartCassidy

@@ -1,3 +1,4 @@
+"""Steal a card instead of drawing the first. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

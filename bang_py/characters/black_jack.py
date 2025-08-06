@@ -1,3 +1,4 @@
+"""Reveal your second draw; if red, draw an extra card. Core set."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

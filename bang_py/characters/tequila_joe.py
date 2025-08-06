@@ -1,3 +1,4 @@
+"""Beer heals you by 2 instead of 1. Dodge City expansion."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

@@ -1,3 +1,4 @@
+"""Draw one plus your wounds during phase 1. Dodge City expansion."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
