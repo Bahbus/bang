@@ -19,7 +19,7 @@ from .ability_dispatch import AbilityDispatchMixin
 from .events.event_hooks import EventHooksMixin
 
 
-@dataclass
+@dataclass(slots=True)
 class GameManager(
     DeckManagerMixin,
     AbilityDispatchMixin,
@@ -50,15 +50,11 @@ class GameManager(
     general_store_index: int = 0
 
     # Event listeners
-    draw_phase_listeners: list[Callable[[Player, object], bool]] = field(
-        default_factory=list
-    )
+    draw_phase_listeners: list[Callable[[Player, object], bool]] = field(default_factory=list)
     player_damaged_listeners: list[Callable[[Player, Player | None], None]] = field(
         default_factory=list
     )
-    player_healed_listeners: list[Callable[[Player], None]] = field(
-        default_factory=list
-    )
+    player_healed_listeners: list[Callable[[Player], None]] = field(default_factory=list)
     player_death_listeners: list[Callable[[Player, Player | None], None]] = field(
         default_factory=list
     )
@@ -67,10 +63,11 @@ class GameManager(
     card_play_checks: list[Callable[[Player, BaseCard, Player | None], bool]] = field(
         default_factory=list
     )
-    card_played_listeners: list[
-        Callable[[Player, BaseCard, Player | None], None]
-    ] = field(default_factory=list)
+    card_played_listeners: list[Callable[[Player, BaseCard, Player | None], None]] = field(
+        default_factory=list
+    )
     play_phase_listeners: list[Callable[[Player], None]] = field(default_factory=list)
+    _card_handlers: dict = field(default_factory=dict, init=False, repr=False)
     _duel_counts: dict | None = field(default=None, init=False, repr=False)
 
     @property

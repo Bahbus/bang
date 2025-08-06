@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from collections import deque
 from collections.abc import Callable
 from typing import TYPE_CHECKING
@@ -158,7 +158,7 @@ def _russian_roulette_event(game: GameManager) -> None:
     RussianRouletteEventCard().play(game=game)
 
 
-@dataclass
+@dataclass(slots=True)
 class EventCard:
     """Card used in event deck expansions."""
 
@@ -170,6 +170,7 @@ class EventCard:
     card_set: str = "event_deck"
     suit: str | None = None
     rank: int | None = None
+    card_name: str = field(init=False)
 
     def __post_init__(self) -> None:
         """Set ``card_name`` to the event name."""
@@ -192,41 +193,45 @@ class EventCard:
 
 def create_high_noon_deck() -> deque[BaseEventCard]:
     """Return a simple High Noon event deck."""
-    return deque([
-        BlessingEventCard(),
-        CurseEventCard(),
-        GhostTownEventCard(),
-        GoldRushEventCard(),
-        HangoverEventCard(),
-        HighNoonEventCard(),
-        ShootoutEventCard(),
-        TheDaltonsEventCard(),
-        TheDoctorEventCard(),
-        TheReverendEventCard(),
-        TheSermonEventCard(),
-        ThirstEventCard(),
-        TrainArrivalEventCard(),
-        HandcuffsEventCard(),
-        NewIdentityEventCard(),
-    ])
+    return deque(
+        [
+            BlessingEventCard(),
+            CurseEventCard(),
+            GhostTownEventCard(),
+            GoldRushEventCard(),
+            HangoverEventCard(),
+            HighNoonEventCard(),
+            ShootoutEventCard(),
+            TheDaltonsEventCard(),
+            TheDoctorEventCard(),
+            TheReverendEventCard(),
+            TheSermonEventCard(),
+            ThirstEventCard(),
+            TrainArrivalEventCard(),
+            HandcuffsEventCard(),
+            NewIdentityEventCard(),
+        ]
+    )
 
 
 def create_fistful_deck() -> deque[BaseEventCard]:
     """Return a simple Fistful of Cards event deck."""
-    return deque([
-        AbandonedMineEventCard(),
-        AmbushEventCard(),
-        BloodBrothersEventCard(),
-        DeadManEventCard(),
-        HardLiquorEventCard(),
-        LassoEventCard(),
-        LawOfTheWestEventCard(),
-        PeyoteEventCard(),
-        RanchEventCard(),
-        RicochetEventCard(),
-        RussianRouletteEventCard(),
-        SniperEventCard(),
-        TheJudgeEventCard(),
-        VendettaEventCard(),
-        FistfulOfCardsEventCard(),
-    ])
+    return deque(
+        [
+            AbandonedMineEventCard(),
+            AmbushEventCard(),
+            BloodBrothersEventCard(),
+            DeadManEventCard(),
+            HardLiquorEventCard(),
+            LassoEventCard(),
+            LawOfTheWestEventCard(),
+            PeyoteEventCard(),
+            RanchEventCard(),
+            RicochetEventCard(),
+            RussianRouletteEventCard(),
+            SniperEventCard(),
+            TheJudgeEventCard(),
+            VendettaEventCard(),
+            FistfulOfCardsEventCard(),
+        ]
+    )
