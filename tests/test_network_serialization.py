@@ -1,12 +1,14 @@
 import json
 
 import pytest
-
-pytest.importorskip("cryptography")
+from websockets.asyncio.client import connect as async_connect
 
 from bang_py.player import Player
 from bang_py.cards.roles import SheriffRoleCard, OutlawRoleCard
+from bang_py.network import client as network_client
 from bang_py.network.server import _serialize_players
+
+pytest.importorskip("cryptography")
 
 
 def test_serialize_players_json_roundtrip():
@@ -61,3 +63,7 @@ def test_serialize_players_without_role():
             "equipment": [],
         }
     ]
+
+
+def test_client_uses_asyncio_connect() -> None:
+    assert network_client.connect is async_connect
