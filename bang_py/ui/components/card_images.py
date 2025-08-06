@@ -5,17 +5,16 @@ from __future__ import annotations
 from importlib import resources
 
 from contextlib import suppress
+from typing import TYPE_CHECKING
 
 from PySide6 import QtCore, QtGui, QtWidgets
 try:
-    from PySide6 import QtMultimedia  # type: ignore
+    from PySide6 import QtMultimedia, QtSvg
 except ImportError:  # pragma: no cover - optional dependency
-    QtMultimedia = None
+    QtMultimedia = QtSvg = None
 
-try:
-    from PySide6 import QtSvg  # type: ignore
-except ImportError:  # pragma: no cover - optional dependency
-    QtSvg = None
+if TYPE_CHECKING:
+    from PySide6 import QtMultimedia, QtSvg
 
 from ...helpers import RankSuitIconLoader
 
