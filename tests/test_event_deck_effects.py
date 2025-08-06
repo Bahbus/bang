@@ -250,7 +250,7 @@ def test_ambush_sets_distance_one():
 
 def test_ranch_discard_and_redraw():
     deck = Deck([])
-    deck.cards = [BangCard(), BangCard(), BangCard(), BangCard()]
+    deck.cards = deque([BangCard(), BangCard(), BangCard(), BangCard()])
     gm = GameManager(deck=deck)
     p1 = Player("A")
     gm.add_player(p1)
@@ -346,11 +346,13 @@ def test_event_deck_order_fistful():
 
 def test_peyote_extra_draw():
     deck = Deck([])
-    deck.cards = [
-        BangCard(suit="Hearts"),
-        BangCard(suit="Clubs"),
-        BangCard(suit="Diamonds"),
-    ]
+    deck.cards = deque(
+        [
+            BangCard(suit="Diamonds"),
+            BangCard(suit="Clubs"),
+            BangCard(suit="Hearts"),
+        ]
+    )
     gm = GameManager(deck=deck)
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
@@ -442,7 +444,7 @@ def test_hard_liquor_skip_draw_to_heal():
 
 def test_law_of_west_plays_second_card():
     deck = Deck([])
-    deck.cards = [BeerCard(), BeerCard()]
+    deck.cards = deque([BeerCard(), BeerCard()])
     gm = GameManager(deck=deck)
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
@@ -468,7 +470,7 @@ def test_shootout_allows_multiple_bangs():
 
 def test_handcuffs_limits_suit_played():
     deck = Deck([])
-    deck.cards = [BangCard(suit="Hearts"), BeerCard(suit="Spades")]
+    deck.cards = deque([BangCard(suit="Hearts"), BeerCard(suit="Spades")])
     gm = GameManager(deck=deck)
     p1 = Player("Sheriff", role=SheriffRoleCard())
     p2 = Player("Outlaw")

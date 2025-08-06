@@ -13,11 +13,12 @@ from bang_py.cards.events import (
 )
 from bang_py.cards import BangCard, MissedCard
 from bang_py.deck import Deck
+from collections import deque
 
 
 def test_handcuffs_restricts_suit():
     deck = Deck([])
-    deck.cards = [BangCard(suit="Hearts"), BangCard(suit="Spades")]
+    deck.cards = deque([BangCard(suit="Hearts"), BangCard(suit="Spades")])
     gm = GameManager(deck=deck)
     sheriff = Player("S", role=SheriffRoleCard())
     outlaw = Player("O", role=OutlawRoleCard())

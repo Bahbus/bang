@@ -36,6 +36,6 @@ class DiscardPhaseMixin:
         while len(player.hand) > limit:
             card = player.hand.pop()
             if self.event_flags.get("abandoned_mine"):
-                self.deck.cards.insert(0, card)
+                self.deck.cards.appendleft(card)
             else:
                 self._pass_left_or_discard(player, card)

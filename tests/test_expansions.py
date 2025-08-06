@@ -79,7 +79,7 @@ def test_high_noon_draws_card_for_all():
     p2 = Player("B")
     gm.add_player(p1)
     gm.add_player(p2)
-    gm.deck.cards.extend([PunchCard(), PunchCard()])
+    gm.deck.cards.extendleft([PunchCard(), PunchCard()])
     card = HighNoonCard()
     p1.hand.append(card)
     gm.play_card(p1, card, p1)

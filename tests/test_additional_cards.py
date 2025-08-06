@@ -14,6 +14,7 @@ from bang_py.cards import (
     BeerCard,
     BangCard,
 )
+from collections import deque
 
 
 def test_stagecoach_draws_two_cards():
@@ -99,7 +100,7 @@ def test_general_store_gives_each_player_card():
 def test_general_store_selection_order():
     deck = Deck([])
     c1, c2, c3 = BangCard(), BeerCard(), GatlingCard()
-    deck.cards = [c1, c2, c3]
+    deck.cards = deque([c3, c2, c1])
     gm = GameManager(deck=deck)
     p1 = Player("A")
     p2 = Player("B")
@@ -116,7 +117,7 @@ def test_general_store_selection_order():
 def test_general_store_allows_player_choice():
     deck = Deck([])
     c1, c2, c3 = BangCard(), BeerCard(), GatlingCard()
-    deck.cards = [c1, c2, c3]
+    deck.cards = deque([c3, c2, c1])
     gm = GameManager(deck=deck)
     p1 = Player("A")
     p2 = Player("B")
