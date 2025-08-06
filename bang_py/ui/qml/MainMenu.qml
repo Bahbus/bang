@@ -28,12 +28,19 @@ Rectangle {
 
         TextField {
             id: nameField
-            placeholderText: "Name"
+            placeholderText: "Name (max 20 chars)"
             width: 200 * scale
             color: theme === "dark" ? "white" : "black"
             background: Rectangle {
                 color: theme === "dark" ? "#3c3c3c" : "#fff8dc"
             }
+            validator: RegExpValidator { regExp: /^[\x20-\x7E]{1,20}$/ }
+        }
+
+        Label {
+            text: "Use up to 20 printable characters"
+            color: "red"
+            visible: nameField.text !== "" && !nameField.acceptableInput
         }
 
         StyledButton {
