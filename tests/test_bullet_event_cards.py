@@ -1,3 +1,5 @@
+from collections import deque
+
 from bang_py.game_manager import GameManager
 from bang_py.player import Player
 from bang_py.cards.roles import SheriffRoleCard, OutlawRoleCard
@@ -21,7 +23,7 @@ def test_handcuffs_restricts_suit():
     outlaw = Player("O", role=OutlawRoleCard())
     gm.add_player(sheriff)
     gm.add_player(outlaw)
-    gm.event_deck = [HandcuffsEventCard()]
+    gm.event_deck = deque([HandcuffsEventCard()])
     gm.turn_order = [0, 1]
     gm.current_turn = 0
     gm.draw_event_card()
@@ -39,7 +41,7 @@ def test_new_identity_event_redraw():
     p = Player("P", role=SheriffRoleCard())
     gm.add_player(p)
     p.hand = [BangCard(), BangCard()]
-    gm.event_deck = [NewIdentityEventCard()]
+    gm.event_deck = deque([NewIdentityEventCard()])
     gm.draw_event_card()
     assert len(p.hand) == 2
 
@@ -53,7 +55,7 @@ def test_lasso_event_ignores_equipment():
     gm.add_player(b)
     MustangCard().play(b)
     assert a.distance_to(b) > 1
-    gm.event_deck = [LassoEventCard()]
+    gm.event_deck = deque([LassoEventCard()])
     gm.draw_event_card()
     assert a.distance_to(b) == 1
 
@@ -64,7 +66,7 @@ def test_sniper_event_allows_special_bang():
     t = Player("T")
     gm.add_player(p)
     gm.add_player(t)
-    gm.event_deck = [SniperEventCard()]
+    gm.event_deck = deque([SniperEventCard()])
     gm.draw_event_card()
     p.hand.extend([BangCard(), BangCard()])
     gm.play_card(p, p.hand[0], t)
@@ -80,7 +82,7 @@ def test_sniper_event_double_bang_damage():
     gm.add_player(attacker)
     gm.add_player(target)
     attacker.hand.extend([BangCard(), BangCard()])
-    gm.event_deck = [SniperEventCard()]
+    gm.event_deck = deque([SniperEventCard()])
     gm.draw_event_card()
     attacker.metadata.use_sniper = True
     gm.play_card(attacker, attacker.hand[0], target)
@@ -96,7 +98,7 @@ def test_russian_roulette_players_discard_missed():
     gm.add_player(s)
     gm.add_player(o)
     o.hand.append(MissedCard())
-    gm.event_deck = [RussianRouletteEventCard()]
+    gm.event_deck = deque([RussianRouletteEventCard()])
     gm.draw_event_card()
     assert s.health == s.max_health - 2
     assert o.health == o.max_health

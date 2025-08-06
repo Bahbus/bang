@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Callable, Sequence
+from collections import deque
 
 from .deck import Deck
 from .cards.card import BaseCard
@@ -36,7 +37,7 @@ class GameManager(
     discard_pile: list[BaseCard] = field(default_factory=list)
     current_turn: int = 0
     turn_order: list[int] = field(default_factory=list)
-    event_deck: list[EventCard] | None = None
+    event_deck: deque[EventCard] | None = None
     current_event: EventCard | None = None
     event_flags: dict = field(default_factory=dict)
     first_eliminated: Player | None = None
