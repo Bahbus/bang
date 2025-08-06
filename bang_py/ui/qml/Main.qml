@@ -68,7 +68,7 @@ Item {
             TextField {
                 id: portField
                 placeholderText: qsTr("Port (1-65535)")
-                text: "8765"
+                text: qsTr("8765")
                 validator: IntValidator { bottom: 1; top: 65535 }
             }
             Label {
@@ -79,7 +79,7 @@ Item {
             TextField {
                 id: maxField
                 placeholderText: qsTr("Max Players (2-8)")
-                text: "7"
+                text: qsTr("7")
                 validator: IntValidator { bottom: 2; top: 8 }
             }
             Label {
@@ -87,8 +87,16 @@ Item {
                 color: "red"
                 visible: !maxField.acceptableInput
             }
-            TextField { id: certField; placeholderText: qsTr("Certificate") }
-            TextField { id: keyField; placeholderText: qsTr("Key File") }
+            TextField {
+                id: certField
+                placeholderText: qsTr("Certificate")
+                validator: RegExpValidator { regExp: /^[\x20-\x7E]{0,255}$/ }
+            }
+            TextField {
+                id: keyField
+                placeholderText: qsTr("Key File")
+                validator: RegExpValidator { regExp: /^[\x20-\x7E]{0,255}$/ }
+            }
         }
         onAccepted: {
             if (!portField.acceptableInput || !maxField.acceptableInput) {
@@ -122,11 +130,16 @@ Item {
                 color: "red"
                 visible: tokenField.text !== "" && !tokenField.acceptableInput
             }
-            TextField { id: addrField; placeholderText: qsTr("Host Address"); text: "localhost" }
+            TextField {
+                id: addrField
+                placeholderText: qsTr("Host Address")
+                text: qsTr("localhost")
+                validator: RegExpValidator { regExp: /^[\x20-\x7E]{1,255}$/ }
+            }
             TextField {
                 id: portJoinField
                 placeholderText: qsTr("Port (1-65535)")
-                text: "8765"
+                text: qsTr("8765")
                 validator: IntValidator { bottom: 1; top: 65535 }
             }
             Label {
@@ -144,7 +157,11 @@ Item {
                 color: "red"
                 visible: codeField.text !== "" && !codeField.acceptableInput
             }
-            TextField { id: cafileField; placeholderText: qsTr("CA File") }
+            TextField {
+                id: cafileField
+                placeholderText: qsTr("CA File")
+                validator: RegExpValidator { regExp: /^[\x20-\x7E]{0,255}$/ }
+            }
         }
         onAccepted: {
             if (tokenField.text !== "") {
@@ -160,7 +177,9 @@ Item {
                     cafileField.text,
                 )
             } else {
-                if (!portJoinField.acceptableInput || !codeField.acceptableInput) {
+                if (!addrField.acceptableInput ||
+                    !portJoinField.acceptableInput ||
+                    !codeField.acceptableInput) {
                     joinDialog.open()
                     return
                 }
