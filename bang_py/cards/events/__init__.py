@@ -1,5 +1,7 @@
 """Event card exports for expansions like High Noon and Fistful of Cards."""
 
+from __future__ import annotations
+
 from .base import BaseEventCard
 from .abandoned_mine import AbandonedMineEventCard
 from .ambush import AmbushEventCard

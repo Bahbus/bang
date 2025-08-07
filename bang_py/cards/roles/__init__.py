@@ -1,5 +1,7 @@
 """Role card exports defining player objectives."""
 
+from __future__ import annotations
+
 from .base import BaseRole
 from .sheriff import SheriffRoleCard
 from .deputy import DeputyRoleCard

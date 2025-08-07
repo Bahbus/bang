@@ -5,3 +5,5 @@ effects during gameplay, and notifying game components of event-driven
 changes. It centralizes all event-related utilities used by the Bang game
 manager.
 """
+
+from __future__ import annotations
