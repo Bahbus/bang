@@ -15,3 +15,6 @@
 - `test_audio_usage` verifies that every file in `bang_py/assets/audio/` is
   referenced by the codebase. Any intentionally unused audio must be added to
   `KNOWN_UNUSED` within `tests/test_audio_usage.py`.
+- `test_icon_usage` ensures every file in `bang_py/assets/icons/` is referenced
+  by the codebase. Any intentionally unused icons must be added to
+  `KNOWN_UNUSED` within `tests/test_icon_usage.py`.
