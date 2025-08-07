@@ -4,8 +4,9 @@ This repository now contains a Python implementation of the Bang card game along
 
 ## Development
 
-This project uses [pre-commit](https://pre-commit.com/) to run linters and
-formatters. Install the hooks with:
+This project uses [pre-commit](https://pre-commit.com/) to run linters,
+formatters and static type checks (Black, Flake8, pydocstyle and mypy).
+Install the hooks with:
 
 ```bash
 pip install pre-commit
