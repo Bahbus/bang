@@ -22,11 +22,7 @@ jobs:
           sudo apt-get install -y libxcb-cursor0 libxkbcommon-x11-0 libegl1
       - name: Install dependencies
         run: |
-          pip install "PySide6>=6.9.1" --pre
-          pip install cryptography
-          pip install -r requirements.txt
-          pip install -e .
-          pip install pytest pre-commit
+          pip install .[dev] --pre
       - name: Run pre-commit
         run: pre-commit run --files $(git ls-files '*.py')
         continue-on-error: true
