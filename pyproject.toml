@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.scripts]
-bang-server = "bang_py.network.server:main"
+bang-server = "bang_py.network.cli:main"
 bang-client = "bang_py.network.client:run"
 bang-ui = "bang_py.ui:main"
 
