@@ -11,6 +11,8 @@ jobs:
         python-version: ["3.13-dev"]
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -24,7 +26,10 @@ jobs:
         run: |
           pip install .[dev] --pre
       - name: Run pre-commit
-        run: pre-commit run --files $(git ls-files '*.py')
-        continue-on-error: true
+        run: |
+          files=$(git diff --name-only HEAD^ -- '*.py')
+          if [ -n "$files" ]; then
+            pre-commit run --files $files
+          fi
       - name: Run tests
         run: pytest
