@@ -4,9 +4,9 @@ import asyncio
 import json
 import secrets
 import ssl
-from collections.abc import Sequence
+from collections.abc import Coroutine, Sequence
 from dataclasses import dataclass, field
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 import logging
 
 from websockets.asyncio.server import serve, ServerConnection
@@ -177,6 +177,7 @@ class BangServer:
         if certfile:
             self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
             self.ssl_context.load_cert_chain(certfile, keyfile)
+        self._broadcast_group: asyncio.TaskGroup | None = None
         self.game.player_damaged_listeners.append(self._on_player_damaged)
         self.game.player_healed_listeners.append(self._on_player_healed)
         self.game.game_over_listeners.append(self._on_game_over)
@@ -200,6 +201,12 @@ class BangServer:
                 logger.exception("Send to %s failed", conn.player.name, exc_info=exc)
 
         conn.task_group.create_task(_send())
+
+    def _spawn_broadcast(self, coro: Coroutine[Any, Any, Any]) -> None:
+        if self._broadcast_group is not None:
+            self._broadcast_group.create_task(coro)
+        else:  # pragma: no cover - server not started
+            asyncio.create_task(coro)
 
     async def handler(self, websocket: ServerConnection) -> None:
         """Register a new client and process game commands sent over the socket."""
@@ -509,20 +516,17 @@ class BangServer:
                 self.game.remove_player(conn.player)
                 self.connections.pop(websocket, None)
 
-        tasks = []
-        for websocket, conn in list(self.connections.items()):
-            payload = {
-                "players": _serialize_players(self.game.players),
-                "hand": [c.card_name for c in conn.player.hand],
-                "character": getattr(conn.player.character, "name", ""),
-                "event": getattr(self.game.current_event, "name", ""),
-            }
-            if message:
-                payload["message"] = message
-            tasks.append(send_payload(websocket, conn, payload))
-
-        if tasks:
-            await asyncio.gather(*tasks)
+        async with asyncio.TaskGroup() as tg:
+            for websocket, conn in list(self.connections.items()):
+                payload = {
+                    "players": _serialize_players(self.game.players),
+                    "hand": [c.card_name for c in conn.player.hand],
+                    "character": getattr(conn.player.character, "name", ""),
+                    "event": getattr(self.game.current_event, "name", ""),
+                }
+                if message:
+                    payload["message"] = message
+                tg.create_task(send_payload(websocket, conn, payload))
 
     def _find_connection(self, player: Player) -> Connection | None:
         for conn in self.connections.values():
@@ -567,7 +571,7 @@ class BangServer:
             if handler(conn, player):
                 return
         self.game.draw_phase(player)
-        asyncio.create_task(self.broadcast_state())
+        self._spawn_broadcast(self.broadcast_state())
 
     def _start_jesse_jones(self, conn: Connection, player: Player) -> bool:
         if not isinstance(player.character, JesseJones):
@@ -582,7 +586,7 @@ class BangServer:
             self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player)
-            asyncio.create_task(self.broadcast_state())
+            self._spawn_broadcast(self.broadcast_state())
         return True
 
     def _start_kit_carlson(self, conn: Connection, player: Player) -> bool:
@@ -603,7 +607,7 @@ class BangServer:
             self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player, pedro_use_discard=False)
-            asyncio.create_task(self.broadcast_state())
+            self._spawn_broadcast(self.broadcast_state())
         return True
 
     def _start_jose_delgado(self, conn: Connection, player: Player) -> bool:
@@ -619,7 +623,7 @@ class BangServer:
             self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player)
-            asyncio.create_task(self.broadcast_state())
+            self._spawn_broadcast(self.broadcast_state())
         return True
 
     def _start_pat_brennan(self, conn: Connection, player: Player) -> bool:
@@ -635,7 +639,7 @@ class BangServer:
             self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player)
-            asyncio.create_task(self.broadcast_state())
+            self._spawn_broadcast(self.broadcast_state())
         return True
 
     def _start_lucky_duke(self, conn: Connection, player: Player) -> bool:
@@ -649,7 +653,7 @@ class BangServer:
             self._create_send_task(conn, payload)
         else:
             self.game.draw_phase(player)
-            asyncio.create_task(self.broadcast_state())
+            self._spawn_broadcast(self.broadcast_state())
         return True
 
     def _on_player_damaged(self, player: Player, _src: Player | None = None) -> None:
@@ -658,14 +662,14 @@ class BangServer:
             if not player.is_alive()
             else f"{player.name} took damage ({player.health})"
         )
-        asyncio.create_task(self.broadcast_state(msg))
+        self._spawn_broadcast(self.broadcast_state(msg))
 
     def _on_player_healed(self, player: Player) -> None:
         msg = f"{player.name} healed to {player.health}"
-        asyncio.create_task(self.broadcast_state(msg))
+        self._spawn_broadcast(self.broadcast_state(msg))
 
     def _on_game_over(self, result: str) -> None:
-        asyncio.create_task(self.broadcast_state(result))
+        self._spawn_broadcast(self.broadcast_state(result))
 
     async def start(self) -> None:
         """Start the websocket server and run until cancelled."""
@@ -676,10 +680,12 @@ class BangServer:
             ssl=self.ssl_context,
             max_size=MAX_MESSAGE_SIZE,
         ):
-            logger.info(
-                "Server started on %s:%s (code: %s)",
-                self.host,
-                self.port,
-                self.room_code,
-            )
-            await asyncio.Future()  # run forever
+            async with asyncio.TaskGroup() as tg:
+                self._broadcast_group = tg
+                logger.info(
+                    "Server started on %s:%s (code: %s)",
+                    self.host,
+                    self.port,
+                    self.room_code,
+                )
+                await asyncio.Future()  # run forever
