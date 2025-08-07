@@ -108,9 +108,9 @@ bang-ui
 Set `BANG_AUTO_CLOSE=1` to automatically close the window. This is mainly useful
 for automated tests.
 
-![Main menu](example-bang-menu-ui.jpg)
+![Main menu](docs/images/example-bang-menu-ui.jpg)
 
-![Game board](example_bang_ui.jpg)
+![Game board](docs/images/example_bang_ui.jpg)
 
 Set `BANG_THEME=dark` to enable a dark interface or choose the theme from the
 **Settings** dialog at runtime.
@@ -143,9 +143,9 @@ ship with the repository under `bang_py/assets/characters/` and
 `scripts/generate_assets.py` helper can create simple placeholders instead. The
 bundled assets are released into the public domain; see
 `bang_py/assets/ATTRIBUTION.md` for details. Two JPEGs,
-``example-bang-menu-ui.jpg`` and ``example_bang_ui.jpg``, show the latest QML
-interface and remain in the repository root solely as reference screenshots.
-They are **not** used by the program.
+``docs/images/example-bang-menu-ui.jpg`` and ``docs/images/example_bang_ui.jpg``,
+show the latest QML interface and reside under `docs/images/` solely as
+reference screenshots. They are **not** used by the program.
 
 ## Linux Dependencies
 
