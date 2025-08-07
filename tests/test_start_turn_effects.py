@@ -8,7 +8,7 @@ from bang_py.player import Player
 
 def test_jail_auto_skip_turn():
     deck = Deck([])
-    deck.cards.extendleft([BangCard(), BangCard(), BangCard(suit="Clubs")])
+    deck.extend_top([BangCard(), BangCard(), BangCard(suit="Clubs")])
     gm = GameManager(deck=deck)
     p1 = Player("Jailbird")
     p2 = Player("Other")
@@ -26,7 +26,7 @@ def test_jail_auto_skip_turn():
 
 def test_dynamite_explodes_on_turn_start():
     deck = Deck([])
-    deck.cards.extendleft([BangCard(), BangCard(), BangCard(suit="Spades", rank=5)])
+    deck.extend_top([BangCard(), BangCard(), BangCard(suit="Spades", rank=5)])
     gm = GameManager(deck=deck)
     p1 = Player("One")
     p2 = Player("Two")
@@ -43,7 +43,7 @@ def test_dynamite_explodes_on_turn_start():
 
 def test_dynamite_passes_to_next_player():
     deck = Deck([])
-    deck.cards.extendleft([BangCard(), BangCard(), BangCard(suit="Hearts", rank=1)])
+    deck.extend_top([BangCard(), BangCard(), BangCard(suit="Hearts", rank=1)])
     gm = GameManager(deck=deck)
     p1 = Player("One")
     p2 = Player("Two")

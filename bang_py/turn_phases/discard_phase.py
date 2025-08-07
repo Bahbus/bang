@@ -18,11 +18,11 @@ class DiscardPhaseMixin:
     discard_pile: list[BaseCard]
     event_flags: dict
 
-    def discard_phase(self: 'GameManager', player: 'Player') -> None:
+    def discard_phase(self: "GameManager", player: "Player") -> None:
         limit = self._hand_limit(player)
         self._discard_to_limit(player, limit)
 
-    def _hand_limit(self, player: 'Player') -> int:
+    def _hand_limit(self, player: "Player") -> int:
         limit = player.health
         if player.metadata.hand_limit is not None:
             limit = max(limit, player.metadata.hand_limit)
@@ -32,10 +32,10 @@ class DiscardPhaseMixin:
             limit = min(limit, int(self.event_flags["reverend_limit"]))
         return limit
 
-    def _discard_to_limit(self, player: 'Player', limit: int) -> None:
+    def _discard_to_limit(self, player: "Player", limit: int) -> None:
         while len(player.hand) > limit:
             card = player.hand.pop()
             if self.event_flags.get("abandoned_mine"):
-                self.deck.cards.appendleft(card)
+                self.deck.push_top(card)
             else:
                 self._pass_left_or_discard(player, card)

@@ -73,7 +73,7 @@ def test_barrel_dodges_bang_on_heart():
     target = Player("Target")
     BarrelCard().play(target)
     deck = create_standard_deck()
-    deck.cards.appendleft(BeerCard(suit="Hearts"))
+    deck.push_top(BeerCard(suit="Hearts"))
     BangCard().play(target, deck)
     assert target.health == target.max_health
     assert target.metadata.dodged is True
@@ -83,7 +83,7 @@ def test_barrel_fails_on_non_heart():
     target = Player("Target")
     BarrelCard().play(target)
     deck = create_standard_deck()
-    deck.cards.appendleft(BeerCard(suit="Clubs"))
+    deck.push_top(BeerCard(suit="Clubs"))
     BangCard().play(target, deck)
     assert target.health == target.max_health - 1
 
@@ -93,7 +93,7 @@ def test_jail_skip_turn():
     jail = JailCard()
     jail.play(player)
     deck = create_standard_deck()
-    deck.cards.appendleft(BangCard(suit="Clubs"))
+    deck.push_top(BangCard(suit="Clubs"))
     skipped = jail.check_turn(player, deck)
     assert skipped is True
     assert "Jail" not in player.equipment
@@ -104,7 +104,7 @@ def test_jail_freed_on_heart():
     jail = JailCard()
     jail.play(player)
     deck = create_standard_deck()
-    deck.cards.appendleft(BangCard(suit="Hearts"))
+    deck.push_top(BangCard(suit="Hearts"))
     skipped = jail.check_turn(player, deck)
     assert skipped is False
     assert "Jail" not in player.equipment
@@ -116,7 +116,7 @@ def test_dynamite_explodes():
     dyn = DynamiteCard()
     dyn.play(p1)
     deck = create_standard_deck()
-    deck.cards.appendleft(BangCard(suit="Spades", rank=5))
+    deck.push_top(BangCard(suit="Spades", rank=5))
     exploded = dyn.check_dynamite(p1, p2, deck)
     assert exploded is True
     assert p1.health == p1.max_health - 3
@@ -129,7 +129,7 @@ def test_dynamite_passes():
     dyn = DynamiteCard()
     dyn.play(p1)
     deck = create_standard_deck()
-    deck.cards.appendleft(BangCard(suit="Hearts", rank=1))
+    deck.push_top(BangCard(suit="Hearts", rank=1))
     exploded = dyn.check_dynamite(p1, p2, deck)
     assert exploded is False
     assert "Dynamite" not in p1.equipment
