@@ -13,11 +13,15 @@ import math
 from pathlib import Path
 
 import os
+from importlib import import_module
+from typing import TYPE_CHECKING, Any, cast
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6 import QtCore, QtGui, QtWidgets
-from importlib import import_module
+from PySide6 import QtCore, QtGui, QtWidgets  # type: ignore[import-not-found]  # noqa: E402
+
+if TYPE_CHECKING:  # pragma: no cover - only for type hints
+    from pydub import AudioSegment  # type: ignore[import-not-found]
 
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "bang_py" / "assets"
 CHAR_DIR = ASSETS_DIR / "characters"
@@ -101,15 +105,15 @@ def create_beep(path: Path, freq: int = 440) -> None:
     duration = 0.1
     volume = 0.5
     frames = [
-        struct.pack('<h', int(volume * math.sin(2 * math.pi * freq * i / rate) * 32767))
+        struct.pack("<h", int(volume * math.sin(2 * math.pi * freq * i / rate) * 32767))
         for i in range(int(duration * rate))
     ]
     raw = b"".join(frames)
     try:  # Attempt MP3 export
-        from pydub import AudioSegment  # type: ignore
-    except ImportError:  # pydub not installed; skip MP3 export
+        segment_cls = cast(Any, import_module("pydub").AudioSegment)
+    except Exception:  # pydub not installed; skip MP3 export
         return
-    audio = AudioSegment(
+    audio: "AudioSegment" = segment_cls(
         data=raw,
         sample_width=2,
         frame_rate=rate,
