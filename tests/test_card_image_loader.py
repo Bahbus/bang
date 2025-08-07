@@ -14,8 +14,12 @@ pytest.importorskip(
     exc_type=ImportError,
 )
 
-from PySide6 import QtGui
-from bang_py.ui.components.card_images import CardImageLoader, ACTION_ICON_MAP
+from PySide6 import QtGui  # noqa: E402
+from bang_py.helpers import RankSuitIconLoader  # noqa: E402
+from bang_py.ui.components.card_images import (  # noqa: E402
+    CardImageLoader,
+    ACTION_ICON_MAP,
+)
 
 
 @pytest.mark.parametrize(
@@ -44,6 +48,13 @@ def test_get_card_back_returns_pixmap(name, qt_app):
 
     loader = CardImageLoader()
     pix = loader.get_card_back(name)
+    assert isinstance(pix, QtGui.QPixmap)
+    assert not pix.isNull()
+
+
+def test_rank_suit_loader_returns_pixmap(qt_app):
+    loader = RankSuitIconLoader()
+    pix = loader.get_pixmap("A", "Hearts")
     assert isinstance(pix, QtGui.QPixmap)
     assert not pix.isNull()
 
