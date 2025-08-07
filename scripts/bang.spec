@@ -4,13 +4,13 @@ from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
 from glob import glob
 
 asset_patterns = (
-    'bang_py/assets/*.png',
-    'bang_py/assets/*.svg',
-    'bang_py/assets/icons/*.svg',
-    'bang_py/assets/characters/*.webp',
-    'bang_py/assets/audio/*.mp3',
-    'bang_py/assets/audio/*.wav',
-    'bang_py/assets/*.md',
+    '../bang_py/assets/*.png',
+    '../bang_py/assets/*.svg',
+    '../bang_py/assets/icons/*.svg',
+    '../bang_py/assets/characters/*.webp',
+    '../bang_py/assets/audio/*.mp3',
+    '../bang_py/assets/audio/*.wav',
+    '../bang_py/assets/*.md',
 )
 
 asset_paths = [
@@ -20,7 +20,7 @@ asset_paths = [
 ]
 
 a = Analysis(
-    ['pyinstaller_entry.py'],
+    ['../pyinstaller_entry.py'],
     pathex=[],
     binaries=collect_dynamic_libs('PySide6'),
     datas=asset_paths,
