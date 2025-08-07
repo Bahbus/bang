@@ -69,10 +69,10 @@ class BangUI(QtCore.QObject):
         except ValueError:
             QtWidgets.QMessageBox.critical(None, "Error", "Invalid settings")
             return
-        cert = cert.strip() or None
-        key = key.strip() or None
+        certfile = cert.strip() or None
+        keyfile = key.strip() or None
         self.local_name = name
-        self._start_host(port, max_players, cert, key)
+        self._start_host(port, max_players, certfile, keyfile)
 
     def _join_menu(
         self,
@@ -86,7 +86,7 @@ class BangUI(QtCore.QObject):
         if not self._validate_name(name):
             QtWidgets.QMessageBox.critical(None, "Error", "Please enter a valid name")
             return
-        cafile = cafile.strip() or None
+        cafile_opt = cafile.strip() or None
         if not addr and port_text == "0":
             token = code.strip()
             if not token:
@@ -104,7 +104,7 @@ class BangUI(QtCore.QObject):
                 QtWidgets.QMessageBox.critical(None, "Error", "Invalid port")
                 return
         self.local_name = name
-        self._start_join(addr or "localhost", port, code.strip(), cafile)
+        self._start_join(addr or "localhost", port, code.strip(), cafile_opt)
 
     def _settings_changed(self, theme: str) -> None:
         self.theme = theme
