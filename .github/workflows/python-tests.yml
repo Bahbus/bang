@@ -5,12 +5,17 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13-dev"]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.13-dev'
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
       - name: Install system packages
         run: |
           sudo apt-get update
@@ -21,6 +26,9 @@ jobs:
           pip install cryptography
           pip install -r requirements.txt
           pip install -e .
-          pip install pytest
+          pip install pytest pre-commit
+      - name: Run pre-commit
+        run: pre-commit run --files $(git ls-files '*.py')
+        continue-on-error: true
       - name: Run tests
         run: pytest
