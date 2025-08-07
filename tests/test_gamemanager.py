@@ -6,7 +6,7 @@ from bang_py.cards.bang import BangCard
 
 def test_drawing_and_playing() -> None:
     deck = create_standard_deck()
-    deck.cards.extendleft([BangCard(), BangCard()])
+    deck.extend_top([BangCard(), BangCard()])
     gm = GameManager(deck=deck)
     p1 = Player("A")
     p2 = Player("B")

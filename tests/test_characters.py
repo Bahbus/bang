@@ -77,7 +77,7 @@ def test_character_ability_registered():
 
 def test_bart_cassidy_draw_on_damage():
     deck = create_standard_deck()
-    deck.cards.appendleft(BangCard())
+    deck.push_top(BangCard())
     gm = GameManager(deck=deck)
     p1 = Player("Bart", character=BartCassidy())
     p2 = Player("Shooter")
@@ -90,7 +90,7 @@ def test_bart_cassidy_draw_on_damage():
 
 def test_black_jack_extra_draw():
     deck = create_standard_deck()
-    deck.cards.extendleft(
+    deck.extend_top(
         [
             BeerCard(suit="Clubs"),
             BeerCard(suit="Diamonds"),
@@ -144,7 +144,7 @@ def test_el_gringo_steals_on_damage():
 
 def test_jesse_jones_draws_from_opponent():
     deck = create_standard_deck()
-    deck.cards.appendleft(BangCard())
+    deck.push_top(BangCard())
     gm = GameManager(deck=deck)
     jj = Player("JJ", character=JesseJones())
     other = Player("Other")
@@ -158,7 +158,7 @@ def test_jesse_jones_draws_from_opponent():
 
 def test_jesse_jones_selects_card_index():
     deck = create_standard_deck()
-    deck.cards.appendleft(BangCard())
+    deck.push_top(BangCard())
     gm = GameManager(deck=deck)
     jj = Player("JJ", character=JesseJones())
     other = Player("Other")
@@ -173,7 +173,7 @@ def test_jesse_jones_selects_card_index():
 
 def test_jourdonnais_has_virtual_barrel():
     deck = create_standard_deck()
-    deck.cards.appendleft(BeerCard(suit="Hearts"))
+    deck.push_top(BeerCard(suit="Hearts"))
     target = Player("Jour", character=Jourdonnais())
     BangCard().play(target, deck)
     assert target.metadata.dodged is True
@@ -181,7 +181,7 @@ def test_jourdonnais_has_virtual_barrel():
 
 def test_kit_carlson_draw_three_keep_two():
     deck = create_standard_deck()
-    deck.cards.extendleft([BangCard(), BeerCard(), MissedCard()])
+    deck.extend_top([BangCard(), BeerCard(), MissedCard()])
     gm = GameManager(deck=deck)
     kit = Player("Kit", character=KitCarlson())
     gm.add_player(kit)
@@ -192,7 +192,7 @@ def test_kit_carlson_draw_three_keep_two():
 
 def test_lucky_duke_draw_two_on_jail():
     deck = create_standard_deck()
-    deck.cards.extendleft([BangCard(suit="Clubs"), BangCard(suit="Hearts")])
+    deck.extend_top([BangCard(suit="Clubs"), BangCard(suit="Hearts")])
     gm = GameManager(deck=deck)
     player = Player("Lucky", character=LuckyDuke())
     gm.add_player(player)
@@ -216,7 +216,7 @@ def test_barrel_draw_card_discarded():
 
 def test_pedro_ramirez_takes_from_discard():
     deck = create_standard_deck()
-    deck.cards.appendleft(BangCard())
+    deck.push_top(BangCard())
     gm = GameManager(deck=deck)
     gm.discard_pile.append(MissedCard())
     pedro = Player("Pedro", character=PedroRamirez())
@@ -227,7 +227,7 @@ def test_pedro_ramirez_takes_from_discard():
 
 def test_pedro_ramirez_draws_from_deck_when_chosen():
     deck = create_standard_deck()
-    deck.cards.extendleft([BangCard(), BeerCard()])
+    deck.extend_top([BangCard(), BeerCard()])
     gm = GameManager(deck=deck)
     gm.discard_pile.append(MissedCard())
     pedro = Player("Pedro", character=PedroRamirez())
@@ -266,7 +266,7 @@ def test_sid_ketchum_discard_two_to_heal():
 
 def test_suzy_lafayette_draws_when_empty():
     deck = create_standard_deck()
-    deck.cards.appendleft(BangCard())
+    deck.push_top(BangCard())
     gm = GameManager(deck=deck)
     suzy = Player("Suzy", character=SuzyLafayette())
     target = Player("Target")

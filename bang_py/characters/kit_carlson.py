@@ -1,4 +1,5 @@
 """View top 3 cards; keep 2 and return 1 to the deck. Core set."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -32,7 +33,7 @@ class KitCarlson(BaseCharacter):
                 if c is None:
                     continue
                 if i == back_index:
-                    gm.deck.cards.appendleft(c)
+                    gm.deck.push_top(c)
                 else:
                     player.hand.append(c)
             return True
