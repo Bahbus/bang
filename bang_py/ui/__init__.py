@@ -2,6 +2,8 @@
 
 Provides Qt Quick-based components and utilities for running the game's
 interactive client.
+
+See AGENTS.md for UI coding guidelines.
 """
 
 from .main import BangUI, main
