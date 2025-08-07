@@ -7,13 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12", "3.13-dev"]
+        python-version: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
       - name: Install system packages
         run: |
           sudo apt-get update
