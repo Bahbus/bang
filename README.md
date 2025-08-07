@@ -6,10 +6,10 @@ This repository now contains a Python implementation of the Bang card game along
 
 This project uses [pre-commit](https://pre-commit.com/) to run linters,
 formatters and static type checks (Black, Flake8, pydocstyle and mypy).
-Install the hooks with:
+Install the project with its development dependencies and set up the hooks:
 
 ```bash
-pip install pre-commit
+pip install .[dev]
 pre-commit install
 ```
 
@@ -89,10 +89,10 @@ The interface now runs entirely on Qt Quick. A single ``QQuickView`` loads
 between screens and the **Settings** dialog are implemented in QML and expose
 signals that the Python backend connects to.
 
-Install the Qt requirements first (PySide6 6.9.1 or newer):
+Install the package first; it pulls in the Qt requirements (PySide6 6.9.1 or newer):
 
 ```bash
-pip install "PySide6>=6.9.1"
+pip install .[dev]
 ```
 
 On Linux, the UI and tests also require the system packages
@@ -161,10 +161,10 @@ These packages provide the OpenGL and keyboard functionality that PySide6 needs.
 ## Building a Windows Executable
 
 `pyinstaller` can bundle the UI into a standalone Windows executable. Install the
-build dependencies (PyInstaller 6.14.2 or newer) and run the target:
+build dependencies and run the target:
 
 ```bash
-pip install -r requirements.txt
+pip install .[dev]
 make build-exe
 ```
 
@@ -183,14 +183,10 @@ needs the `contents: write` permission (or a PAT) to upload the file.
 
 ## Running Tests
 
-Install the Qt bindings before running the test suite. The CI workflow installs
-`PySide6>=6.9.1` first along with `cryptography` for the network tests:
+Install the development dependencies before running the test suite:
 
 ```bash
-pip install "PySide6>=6.9.1"
-pip install cryptography
-pip install -r requirements.txt
-pip install -e .
+pip install .[dev]
 pytest
 ```
 
