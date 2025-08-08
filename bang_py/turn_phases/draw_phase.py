@@ -7,11 +7,6 @@ import random
 from collections import deque
 
 from ..cards.card import BaseCard
-from ..characters.jesse_jones import JesseJones
-from ..characters.jose_delgado import JoseDelgado
-from ..characters.kit_carlson import KitCarlson
-from ..characters.pat_brennan import PatBrennan
-from ..characters.pedro_ramirez import PedroRamirez
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from ..player import Player
@@ -24,7 +19,7 @@ class DrawPhaseMixin:
     deck: object
     discard_pile: list[BaseCard]
     event_flags: dict
-    _players: list['Player']
+    _players: list["Player"]
     turn_order: list[int]
     current_turn: int
     phase: str
@@ -34,8 +29,10 @@ class DrawPhaseMixin:
 
     # ------------------------------------------------------------------
     # Deck helpers
-    def _draw_from_deck(self: 'GameManager') -> BaseCard | None:
+    def _draw_from_deck(self: "GameManager") -> BaseCard | None:
         """Draw a card reshuffling the discard pile if needed."""
+        if self.deck is None:
+            return None
         card = self.deck.draw()
         if card is None and self.discard_pile:
             self.deck.cards.extend(self.discard_pile)
@@ -46,7 +43,7 @@ class DrawPhaseMixin:
             card = self.deck.draw()
         return card
 
-    def draw_card(self: 'GameManager', player: 'Player', num: int = 1) -> None:
+    def draw_card(self: "GameManager", player: "Player", num: int = 1) -> None:
         """Draw ``num`` cards for ``player`` applying event modifiers."""
         bonus = int(self.event_flags.get("peyote_bonus", 0))
         for _ in range(num + bonus):
@@ -65,20 +62,20 @@ class DrawPhaseMixin:
     # Draw phase
     def draw_phase(
         self,
-        player: 'Player',
+        player: "Player",
         *,
-        jesse_target: 'Player' | None = None,
+        jesse_target: "Player" | None = None,
         jesse_card: int | None = None,
         kit_back: int | None = None,
         pedro_use_discard: bool | None = None,
         jose_equipment: int | None = None,
-        pat_target: 'Player' | None = None,
+        pat_target: "Player" | None = None,
         pat_card: str | None = None,
         skip_heal: bool | None = None,
         peyote_guesses: list[str] | None = None,
         ranch_discards: list[int] | None = None,
         handcuffs_suit: str | None = None,
-        blood_target: 'Player' | None = None,
+        blood_target: "Player" | None = None,
     ) -> None:
         """Execute the draw phase for ``player``."""
         if self._draw_pre_checks(player, skip_heal=skip_heal, blood_target=blood_target):
@@ -105,16 +102,16 @@ class DrawPhaseMixin:
 
     def _draw_pre_checks(
         self,
-        player: 'Player',
+        player: "Player",
         *,
         skip_heal: bool | None,
-        blood_target: 'Player' | None,
+        blood_target: "Player" | None,
     ) -> bool:
         if self.event_flags.get("no_draw"):
             return True
         if self.event_flags.get("hard_liquor") and skip_heal:
             player.heal(1)
-            self.on_player_healed(player)
+            self.on_player_healed(player)  # type: ignore[attr-defined]
             return True
         custom_draw = self.event_flags.get("draw_count")
         if custom_draw is not None:
@@ -126,14 +123,14 @@ class DrawPhaseMixin:
 
     def _dispatch_draw_listeners(
         self,
-        player: 'Player',
+        player: "Player",
         *,
-        jesse_target: 'Player' | None,
+        jesse_target: "Player" | None,
         jesse_card: int | None,
         kit_back: int | None,
         pedro_use_discard: bool | None,
         jose_equipment: int | None,
-        pat_target: 'Player' | None,
+        pat_target: "Player" | None,
         pat_card: str | None,
     ) -> bool:
         for cb in self.draw_phase_listeners:
@@ -152,13 +149,13 @@ class DrawPhaseMixin:
                 return True
         return False
 
-    def _perform_draw(self, player: 'Player', peyote_guesses: list[str] | None) -> None:
+    def _perform_draw(self, player: "Player", peyote_guesses: list[str] | None) -> None:
         if self.event_flags.get("peyote"):
             self._draw_with_peyote(player, peyote_guesses or [])
         else:
             self.draw_card(player, 2)
 
-    def _draw_with_peyote(self, player: 'Player', guesses: list[str]) -> None:
+    def _draw_with_peyote(self, player: "Player", guesses: list[str]) -> None:
         cont = True
         while cont:
             card = self._draw_from_deck()
@@ -174,7 +171,7 @@ class DrawPhaseMixin:
 
     def _post_draw_events(
         self,
-        player: 'Player',
+        player: "Player",
         *,
         ranch_discards: list[int] | None,
         handcuffs_suit: str | None,
@@ -185,12 +182,12 @@ class DrawPhaseMixin:
         if self.event_flags.get("handcuffs"):
             self._set_turn_suit(handcuffs_suit)
 
-    def _apply_law_of_the_west(self, player: 'Player') -> None:
+    def _apply_law_of_the_west(self, player: "Player") -> None:
         if self.event_flags.get("law_of_the_west") and len(player.hand) >= 2:
             card = player.hand[-1]
-            self.play_card(player, card)
+            self.play_card(player, card)  # type: ignore[attr-defined]
 
-    def _handle_ranch(self, player: 'Player', discards: list[int]) -> None:
+    def _handle_ranch(self, player: "Player", discards: list[int]) -> None:
         discards = sorted(discards, reverse=True)
         drawn = 0
         for idx in discards:
@@ -207,9 +204,9 @@ class DrawPhaseMixin:
     # ------------------------------------------------------------------
     # Misc helpers
     def _blood_brothers_transfer(
-        self: 'GameManager',
-        player: 'Player',
-        target: 'Player',
+        self: "GameManager",
+        player: "Player",
+        target: "Player",
     ) -> None:
         if not self.event_flags.get("blood_brothers"):
             return
@@ -218,6 +215,6 @@ class DrawPhaseMixin:
         if player.health <= 1:
             return
         player.take_damage(1)
-        self.on_player_damaged(player)
+        self.on_player_damaged(player)  # type: ignore[attr-defined]
         target.heal(1)
-        self.on_player_healed(target)
+        self.on_player_healed(target)  # type: ignore[attr-defined]

@@ -41,9 +41,13 @@ class DispatchMixin:
     """Mixin implementing card play dispatch and general utilities."""
 
     card_played_listeners: list
+    card_play_checks: list
     discard_pile: list
     event_flags: dict
     _card_handlers: dict
+    _players: list["Player"]
+    turn_order: list[int]
+    current_turn: int
 
     def _handler_self_game(
         self: "GameManager",
@@ -96,9 +100,7 @@ class DispatchMixin:
         if target:
             card.play(target, player)
 
-    def _register_card_handlers(
-        self: "GameManager", groups: Iterable[str] | None = None
-    ) -> None:
+    def _register_card_handlers(self: "GameManager", groups: Iterable[str] | None = None) -> None:
         """Populate the card handler registry."""
         self._card_handlers = {}
         register_handler_groups(self, groups or HANDLER_MODULES.keys())
@@ -132,9 +134,7 @@ class DispatchMixin:
 
     # ------------------------------------------------------------------
     # Card play utilities
-    def _pre_card_checks(
-        self, player: "Player", card: BaseCard, target: "Player" | None
-    ) -> bool:
+    def _pre_card_checks(self, player: "Player", card: BaseCard, target: "Player" | None) -> bool:
         return (
             self._card_in_hand(player, card)
             and self._run_card_play_checks(player, card, target)
@@ -191,17 +191,13 @@ class DispatchMixin:
             return player.distance_to(target) <= 1
         return True
 
-    def _jail_target_valid(
-        self, card: BaseCard, target: "Player" | None
-    ) -> bool:
+    def _jail_target_valid(self, card: BaseCard, target: "Player" | None) -> bool:
         """Jail cannot be played on the sheriff."""
         if isinstance(card, JailCard) and target and isinstance(target.role, SheriffRoleCard):
             return False
         return True
 
-    def _check_event_restrictions(
-        self, player: "Player", card: BaseCard
-    ) -> bool:
+    def _check_event_restrictions(self, player: "Player", card: BaseCard) -> bool:
         """Check event related card play restrictions."""
         return not (
             self._jail_blocked(card)
@@ -211,24 +207,28 @@ class DispatchMixin:
 
     def _jail_blocked(self, card: BaseCard) -> bool:
         """Return ``True`` if Jail cards are currently banned."""
-        return self.event_flags.get("no_jail") and isinstance(card, JailCard)
+        return bool(self.event_flags.get("no_jail") and isinstance(card, JailCard))
 
     def _judge_blocked(self, card: BaseCard) -> bool:
         """Return ``True`` if blue cards are disallowed by The Judge."""
-        return self.event_flags.get("judge") and card.card_type in {"blue", "green"}
+        return bool(self.event_flags.get("judge") and card.card_type in {"blue", "green"})
 
     def _handcuffs_blocked(self, player: "Player", card: BaseCard) -> bool:
         """Return ``True`` if Handcuffs restricts ``player`` from playing ``card``."""
         if not self.event_flags.get("handcuffs") or not self.event_flags.get("turn_suit"):
             return False
-        active = self._players[self.turn_order[self.current_turn]]
+        if not self.turn_order or not self._players:
+            return False
+        idx = self.turn_order[self.current_turn % len(self.turn_order)]
+        if idx >= len(self._players):
+            return False
+        active = self._players[idx]
         return player is active and getattr(card, "suit", None) != self.event_flags["turn_suit"]
 
-    def _is_bang(
-        self, player: "Player", card: BaseCard, target: "Player" | None
-    ) -> bool:
-        return isinstance(card, BangCard) or (
-            player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target
+    def _is_bang(self, player: "Player", card: BaseCard, target: "Player" | None) -> bool:
+        return bool(
+            isinstance(card, BangCard)
+            or (player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target)
         )
 
     def _can_play_bang(self, player: "Player") -> bool:
@@ -238,9 +238,7 @@ class DispatchMixin:
         gun = player.equipment.get("Gun")
         extra = player.metadata.doc_free_bang
         unlimited = (
-            player.metadata.unlimited_bang
-            or getattr(gun, "unlimited_bang", False)
-            or extra > 0
+            player.metadata.unlimited_bang or getattr(gun, "unlimited_bang", False) or extra > 0
         )
         limit = self.event_flags.get("bang_limit", 1)
         return count < limit or unlimited
@@ -296,9 +294,9 @@ class DispatchMixin:
         """Trigger damage or heal callbacks if ``target`` changed health."""
         if target and before is not None:
             if target.health < before:
-                self.on_player_damaged(target, source)
+                self.on_player_damaged(target, source)  # type: ignore[attr-defined]
             elif target.health > before:
-                self.on_player_healed(target)
+                self.on_player_healed(target)  # type: ignore[attr-defined]
 
     def _draw_if_empty(self: "GameManager", player: "Player") -> None:
         """Draw a card if the player has an empty hand and may draw."""
@@ -333,4 +331,3 @@ class DispatchMixin:
 
 
 __all__ = ["DispatchMixin", "register_handler_groups", "HANDLER_MODULES"]
-
