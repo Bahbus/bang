@@ -8,6 +8,8 @@ from typing import Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from .cards.card import BaseCard
+    from .cards.roles import BaseRole
+    from .characters.base import BaseCharacter
     from .deck import Deck
     from .events.event_decks import EventCard
     from .player import Player
@@ -136,6 +138,15 @@ class GameManagerProtocol(Protocol):
 
     def _reindex_turn_order(self, removed_idx: int) -> None:
         """Rebuild turn order after removing ``removed_idx``."""
+
+    def _build_role_deck(self) -> list[type[BaseRole]]:
+        """Return role classes for the current player count."""
+
+    def _build_character_deck(self) -> list[type[BaseCharacter]]:
+        """Return available character classes."""
+
+    def choose_character(self, player: Player, options: list[BaseCharacter]) -> BaseCharacter:
+        """Select the character for ``player`` from ``options``."""
 
     def _deal_roles_and_characters(self) -> None:
         """Assign roles and characters to all players."""
