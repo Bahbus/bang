@@ -14,4 +14,3 @@ repos:
       - id: mypy
         args: ["--ignore-missing-imports", "--follow-imports=skip"]
         pass_filenames: true
-        files: "^tests/"
