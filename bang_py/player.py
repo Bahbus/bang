@@ -3,7 +3,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import Mapping, TYPE_CHECKING
 
 from .cards.roles import (
     BaseRole,
@@ -75,7 +75,7 @@ class Player:
         return self._metadata
 
     @property
-    def equipment(self) -> dict[str, "BaseCard"]:
+    def equipment(self) -> Mapping[str, "BaseCard"]:
         """Mapping of currently equipped cards (read-only)."""
         return MappingProxyType(self._equipment)
 
@@ -184,9 +184,8 @@ class Player:
         if getattr(game, "event_flags", {}).get("range_unlimited"):
             return 99
         rng = self.gun_range + self.range_bonus
-        if (
-            getattr(game, "event_flags", {}).get("vendetta")
-            and isinstance(self.role, OutlawRoleCard)
+        if getattr(game, "event_flags", {}).get("vendetta") and isinstance(
+            self.role, OutlawRoleCard
         ):
             rng += 1
         return rng
