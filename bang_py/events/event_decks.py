@@ -46,116 +46,38 @@ if TYPE_CHECKING:
     from ..game_manager import GameManager
 
 
-def _peyote(game: GameManager) -> None:
-    PeyoteEventCard().play(game=game)
-
-
-def _ricochet(game: GameManager) -> None:
-    RicochetEventCard().play(game=game)
-
-
-def _judge(game: GameManager) -> None:
-    TheJudgeEventCard().play(game=game)
-
-
-def _ghost_town(game: GameManager) -> None:
-    GhostTownEventCard().play(game=game)
-
-
-def _vendetta(game: GameManager) -> None:
-    VendettaEventCard().play(game=game)
-
-
-def _thirst(game: GameManager) -> None:
-    ThirstEventCard().play(game=game)
-
-
-def _shootout(game: GameManager) -> None:
-    ShootoutEventCard().play(game=game)
-
-
-def _high_noon(game: GameManager) -> None:
-    HighNoonEventCard().play(game=game)
-
-
-def _fistful(game: GameManager) -> None:
-    FistfulOfCardsEventCard().play(game=game)
-
-
-def _blessing(game: GameManager) -> None:
-    BlessingEventCard().play(game=game)
-
-
-def _gold_rush(game: GameManager) -> None:
-    GoldRushEventCard().play(game=game)
-
-
-def _law_of_the_west(game: GameManager) -> None:
-    LawOfTheWestEventCard().play(game=game)
-
-
-def _sermon(game: GameManager) -> None:
-    TheSermonEventCard().play(game=game)
-
-
-def _hangover(game: GameManager) -> None:
-    HangoverEventCard().play(game=game)
-
-
-def _abandoned_mine(game: GameManager) -> None:
-    AbandonedMineEventCard().play(game=game)
-
-
-def _ambush_event(game: GameManager) -> None:
-    AmbushEventCard().play(game=game)
-
-
-def _ranch(game: GameManager) -> None:
-    RanchEventCard().play(game=game)
-
-
-def _hard_liquor(game: GameManager) -> None:
-    HardLiquorEventCard().play(game=game)
-
-
-def _blood_brothers(game: GameManager) -> None:
-    BloodBrothersEventCard().play(game=game)
-
-
-def _daltons_event(game: GameManager) -> None:
-    TheDaltonsEventCard().play(game=game)
-
-
-def _doctor_event(game: GameManager) -> None:
-    TheDoctorEventCard().play(game=game)
-
-
-def _reverend_event(game: GameManager) -> None:
-    TheReverendEventCard().play(game=game)
-
-
-def _train_arrival_event(game: GameManager) -> None:
-    TrainArrivalEventCard().play(game=game)
-
-
-def _handcuffs_event(game: GameManager) -> None:
-    HandcuffsEventCard().play(game=game)
-
-
-def _new_identity_event(game: GameManager) -> None:
-    NewIdentityEventCard().play(game=game)
-
-
-def _lasso_event(game: GameManager) -> None:
-    LassoEventCard().play(game=game)
-
-
-def _sniper_event(game: GameManager) -> None:
-    SniperEventCard().play(game=game)
-
-
-def _russian_roulette_event(game: GameManager) -> None:
-    RussianRouletteEventCard().play(game=game)
+EVENT_CARD_MAP: dict[str, type[BaseEventCard]] = {
+    "Abandoned Mine": AbandonedMineEventCard,
+    "Ambush": AmbushEventCard,
+    "A Fistful of Cards": FistfulOfCardsEventCard,
+    "Blessing": BlessingEventCard,
+    "Blood Brothers": BloodBrothersEventCard,
+    "Curse": CurseEventCard,
+    "Dead Man": DeadManEventCard,
+    "Ghost Town": GhostTownEventCard,
+    "Gold Rush": GoldRushEventCard,
+    "Hangover": HangoverEventCard,
+    "Hard Liquor": HardLiquorEventCard,
+    "Handcuffs": HandcuffsEventCard,
+    "High Noon": HighNoonEventCard,
+    "Law of the West": LawOfTheWestEventCard,
+    "Lasso": LassoEventCard,
+    "New Identity": NewIdentityEventCard,
+    "Peyote": PeyoteEventCard,
+    "Ranch": RanchEventCard,
+    "Ricochet": RicochetEventCard,
+    "Russian Roulette": RussianRouletteEventCard,
+    "Shootout": ShootoutEventCard,
+    "Sniper": SniperEventCard,
+    "The Daltons": TheDaltonsEventCard,
+    "The Doctor": TheDoctorEventCard,
+    "The Judge": TheJudgeEventCard,
+    "The Reverend": TheReverendEventCard,
+    "The Sermon": TheSermonEventCard,
+    "Thirst": ThirstEventCard,
+    "Train Arrival": TrainArrivalEventCard,
+    "Vendetta": VendettaEventCard,
+}
 
 
 @dataclass(slots=True)
@@ -193,45 +115,43 @@ class EventCard:
 
 def create_high_noon_deck() -> deque[BaseEventCard]:
     """Return a simple High Noon event deck."""
-    return deque(
-        [
-            BlessingEventCard(),
-            CurseEventCard(),
-            GhostTownEventCard(),
-            GoldRushEventCard(),
-            HangoverEventCard(),
-            HighNoonEventCard(),
-            ShootoutEventCard(),
-            TheDaltonsEventCard(),
-            TheDoctorEventCard(),
-            TheReverendEventCard(),
-            TheSermonEventCard(),
-            ThirstEventCard(),
-            TrainArrivalEventCard(),
-            HandcuffsEventCard(),
-            NewIdentityEventCard(),
-        ]
-    )
+    names = [
+        "Blessing",
+        "Curse",
+        "Ghost Town",
+        "Gold Rush",
+        "Hangover",
+        "High Noon",
+        "Shootout",
+        "The Daltons",
+        "The Doctor",
+        "The Reverend",
+        "The Sermon",
+        "Thirst",
+        "Train Arrival",
+        "Handcuffs",
+        "New Identity",
+    ]
+    return deque(EVENT_CARD_MAP[n]() for n in names)
 
 
 def create_fistful_deck() -> deque[BaseEventCard]:
     """Return a simple Fistful of Cards event deck."""
-    return deque(
-        [
-            AbandonedMineEventCard(),
-            AmbushEventCard(),
-            BloodBrothersEventCard(),
-            DeadManEventCard(),
-            HardLiquorEventCard(),
-            LassoEventCard(),
-            LawOfTheWestEventCard(),
-            PeyoteEventCard(),
-            RanchEventCard(),
-            RicochetEventCard(),
-            RussianRouletteEventCard(),
-            SniperEventCard(),
-            TheJudgeEventCard(),
-            VendettaEventCard(),
-            FistfulOfCardsEventCard(),
-        ]
-    )
+    names = [
+        "Abandoned Mine",
+        "Ambush",
+        "Blood Brothers",
+        "Dead Man",
+        "Hard Liquor",
+        "Lasso",
+        "Law of the West",
+        "Peyote",
+        "Ranch",
+        "Ricochet",
+        "Russian Roulette",
+        "Sniper",
+        "The Judge",
+        "Vendetta",
+        "A Fistful of Cards",
+    ]
+    return deque(EVENT_CARD_MAP[n]() for n in names)

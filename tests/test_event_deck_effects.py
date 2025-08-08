@@ -1,26 +1,8 @@
 from collections import deque
 
 from bang_py.events.event_decks import (
+    EVENT_CARD_MAP,
     EventCard,
-    _thirst,
-    _fistful,
-    _judge,
-    _ghost_town,
-    _peyote,
-    _ricochet,
-    _vendetta,
-    _abandoned_mine,
-    _hard_liquor,
-    _law_of_the_west,
-    _shootout,
-    _blessing,
-    _gold_rush,
-    _sermon,
-    _hangover,
-    _ambush_event,
-    _blood_brothers,
-    _ranch,
-    _high_noon,
     create_high_noon_deck,
     create_fistful_deck,
 )
@@ -49,7 +31,7 @@ from bang_py.deck import Deck
 
 def test_thirst_event_draw_one():
     gm = GameManager()
-    gm.event_deck = deque([EventCard("Thirst", _thirst, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Thirst"]()])
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     gm.draw_event_card()
@@ -63,16 +45,12 @@ def test_fistful_event_bangs_by_hand():
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
     p.hand = [BangCard(), BangCard()]
-    gm.event_deck = deque([EventCard("A Fistful of Cards", _fistful, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["A Fistful of Cards"]()])
     gm.turn_order = [0]
     gm.current_turn = 0
     gm._begin_turn()
     gm.end_turn()
     assert p.health == p.max_health - 4
-
-
-def _enable_no_bang(game: GameManager) -> None:
-    game.event_flags.update(no_bang=True)
 
 
 def test_sermon_event_blocks_bang():
@@ -81,7 +59,7 @@ def test_sermon_event_blocks_bang():
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
-    gm.event_deck = deque([EventCard("The Sermon", _enable_no_bang, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["The Sermon"]()])
     gm.draw_event_card()
     sheriff.hand.append(BangCard())
     gm.play_card(sheriff, sheriff.hand[0], outlaw)
@@ -96,7 +74,7 @@ def test_hangover_disables_abilities():
     p = Player("Sheriff", role=SheriffRoleCard(), character=JesseJones())
     gm.add_player(p)
     assert has_ability(p, JesseJones)
-    gm.event_deck = deque([EventCard("Hangover", _hangover, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Hangover"]()])
     gm.draw_event_card()
     assert not has_ability(p, JesseJones)
 
@@ -105,7 +83,7 @@ def test_judge_prevents_beer_play():
     gm = GameManager()
     sheriff = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(sheriff)
-    gm.event_deck = deque([EventCard("The Judge", _judge, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["The Judge"]()])
     gm.draw_event_card()
     sheriff.health -= 1
     sheriff.hand.append(BeerCard())
@@ -121,7 +99,7 @@ def test_ghost_town_revives_players():
     gm.add_player(sheriff)
     gm.add_player(outlaw)
     outlaw.take_damage(outlaw.health)
-    gm.event_deck = deque([EventCard("Ghost Town", _ghost_town, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Ghost Town"]()])
     gm.turn_order = [0, 1]
     gm.current_turn = 0
     gm._begin_turn()  # sheriff first turn
@@ -139,10 +117,12 @@ def test_ghost_town_players_disappear_next_event():
     gm.add_player(sheriff)
     gm.add_player(outlaw)
     outlaw.take_damage(outlaw.health)
-    gm.event_deck = deque([
-        EventCard("Ghost Town", _ghost_town, ""),
-        EventCard("Thirst", _thirst, ""),
-    ])
+    gm.event_deck = deque(
+        [
+            EVENT_CARD_MAP["Ghost Town"](),
+            EVENT_CARD_MAP["Thirst"](),
+        ]
+    )
     gm.turn_order = [0, 1]
     gm.current_turn = 0
     gm._begin_turn()  # sheriff first turn
@@ -160,7 +140,7 @@ def test_blessing_overrides_suit():
     gm = GameManager(deck=deck)
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
-    gm.event_deck = deque([EventCard("Blessing", _blessing, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Blessing"]()])
     gm.draw_event_card()
     gm.draw_phase(p)
     assert all(c.suit == "Hearts" for c in p.hand)
@@ -176,7 +156,7 @@ def test_gold_rush_reverses_turn_order():
     gm.add_player(p3)
     gm.turn_order = [0, 1, 2]
     gm.current_turn = 0
-    gm.event_deck = deque([EventCard("Gold Rush", _gold_rush, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Gold Rush"]()])
     gm.draw_event_card()
     gm.end_turn()
     assert gm.players[gm.turn_order[gm.current_turn]] is p3
@@ -188,7 +168,7 @@ def test_vendetta_outlaw_range_bonus():
     target = Player("T")
     gm.add_player(outlaw)
     gm.add_player(target)
-    gm.event_deck = deque([EventCard("Vendetta", _vendetta, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Vendetta"]()])
     gm.draw_event_card()
     assert outlaw.attack_range == 2
 
@@ -199,7 +179,7 @@ def test_sermon_blocks_bang_real():
     outlaw = Player("Outlaw")
     gm.add_player(sheriff)
     gm.add_player(outlaw)
-    gm.event_deck = deque([EventCard("The Sermon", _sermon, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["The Sermon"]()])
     gm.draw_event_card()
     sheriff.hand.append(BangCard())
     gm.play_card(sheriff, sheriff.hand[0], outlaw)
@@ -215,7 +195,7 @@ def test_ricochet_discards_equipment():
     gm.add_player(target)
     BarrelCard().play(target)
     shooter.hand.append(BangCard())
-    gm.event_deck = deque([EventCard("Ricochet", _ricochet, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Ricochet"]()])
     gm.draw_event_card()
     assert gm.ricochet_shoot(shooter, target, "Barrel")
     assert "Barrel" not in target.equipment
@@ -230,7 +210,7 @@ def test_ricochet_can_be_missed():
     BarrelCard().play(target)
     target.hand.append(MissedCard())
     shooter.hand.append(BangCard())
-    gm.event_deck = deque([EventCard("Ricochet", _ricochet, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Ricochet"]()])
     gm.draw_event_card()
     assert not gm.ricochet_shoot(shooter, target, "Barrel")
     assert "Barrel" in target.equipment
@@ -243,7 +223,7 @@ def test_ambush_sets_distance_one():
     p2 = Player("B")
     gm.add_player(p1)
     gm.add_player(p2)
-    gm.event_deck = deque([EventCard("Ambush", _ambush_event, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Ambush"]()])
     gm.draw_event_card()
     assert p1.distance_to(p2) == 1
 
@@ -254,7 +234,7 @@ def test_ranch_discard_and_redraw():
     gm = GameManager(deck=deck)
     p1 = Player("A")
     gm.add_player(p1)
-    gm.event_deck = deque([EventCard("Ranch", _ranch, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Ranch"]()])
     gm.draw_event_card()
     p1.hand = [BangCard(), MissedCard()]
     gm.draw_phase(p1, ranch_discards=[2, 3])
@@ -265,7 +245,7 @@ def test_high_noon_start_damage():
     gm = GameManager()
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
-    gm.event_deck = deque([EventCard("High Noon", _high_noon, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["High Noon"]()])
     gm.turn_order = [0]
     gm.current_turn = 0
     gm.draw_event_card()
@@ -280,7 +260,7 @@ def test_blood_brothers_transfer_during_turn():
     gm.add_player(p1)
     gm.add_player(p2)
     p2.health -= 1
-    gm.event_deck = deque([EventCard("Blood Brothers", _blood_brothers, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Blood Brothers"]()])
     gm.turn_order = [0]
     gm.current_turn = 0
     gm.draw_event_card()
@@ -356,7 +336,7 @@ def test_peyote_extra_draw():
     gm = GameManager(deck=deck)
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
-    gm.event_deck = deque([EventCard("Peyote", _peyote, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Peyote"]()])
     gm.draw_event_card()
     gm.draw_phase(p, peyote_guesses=["red", "black", "red"])
     assert len(p.hand) == 3
@@ -368,7 +348,7 @@ def test_abandoned_mine_uses_discard_pile_and_deck_top():
     p1 = Player("A")
     gm.add_player(p1)
     gm.discard_pile.append(BangCard())
-    gm.event_deck = deque([EventCard("Abandoned Mine", _abandoned_mine, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Abandoned Mine"]()])
     gm.draw_event_card()
     p1.health = 1
     gm.draw_phase(p1)
@@ -434,7 +414,7 @@ def test_hard_liquor_skip_draw_to_heal():
     gm = GameManager()
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
-    gm.event_deck = deque([EventCard("Hard Liquor", _hard_liquor, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Hard Liquor"]()])
     gm.draw_event_card()
     p.health -= 1
     gm.draw_phase(p, skip_heal=True)
@@ -448,7 +428,7 @@ def test_law_of_west_plays_second_card():
     gm = GameManager(deck=deck)
     p = Player("Sheriff", role=SheriffRoleCard())
     gm.add_player(p)
-    gm.event_deck = deque([EventCard("Law of the West", _law_of_the_west, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Law of the West"]()])
     gm.draw_event_card()
     gm.draw_phase(p)
     assert len(p.hand) == 1
@@ -460,7 +440,7 @@ def test_shootout_allows_multiple_bangs():
     p2 = Player("Outlaw")
     gm.add_player(p1)
     gm.add_player(p2)
-    gm.event_deck = deque([EventCard("Shootout", _shootout, "")])
+    gm.event_deck = deque([EVENT_CARD_MAP["Shootout"]()])
     gm.draw_event_card()
     p1.hand.extend([BangCard(), BangCard()])
     gm.play_card(p1, p1.hand[0], p2)
