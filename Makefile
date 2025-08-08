@@ -7,7 +7,7 @@ build-exe:
 >pyinstaller scripts/bang.spec
 
 lint:
->@pre-commit run --files $(FILES)
+>@pre-commit run --files $(if $(FILES),$(FILES),$(shell git ls-files '*.py'))
 
 test:
 >@pytest
