@@ -8,21 +8,25 @@ pytest.importorskip("cryptography")
 pytest.importorskip("trustme")
 pytest.importorskip("websockets")
 
-import trustme
-from websockets.asyncio.client import connect
-from websockets.asyncio.server import serve
+import trustme  # noqa: E402
+from websockets.asyncio.client import connect  # noqa: E402
+from websockets.asyncio.server import serve  # noqa: E402
 
-from bang_py.cards.bang import BangCard
-from bang_py.network.server import BangServer
+from bang_py.cards.bang import BangCard  # noqa: E402
+from bang_py.network.server import BangServer  # noqa: E402
 
 pytestmark = pytest.mark.slow
 
 
 def test_server_client_play_flow() -> None:
     async def run_flow() -> None:
-        server = BangServer(host="localhost", port=8767, room_code="1111")
-        async with serve(server.handler, server.host, server.port):
-            async with connect("ws://localhost:8767") as ws1, connect("ws://localhost:8767") as ws2:
+        server = BangServer(host="localhost", port=0, room_code="1111")
+        async with serve(server.handler, server.host, server.port) as ws_server:
+            server.port = ws_server.sockets[0].getsockname()[1]
+            async with (
+                connect(f"ws://localhost:{server.port}") as ws1,
+                connect(f"ws://localhost:{server.port}") as ws2,
+            ):
                 # Alice join
                 await ws1.recv()
                 await ws1.send("1111")
@@ -67,7 +71,7 @@ def test_server_client_ssl(tmp_path) -> None:
 
     server = BangServer(
         host="localhost",
-        port=8768,
+        port=0,
         room_code="2222",
         certfile=str(cert),
         keyfile=str(key),
@@ -77,10 +81,9 @@ def test_server_client_ssl(tmp_path) -> None:
         ssl_client = ssl.create_default_context(cafile=str(ca_file))
         async with serve(
             server.handler, server.host, server.port, ssl=server.ssl_context
-        ):
-            async with connect(
-                "wss://localhost:8768", ssl=ssl_client
-            ) as ws:
+        ) as ws_server:
+            server.port = ws_server.sockets[0].getsockname()[1]
+            async with connect(f"wss://localhost:{server.port}", ssl=ssl_client) as ws:
                 await ws.recv()
                 await ws.send("2222")
                 await ws.recv()
