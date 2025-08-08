@@ -77,6 +77,12 @@ class GameManagerProtocol(Protocol):
     def _set_general_store_order(self, player: Player) -> None:
         """Initialize General Store pick order starting with ``player``."""
 
+    def _valid_general_store_pick(self, player: Player, index: int) -> bool:
+        """Return ``True`` if ``player`` can take the card at ``index``."""
+
+    def _cleanup_general_store_leftovers(self) -> None:
+        """Discard any remaining General Store cards and reset state."""
+
     def reset_turn_flags(self, player: Player) -> None:
         """Reset per-turn ability flags on ``player``."""
 
