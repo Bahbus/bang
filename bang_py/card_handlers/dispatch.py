@@ -51,7 +51,7 @@ class DispatchMixin:
     current_turn: int
 
     def _handler_self_game(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -59,7 +59,7 @@ class DispatchMixin:
         card.play(player, game=self)
 
     def _handler_target_game(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -68,7 +68,7 @@ class DispatchMixin:
             card.play(target, game=self)
 
     def _handler_target_player_game(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -77,7 +77,7 @@ class DispatchMixin:
             card.play(target, player, game=self)
 
     def _handler_self_player_game(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -85,7 +85,7 @@ class DispatchMixin:
         card.play(player, player, game=self)
 
     def _handler_target_or_self_player_game(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -93,7 +93,7 @@ class DispatchMixin:
         card.play(target or player, player, game=self)
 
     def _handler_target_player(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -101,13 +101,15 @@ class DispatchMixin:
         if target:
             card.play(target, player)
 
-    def _register_card_handlers(self: "GameManager", groups: Iterable[str] | None = None) -> None:
+    def _register_card_handlers(
+        self: GameManagerProtocol, groups: Iterable[str] | None = None
+    ) -> None:
         """Populate the card handler registry."""
         self._card_handlers = {}
         register_handler_groups(self, groups or HANDLER_MODULES.keys())
 
     def _dispatch_play(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -121,7 +123,7 @@ class DispatchMixin:
             card.play(target)
 
     def _handle_missed_as_bang(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -245,7 +247,7 @@ class DispatchMixin:
         return count < limit or unlimited
 
     def play_card(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None = None,
@@ -265,7 +267,7 @@ class DispatchMixin:
         self._apply_post_play(player, card, target, before, is_bang)
 
     def _notify_card_played(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -300,19 +302,19 @@ class DispatchMixin:
             elif target.health > before:
                 gm.on_player_healed(target)
 
-    def _draw_if_empty(self: "GameManager", player: "Player") -> None:
+    def _draw_if_empty(self: GameManagerProtocol, player: "Player") -> None:
         """Draw a card if the player has an empty hand and may draw."""
         if player.metadata.draw_when_empty and not player.hand:
             self.draw_card(player)
 
-    def _update_bang_counters(self: "GameManager", player: "Player") -> None:
+    def _update_bang_counters(self: GameManagerProtocol, player: "Player") -> None:
         """Update Bang! play counters for ``player``."""
         if player.metadata.doc_free_bang > 0:
             player.metadata.doc_free_bang -= 1
         else:
             player.metadata.bangs_played += 1
 
-    def discard_card(self: "GameManager", player: "Player", card: BaseCard) -> None:
+    def discard_card(self: GameManagerProtocol, player: "Player", card: BaseCard) -> None:
         """Discard ``card`` from ``player`` and process event effects."""
         if card in player.hand:
             player.hand.remove(card)
@@ -322,7 +324,7 @@ class DispatchMixin:
             if player.metadata.draw_when_empty and not player.hand:
                 self.draw_card(player)
 
-    def _pass_left_or_discard(self: "GameManager", player: "Player", card: BaseCard) -> None:
+    def _pass_left_or_discard(self: GameManagerProtocol, player: "Player", card: BaseCard) -> None:
         """Pass card to the left during River, otherwise discard."""
         if self.event_flags.get("river"):
             idx = self._players.index(player)

@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING
 from ..cards.bang import BangCard
 from ..cards.missed import MissedCard
 from ..cards.card import BaseCard
+from ..game_manager_protocol import GameManagerProtocol
 from ..helpers import handle_out_of_turn_discard
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
     from ..player import Player
 
 
@@ -18,7 +18,7 @@ class BangHandlersMixin:
     """Mixin providing Bang-specific card resolution helpers."""
 
     def _play_bang_card(
-        self: "GameManager",
+        self: GameManagerProtocol,
         player: "Player",
         card: BangCard,
         target: "Player" | None,
@@ -34,9 +34,7 @@ class BangHandlersMixin:
             if not (target and self._auto_miss(target)):
                 card.play(target, self.deck, ignore_equipment=ignore_eq)
 
-    def _consume_sniper_extra(
-        self: "GameManager", player: "Player", card: BangCard
-    ) -> bool:
+    def _consume_sniper_extra(self: GameManagerProtocol, player: "Player", card: BangCard) -> bool:
         """Discard an extra Bang! when Sniper event is active and return True if consumed."""
         if self.event_flags.get("sniper") and player.metadata.use_sniper:
             extra = next(
@@ -50,7 +48,7 @@ class BangHandlersMixin:
                 return True
         return False
 
-    def _attempt_double_dodge(self: "GameManager", target: "Player") -> bool:
+    def _attempt_double_dodge(self: GameManagerProtocol, target: "Player") -> bool:
         """Let ``target`` discard two Missed! cards to dodge a Bang!."""
         misses = [c for c in target.hand if isinstance(c, MissedCard)]
         if len(misses) >= 2:
@@ -63,15 +61,13 @@ class BangHandlersMixin:
             return True
         return False
 
-    def _discard_and_record(
-        self: "GameManager", player: "Player", card: BaseCard
-    ) -> None:
+    def _discard_and_record(self: GameManagerProtocol, player: "Player", card: BaseCard) -> None:
         """Discard ``card`` from ``player`` and note any out-of-turn discard."""
         self._pass_left_or_discard(player, card)
         if not self.event_flags.get("river"):
             handle_out_of_turn_discard(self, player, card)
 
-    def _auto_miss(self: "GameManager", target: "Player") -> bool:
+    def _auto_miss(self: GameManagerProtocol, target: "Player") -> bool:
         """Attempt to satisfy a Bang! with automatic Missed! effects."""
         if not self._should_use_auto_miss(target):
             return False
@@ -83,13 +79,13 @@ class BangHandlersMixin:
             return True
         return False
 
-    def _should_use_auto_miss(self: "GameManager", target: "Player") -> bool:
+    def _should_use_auto_miss(self: GameManagerProtocol, target: "Player") -> bool:
         """Return ``True`` if automatic Missed! can be used."""
         if self.event_flags.get("no_missed"):
             return False
         return target.metadata.auto_miss is not False
 
-    def _use_miss_card(self: "GameManager", target: "Player") -> bool:
+    def _use_miss_card(self: GameManagerProtocol, target: "Player") -> bool:
         """Use a Missed! card from ``target`` if available."""
         miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
         if miss:
@@ -99,7 +95,7 @@ class BangHandlersMixin:
             return True
         return False
 
-    def _use_bang_as_miss(self: "GameManager", target: "Player") -> bool:
+    def _use_bang_as_miss(self: GameManagerProtocol, target: "Player") -> bool:
         """Use a Bang! card as a Missed! if allowed."""
         if target.metadata.bang_as_missed:
             bang = next((c for c in target.hand if isinstance(c, BangCard)), None)
@@ -110,7 +106,7 @@ class BangHandlersMixin:
                 return True
         return False
 
-    def _use_any_card_as_miss(self: "GameManager", target: "Player") -> bool:
+    def _use_any_card_as_miss(self: GameManagerProtocol, target: "Player") -> bool:
         """Use any card as a Missed! if permitted by effects."""
         if target.metadata.any_card_as_missed and target.hand:
             card = target.hand.pop()
@@ -121,4 +117,3 @@ class BangHandlersMixin:
 
 
 __all__ = ["BangHandlersMixin"]
-
