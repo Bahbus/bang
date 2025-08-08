@@ -8,7 +8,7 @@ import secrets
 import ssl
 from collections.abc import Coroutine, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal, TypedDict
+from typing import Any
 import logging
 
 from websockets.asyncio.server import serve, ServerConnection
@@ -24,6 +24,25 @@ from ..characters.pat_brennan import PatBrennan
 from ..characters.pedro_ramirez import PedroRamirez
 from ..characters.vera_custer import VeraCuster
 from ..cards.general_store import GeneralStoreCard
+from .messages import (
+    ChuckWengamPayload,
+    DiscardPayload,
+    DocHolydayPayload,
+    DrawPayload,
+    GeneralStorePickPayload,
+    JesseJonesPayload,
+    JoseDelgadoPayload,
+    KitCarlsonPayload,
+    LuckyDukePayload,
+    PatBrennanPayload,
+    PedroRamirezPayload,
+    PlayCardPayload,
+    SetAutoMissPayload,
+    SidKetchumPayload,
+    UncleWillPayload,
+    UseAbilityPayload,
+    VeraCusterPayload,
+)
 from .token_utils import _token_key_bytes, generate_join_token, parse_join_token
 from .validation import validate_player_name
 
@@ -41,91 +60,6 @@ class Connection:
     websocket: ServerConnection
     player: Player
     task_group: asyncio.TaskGroup = field(default_factory=asyncio.TaskGroup)
-
-
-class DrawPayload(TypedDict, total=False):
-    action: Literal["draw"]
-    num: int
-
-
-class DiscardPayload(TypedDict):
-    action: Literal["discard"]
-    card_index: int
-
-
-class PlayCardPayload(TypedDict, total=False):
-    action: Literal["play_card"]
-    card_index: int
-    target: int
-
-
-class GeneralStorePickPayload(TypedDict):
-    action: Literal["general_store_pick"]
-    index: int
-
-
-class UseAbilityPayload(TypedDict, total=False):
-    action: Literal["use_ability"]
-    ability: str
-    indices: list[int]
-    target: int
-    card_index: int
-    discard: int
-    equipment: int
-    card: int
-    use_discard: bool
-    enabled: bool
-
-
-class SetAutoMissPayload(TypedDict, total=False):
-    action: Literal["set_auto_miss"]
-    enabled: bool
-
-
-class SidKetchumPayload(TypedDict, total=False):
-    indices: list[int]
-
-
-class ChuckWengamPayload(TypedDict, total=False):
-    pass
-
-
-class DocHolydayPayload(TypedDict, total=False):
-    indices: list[int]
-
-
-class VeraCusterPayload(TypedDict, total=False):
-    target: int
-
-
-class JesseJonesPayload(TypedDict, total=False):
-    target: int
-    card_index: int
-
-
-class KitCarlsonPayload(TypedDict, total=False):
-    discard: int
-
-
-class PedroRamirezPayload(TypedDict, total=False):
-    use_discard: bool
-
-
-class JoseDelgadoPayload(TypedDict, total=False):
-    equipment: int
-
-
-class PatBrennanPayload(TypedDict, total=False):
-    target: int
-    card: int
-
-
-class LuckyDukePayload(TypedDict, total=False):
-    card_index: int
-
-
-class UncleWillPayload(TypedDict, total=False):
-    card_index: int
 
 
 def _serialize_players(players: Sequence[Player]) -> list[dict]:
