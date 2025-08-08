@@ -1,4 +1,5 @@
 """Draw when playing or discarding out of turn, including Duels. Dodge City expansion."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -21,6 +22,7 @@ class MollyStark(BaseCharacter):
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(MollyStark)
+        player.metadata.molly_choices = {}
         return True
 
     def on_out_of_turn_discard(self, gm: "GameManager", player: "Player", card: "BaseCard") -> None:
