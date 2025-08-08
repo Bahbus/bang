@@ -1,4 +1,5 @@
 """Copy another living character's ability each turn. Dodge City expansion."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -19,10 +20,8 @@ class VeraCuster(BaseCharacter):
         player.metadata.abilities.add(VeraCuster)
         return True
 
-    def copy_ability(
-        self, gm: "GameManager", player: "Player", target: "Player"
-    ) -> bool:
-        if not target.is_alive() or target is player:
+    def copy_ability(self, gm: "GameManager", player: "Player", target: "Player") -> bool:
+        if not target.is_alive() or target is player or target.character is None:
             return True
         player.metadata.vera_copy = target.character.__class__
         player.metadata.abilities.add(target.character.__class__)
