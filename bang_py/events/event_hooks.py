@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 from ..cards.roles import SheriffRoleCard
 from ..cards.card import BaseCard
+from ..game_manager_protocol import GameManagerProtocol
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from ..player import Player
-    from ..game_manager import GameManager
 
 
 class EventHooksMixin:
@@ -27,7 +27,7 @@ class EventHooksMixin:
     player_healed_listeners: list
 
     def on_player_damaged(
-        self, player: Player, source: Player | None = None
+        self: GameManagerProtocol, player: Player, source: Player | None = None
     ) -> None:
         """Handle player damage and determine if they are eliminated."""
         self._notify_damage_listeners(player, source)
@@ -41,40 +41,38 @@ class EventHooksMixin:
         self._check_win_conditions()
 
     def _notify_damage_listeners(
-        self, player: Player, source: Player | None
+        self: GameManagerProtocol, player: Player, source: Player | None
     ) -> None:
         for cb in self.player_damaged_listeners:
             cb(player, source)
 
-    def _bounty_reward(self, source: Player | None) -> None:
+    def _bounty_reward(self: GameManagerProtocol, source: Player | None) -> None:
         if source and self.event_flags.get("bounty"):
             self.draw_card(source, 2)
 
     def _notify_death_listeners(
-        self, player: Player, source: Player | None
+        self: GameManagerProtocol, player: Player, source: Player | None
     ) -> None:
         for cb in self.player_death_listeners:
             cb(player, source)
 
-    def _handle_ghost_town_revive(self, player: Player) -> bool:
+    def _handle_ghost_town_revive(self: GameManagerProtocol, player: Player) -> bool:
         """Revive a Ghost Town player if possible."""
         if self.event_flags.get("ghost_town") and player.metadata.ghost_revived:
             player.health = 1
             return True
         return False
 
-    def _record_first_elimination(self, player: Player) -> None:
+    def _record_first_elimination(self: GameManagerProtocol, player: Player) -> None:
         if self.first_eliminated is None:
             self.first_eliminated = player
 
-    def on_player_healed(self, player: Player) -> None:
+    def on_player_healed(self: GameManagerProtocol, player: Player) -> None:
         """Notify listeners that ``player`` has regained health."""
         for cb in self.player_healed_listeners:
             cb(player)
 
-    def blood_brothers_transfer(
-        self, donor: Player, target: Player
-    ) -> bool:
+    def blood_brothers_transfer(self: GameManagerProtocol, donor: Player, target: Player) -> bool:
         """Transfer one life from ``donor`` to ``target`` if allowed."""
         if not self.event_flags.get("blood_brothers"):
             return False
@@ -88,12 +86,10 @@ class EventHooksMixin:
         self.on_player_healed(target)
         return True
 
-    def _check_win_conditions(self) -> str | None:
+    def _check_win_conditions(self: GameManagerProtocol) -> str | None:
         alive = [p for p in self._players if p.is_alive()]
         self._update_turn_order_post_death()
-        has_sheriff = any(
-            isinstance(p.role, SheriffRoleCard) for p in self._players
-        )
+        has_sheriff = any(isinstance(p.role, SheriffRoleCard) for p in self._players)
         result = self._determine_winner(alive, has_sheriff)
         if result:
             for cb in self.game_over_listeners:
@@ -102,7 +98,7 @@ class EventHooksMixin:
 
     # ------------------------------------------------------------------
     # Win condition helpers
-    def _update_turn_order_post_death(self) -> None:
+    def _update_turn_order_post_death(self: GameManagerProtocol) -> None:
         """Remove eliminated players from turn order and adjust the index."""
         self.turn_order = [i for i in self.turn_order if self._players[i].is_alive()]
         if self.turn_order:
@@ -111,7 +107,7 @@ class EventHooksMixin:
             self.current_turn = 0
 
     def _determine_winner(
-        self, alive: list[Player], has_sheriff: bool
+        self: GameManagerProtocol, alive: list[Player], has_sheriff: bool
     ) -> str | None:
         """Return a victory message if a win condition is met."""
         if not has_sheriff and len(self._players) == 3:
@@ -123,7 +119,7 @@ class EventHooksMixin:
                 return player.role.victory_message
         return None
 
-    def get_hand(self, viewer: Player, target: Player) -> list[str]:
+    def get_hand(self: GameManagerProtocol, viewer: Player, target: Player) -> list[str]:
         """Return the visible hand of ``target`` for ``viewer``."""
         if viewer is target or self.event_flags.get("revealed_hands"):
             return [c.card_name for c in target.hand]

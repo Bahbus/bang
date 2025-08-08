@@ -31,7 +31,6 @@ class GeneralStoreMixin:
         self._set_general_store_order(player)
         return [c.card_name for c in self.general_store_cards or []]
 
-
     def _deal_general_store_cards(self: GameManagerProtocol) -> list[BaseCard]:
         alive = [p for p in self._players if p.is_alive()]
         cards: list[BaseCard] = []
@@ -64,6 +63,8 @@ class GeneralStoreMixin:
         return True
 
     def _valid_general_store_pick(self: GameManagerProtocol, player: "Player", index: int) -> bool:
+        cards = self.general_store_cards
+        order = self.general_store_order
         if (
             not cards
             or not order

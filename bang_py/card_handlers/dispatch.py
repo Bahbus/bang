@@ -20,7 +20,6 @@ from ..helpers import handle_out_of_turn_discard
 from ..game_manager_protocol import GameManagerProtocol
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
     from ..player import Player
 
 HANDLER_MODULES = {
@@ -31,7 +30,7 @@ HANDLER_MODULES = {
 }
 
 
-def register_handler_groups(game: "GameManager", groups: Iterable[str]) -> None:
+def register_handler_groups(game: GameManagerProtocol, groups: Iterable[str]) -> None:
     """Import handler modules for ``groups`` and register them on ``game``."""
     for group in groups:
         module = import_module(HANDLER_MODULES[group])
@@ -109,7 +108,7 @@ class DispatchMixin:
         register_handler_groups(self, groups or HANDLER_MODULES.keys())
 
     def _dispatch_play(
-        self,
+        self: GameManagerProtocol,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,
@@ -137,7 +136,9 @@ class DispatchMixin:
 
     # ------------------------------------------------------------------
     # Card play utilities
-    def _pre_card_checks(self, player: "Player", card: BaseCard, target: "Player" | None) -> bool:
+    def _pre_card_checks(
+        self: GameManagerProtocol, player: "Player", card: BaseCard, target: "Player" | None
+    ) -> bool:
         return (
             self._card_in_hand(player, card)
             and self._run_card_play_checks(player, card, target)
@@ -228,7 +229,9 @@ class DispatchMixin:
         active = self._players[idx]
         return player is active and getattr(card, "suit", None) != self.event_flags["turn_suit"]
 
-    def _is_bang(self, player: "Player", card: BaseCard, target: "Player" | None) -> bool:
+    def _is_bang(
+        self: GameManagerProtocol, player: "Player", card: BaseCard, target: "Player" | None
+    ) -> bool:
         return bool(
             isinstance(card, BangCard)
             or (player.metadata.play_missed_as_bang and isinstance(card, MissedCard) and target)
