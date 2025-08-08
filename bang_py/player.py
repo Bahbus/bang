@@ -33,6 +33,7 @@ class PlayerMetadata:
     kit_cards: list["BaseCard"] | None = None
     lucky_cards: list["BaseCard"] | None = None
     gringo_index: int | None = None
+    molly_choices: dict[int, bool] | None = None
     uncle_used: bool = False
     vera_copy: type["BaseCharacter"] | None = None
     unused_character: "BaseCharacter | None" = None
