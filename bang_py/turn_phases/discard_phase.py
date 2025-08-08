@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ..cards.card import BaseCard
+from ..game_manager_protocol import GameManagerProtocol
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from ..player import Player
-    from ..game_manager import GameManager
 
 
 class DiscardPhaseMixin:
@@ -18,7 +18,7 @@ class DiscardPhaseMixin:
     discard_pile: list[BaseCard]
     event_flags: dict
 
-    def discard_phase(self: "GameManager", player: "Player") -> None:
+    def discard_phase(self: GameManagerProtocol, player: "Player") -> None:
         limit = self._hand_limit(player)
         self._discard_to_limit(player, limit)
 
