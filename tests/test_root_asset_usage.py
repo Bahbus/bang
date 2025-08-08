@@ -7,7 +7,7 @@ from pathlib import Path
 
 # Root-level PNG assets that are intentionally present but unused.
 # Document such files here to prevent false positives.
-KNOWN_UNUSED: set[str] = {"bullet.png", "table.png"}
+KNOWN_UNUSED: set[str] = set()
 
 
 def load_text_files(root: Path, assets_dir: Path) -> list[tuple[Path, str]]:

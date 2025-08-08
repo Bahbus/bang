@@ -56,3 +56,7 @@ The following icon files are included:
 - `host.svg` – host button icon on the main menu.
 - `join.svg` – join button icon on the main menu.
 - `settings.svg` – settings button icon on the main menu.
+
+The `bullet.png` icon used for health markers and the `table.png` background
+are from the [Kenney Game Assets](https://kenney.nl/assets) collection and are
+released under the CC0 1.0 Universal license.
