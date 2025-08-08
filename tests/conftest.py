@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 import os
 import pathlib
 import importlib.util
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from PySide6 import QtWidgets
 
 try:
     from bang_py.network.token_utils import DEFAULT_TOKEN_KEY
@@ -41,7 +47,7 @@ def _set_token_key(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def qt_app() -> "QtWidgets.QApplication":  # noqa: F821
+def qt_app() -> QtWidgets.QApplication:
     """Create a ``QApplication`` instance for Qt tests."""
     pytest.importorskip("PySide6")
     pytest.importorskip("PySide6.QtWidgets")
