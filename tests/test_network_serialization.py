@@ -34,6 +34,7 @@ def test_serialize_players_json_roundtrip():
             "equipment": [],
         },
     ]
+    assert network_client.connect is async_connect
 
 
 def test_serialize_players_with_health_changes():
@@ -63,7 +64,3 @@ def test_serialize_players_without_role():
             "equipment": [],
         }
     ]
-
-
-def test_client_uses_asyncio_connect() -> None:
-    assert network_client.connect is async_connect
