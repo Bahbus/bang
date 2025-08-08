@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checking only
     from ..player import Player
+    from ..deck import Deck
 
 
 class BaseCard(ABC):
@@ -21,6 +22,7 @@ class BaseCard(ABC):
     description: str = ""
     suit: str | None
     rank: int | None
+    active: bool = False
 
     def __init__(self, suit: str | None = None, rank: int | None = None) -> None:
         self.suit = suit
@@ -32,3 +34,7 @@ class BaseCard(ABC):
         # ``**kwargs`` allows subclasses to accept extra parameters without
         # changing the base class signature.
         raise NotImplementedError
+
+    def draw_check(self, deck: "Deck", player: "Player" | None = None) -> bool:
+        """Hook for cards that perform a draw! check. Default implementation."""
+        return False
