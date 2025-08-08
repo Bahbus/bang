@@ -1,3 +1,8 @@
+"""Entry script for bundling the Bang app with PyInstaller.
+
+Ensures card handler modules and Qt plugins are included.
+"""
+
 import os
 from pathlib import Path
 
@@ -8,9 +13,9 @@ app = QtWidgets.QApplication.instance()
 if app is None:
     app = QtWidgets.QApplication([])
 
-from bang_py.ui import main
-from importlib import import_module
-from bang_py.card_handlers import MODULE_REGISTRY
+from bang_py.ui import main  # noqa: E402
+from importlib import import_module  # noqa: E402
+from bang_py.card_handlers import MODULE_REGISTRY  # noqa: E402
 
 # Ensure card handler submodules are bundled by PyInstaller
 for path in MODULE_REGISTRY.values():
