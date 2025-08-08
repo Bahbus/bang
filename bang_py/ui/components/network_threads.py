@@ -90,12 +90,16 @@ class ClientThread(QtCore.QThread):
 
     def stop(self) -> None:
         if self.websocket and not self.websocket.closed:
-            fut = asyncio.run_coroutine_threadsafe(self.websocket.close(),
-                                                   self.loop)
+            fut = asyncio.run_coroutine_threadsafe(self.websocket.close(), self.loop)
             try:
                 fut.result(timeout=1)
-            except (asyncio.TimeoutError, Exception) as exc:  # noqa: BLE001
-                logging.exception("Failed to close websocket: %s", exc)
+            except asyncio.TimeoutError:
+                logging.exception("Timed out while closing websocket")
+            except WebSocketException:
+                logging.exception("Failed to close websocket")
+            except Exception:
+                logging.exception("Unexpected error while closing websocket")
+                raise
         if self.loop.is_running():
             self.loop.call_soon_threadsafe(self.loop.stop)
 
