@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import importlib.util
 import os
 import pathlib
-import importlib.util
+import sys
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,8 +11,15 @@ import pytest
 if TYPE_CHECKING:
     from PySide6 import QtWidgets
 
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+DEFAULT_TOKEN_KEY: bytes | None
 try:
-    from bang_py.network.token_utils import DEFAULT_TOKEN_KEY
+    from bang_py.network.token_utils import DEFAULT_TOKEN_KEY as TOKEN_KEY
+
+    DEFAULT_TOKEN_KEY = TOKEN_KEY
 except ImportError:
     DEFAULT_TOKEN_KEY = None
 
