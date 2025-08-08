@@ -63,7 +63,7 @@ class Player:
     max_health: int = 4
     _health: int = field(init=False, repr=False)
     _metadata: PlayerMetadata = field(default_factory=PlayerMetadata, init=False, repr=False)
-    _equipment: dict[str, "BaseCard"] = field(default_factory=dict, init=False, repr=False)
+    _equipment: dict[str, BaseCard] = field(default_factory=dict, init=False, repr=False)
     hand: list["BaseCard"] = field(default_factory=list)
 
     def __post_init__(self) -> None:
@@ -76,7 +76,7 @@ class Player:
         return self._metadata
 
     @property
-    def equipment(self) -> Mapping[str, "BaseCard"]:
+    def equipment(self) -> Mapping[str, BaseCard]:
         """Mapping of currently equipped cards (read-only)."""
         return MappingProxyType(self._equipment)
 
