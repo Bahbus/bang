@@ -1,5 +1,7 @@
 """Turn phase mixins grouped into a package."""
 
+from __future__ import annotations
+
 from .draw_phase import DrawPhaseMixin
 from .discard_phase import DiscardPhaseMixin
 from .turn_flow import TurnFlowMixin

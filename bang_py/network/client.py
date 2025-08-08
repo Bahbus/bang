@@ -4,6 +4,8 @@ When a join token is provided, ``parse_join_token`` extracts the host, port, and
 room.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
