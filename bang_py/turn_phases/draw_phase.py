@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 import random
 from collections import deque
 
 from ..cards.card import BaseCard
+from ..game_manager_protocol import GameManagerProtocol
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from ..player import Player
-    from ..game_manager import GameManager
 
 
 class DrawPhaseMixin:
@@ -29,7 +29,7 @@ class DrawPhaseMixin:
 
     # ------------------------------------------------------------------
     # Deck helpers
-    def _draw_from_deck(self: "GameManager") -> BaseCard | None:
+    def _draw_from_deck(self) -> BaseCard | None:
         """Draw a card reshuffling the discard pile if needed."""
         if self.deck is None:
             return None
@@ -43,7 +43,7 @@ class DrawPhaseMixin:
             card = self.deck.draw()
         return card
 
-    def draw_card(self: "GameManager", player: "Player", num: int = 1) -> None:
+    def draw_card(self, player: "Player", num: int = 1) -> None:
         """Draw ``num`` cards for ``player`` applying event modifiers."""
         bonus = int(self.event_flags.get("peyote_bonus", 0))
         for _ in range(num + bonus):
@@ -111,7 +111,7 @@ class DrawPhaseMixin:
             return True
         if self.event_flags.get("hard_liquor") and skip_heal:
             player.heal(1)
-            self.on_player_healed(player)  # type: ignore[attr-defined]
+            cast(GameManagerProtocol, self).on_player_healed(player)
             return True
         custom_draw = self.event_flags.get("draw_count")
         if custom_draw is not None:
@@ -185,7 +185,7 @@ class DrawPhaseMixin:
     def _apply_law_of_the_west(self, player: "Player") -> None:
         if self.event_flags.get("law_of_the_west") and len(player.hand) >= 2:
             card = player.hand[-1]
-            self.play_card(player, card)  # type: ignore[attr-defined]
+            cast(GameManagerProtocol, self).play_card(player, card)
 
     def _handle_ranch(self, player: "Player", discards: list[int]) -> None:
         discards = sorted(discards, reverse=True)
@@ -204,7 +204,7 @@ class DrawPhaseMixin:
     # ------------------------------------------------------------------
     # Misc helpers
     def _blood_brothers_transfer(
-        self: "GameManager",
+        self,
         player: "Player",
         target: "Player",
     ) -> None:
@@ -215,6 +215,7 @@ class DrawPhaseMixin:
         if player.health <= 1:
             return
         player.take_damage(1)
-        self.on_player_damaged(player)  # type: ignore[attr-defined]
+        gm = cast(GameManagerProtocol, self)
+        gm.on_player_damaged(player)
         target.heal(1)
-        self.on_player_healed(target)  # type: ignore[attr-defined]
+        gm.on_player_healed(target)
