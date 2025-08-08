@@ -27,9 +27,10 @@ class GeneralStoreMixin:
             self.general_store_order = []
             self.general_store_index = 0
             return []
-        self.general_store_cards = self._deal_general_store_cards()
+        cards = self._deal_general_store_cards()
+        self.general_store_cards = cards
         self._set_general_store_order(player)
-        return [c.card_name for c in self.general_store_cards or []]
+        return [c.card_name for c in cards]
 
     def _deal_general_store_cards(self: GameManagerProtocol) -> list[BaseCard]:
         alive = [p for p in self._players if p.is_alive()]
@@ -53,12 +54,14 @@ class GeneralStoreMixin:
     def general_store_pick(self: GameManagerProtocol, player: "Player", index: int) -> bool:
         if not self._valid_general_store_pick(player, index):
             return False
-        if self.general_store_cards is None or self.general_store_order is None:
+        cards = self.general_store_cards
+        order = self.general_store_order
+        if cards is None or order is None:
             return False
-        card = self.general_store_cards.pop(index)
+        card = cards.pop(index)
         player.hand.append(card)
         self.general_store_index += 1
-        if self.general_store_index >= len(self.general_store_order):
+        if self.general_store_index >= len(order):
             self._cleanup_general_store_leftovers()
         return True
 
@@ -75,8 +78,10 @@ class GeneralStoreMixin:
         return 0 <= index < len(cards)
 
     def _cleanup_general_store_leftovers(self: GameManagerProtocol) -> None:
-        for leftover in self.general_store_cards:
-            self.discard_pile.append(leftover)
+        cards = self.general_store_cards
+        if cards:
+            for leftover in cards:
+                self.discard_pile.append(leftover)
         self.general_store_cards = None
         self.general_store_order = None
         self.general_store_index = 0
