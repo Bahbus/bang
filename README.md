@@ -19,6 +19,12 @@ Run the checks on changed files before committing:
 pre-commit run --files <path> [<path> ...]
 ```
 
+Run the type checker directly with:
+
+```bash
+mypy bang_py tests
+```
+
 Alternatively, use the Makefile targets:
 
 ```bash
