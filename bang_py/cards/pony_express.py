@@ -1,10 +1,9 @@
 """Pony Express card from the Fistful of Cards expansion. Draw three cards."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from ..game_manager import GameManager
@@ -18,11 +17,13 @@ class PonyExpressCard(BaseCard):
     card_set = "fistful_of_cards"
     description = "Draw three cards."
 
+    @override
     def play(
         self,
         target: Player | None = None,
         player: Player | None = None,
         game: GameManager | None = None,
+        **kwargs: Any,
     ) -> None:
         if player and game:
             game.draw_card(player, 3)

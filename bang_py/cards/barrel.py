@@ -1,12 +1,10 @@
 """Barrel card from the base game. Draw when targeted by Bang!; on Heart, ignore it."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
 
-
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 from ..helpers import is_heart
 
@@ -23,7 +21,8 @@ class BarrelCard(BaseCard):
         super().__init__(suit, rank)
         self.active = True
 
-    def play(self, target: Player, deck: Deck | None = None) -> None:
+    @override
+    def play(self, target: Player | None, deck: Deck | None = None, **kwargs: Any) -> None:
         if not target:
             return
         target.equip(self, active=self.active)

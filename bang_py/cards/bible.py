@@ -1,10 +1,9 @@
 """Bible card from the Dodge City expansion. Play as Missed! and then draw one card."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from ..game_manager import GameManager
@@ -18,11 +17,13 @@ class BibleCard(BaseCard):
     card_set = "dodge_city"
     description = "Play as Missed! and then draw one card."
 
+    @override
     def play(
         self,
-        target: Player,
+        target: Player | None,
         player: Player | None = None,
         game: GameManager | None = None,
+        **kwargs: Any,
     ) -> None:
         if not target:
             return

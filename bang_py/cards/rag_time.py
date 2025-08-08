@@ -2,10 +2,9 @@
 player."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -21,14 +20,16 @@ class RagTimeCard(BaseCard):
     card_set = "fistful_of_cards"
     description = "Discard another card to take a card from any player."
 
+    @override
     def play(
         self,
-        target: Player,
+        target: Player | None,
         player: Player | None = None,
         game: GameManager | None = None,
         *,
         discard_idx: int = 0,
         steal_idx: int = 0,
+        **kwargs: Any,
     ) -> None:
         if not target or not player or not game or not player.hand:
             return

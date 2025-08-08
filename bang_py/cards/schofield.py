@@ -1,7 +1,7 @@
 """Schofield card from the base game. Gun with range 2."""
 
 from __future__ import annotations
-
+from typing import Any, override
 from .card import BaseCard
 from ..player import Player
 
@@ -17,7 +17,8 @@ class SchofieldCard(BaseCard):
         super().__init__(suit, rank)
         self.active = True
 
-    def play(self, target: Player) -> None:
+    @override
+    def play(self, target: Player | None, **kwargs: Any) -> None:
         if not target:
             return
         target.equip(self, active=self.active)

@@ -1,10 +1,9 @@
 """Gatling card from the base game. Bang every other player once."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from ..game_manager import GameManager
@@ -17,9 +16,14 @@ class GatlingCard(BaseCard):
     card_set = "base"
     description = "Bang every other player once."
 
+    @override
     def play(
-        self, target: Player, player: Player | None = None, game: GameManager | None = None,
-        deck: Deck | None = None
+        self,
+        target: Player | None,
+        player: Player | None = None,
+        game: GameManager | None = None,
+        deck: Deck | None = None,
+        **kwargs: Any,
     ) -> None:
         if not game or not player:
             return

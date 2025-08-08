@@ -1,10 +1,9 @@
 """Jail card from the base game. Skip your turn unless you draw a Heart."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 from ..helpers import is_heart
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
@@ -20,7 +19,8 @@ class JailCard(BaseCard):
         super().__init__(suit, rank)
         self.active = True
 
-    def play(self, target: Player, deck: Deck | None = None) -> None:
+    @override
+    def play(self, target: Player | None, deck: Deck | None = None, **kwargs: Any) -> None:
         if not target:
             return
         target.equip(self, active=self.active)

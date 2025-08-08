@@ -1,10 +1,9 @@
 """Brawl card from the Dodge City expansion. Discard a card to make all others discard one."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -20,6 +19,7 @@ class BrawlCard(BaseCard):
     card_set = "dodge_city"
     description = "Discard a card to make all others discard one."
 
+    @override
     def play(
         self,
         target: Player | None = None,
@@ -28,6 +28,7 @@ class BrawlCard(BaseCard):
         *,
         discard_idx: int = 0,
         victim_indices: dict[int, int] | None = None,
+        **kwargs: Any,
     ) -> None:
         if not player or not game or not player.hand:
             return

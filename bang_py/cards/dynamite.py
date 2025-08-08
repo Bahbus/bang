@@ -2,10 +2,9 @@
 is a spade between 2 and 9, Dynamite explodes for 3 damage."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 from ..helpers import is_spade_between
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
@@ -24,14 +23,13 @@ class DynamiteCard(BaseCard):
         super().__init__(suit, rank)
         self.active = True
 
-    def play(self, target: Player, deck: Deck | None = None) -> None:
+    @override
+    def play(self, target: Player | None, deck: Deck | None = None, **kwargs: Any) -> None:
         if not target:
             return
         target.equip(self, active=self.active)
 
-    def check_dynamite(
-        self, current: Player, next_player: Player, deck: Deck
-    ) -> bool:
+    def check_dynamite(self, current: Player, next_player: Player, deck: Deck) -> bool:
         """Resolve Dynamite at the start of the current player's turn.
 
         Returns True if it exploded on the current player.
