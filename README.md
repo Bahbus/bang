@@ -1,4 +1,4 @@
-# Bang Card Game
+# Bang Game
 
 This repository now contains a Python implementation of the Bang card game along with a very small websocket server to experiment with multiplayer connectivity.
 
