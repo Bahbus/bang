@@ -7,7 +7,6 @@ from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from ..game_manager import GameManager
-    from ..deck import Deck
 
 
 class GatlingCard(BaseCard):
@@ -22,7 +21,6 @@ class GatlingCard(BaseCard):
         target: Player | None,
         player: Player | None = None,
         game: GameManager | None = None,
-        deck: Deck | None = None,
         **kwargs: Any,
     ) -> None:
         if not game or not player:
@@ -35,7 +33,7 @@ class GatlingCard(BaseCard):
 
             BangCard().play(
                 p,
-                deck or game.deck,
+                game=game,
                 ignore_equipment=player.metadata.ignore_others_equipment,
             )
             if p.health < before:

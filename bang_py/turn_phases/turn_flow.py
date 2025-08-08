@@ -55,10 +55,8 @@ class TurnFlowMixin:
     def _resolve_dynamite(self: GameManagerProtocol, player: "Player") -> bool:
         """Handle Dynamite at turn start. Returns ``False`` if the player dies."""
         dyn = player.equipment.get("Dynamite")
-        if dyn and getattr(dyn, "check_dynamite", None):
-            next_idx = self.turn_order[(self.current_turn + 1) % len(self.turn_order)]
-            next_player = self._players[next_idx]
-            exploded = dyn.check_dynamite(player, next_player, self.deck)
+        if dyn and hasattr(dyn, "check_dynamite"):
+            exploded = dyn.check_dynamite(self, player)
             if exploded:
                 self.discard_pile.append(dyn)
                 self.on_player_damaged(player)
@@ -76,8 +74,8 @@ class TurnFlowMixin:
             player.unequip("Jail")
             self.discard_pile.append(jail)
             return True
-        if getattr(jail, "check_turn", None):
-            skipped = jail.check_turn(player, self.deck)
+        if hasattr(jail, "check_turn"):
+            skipped = jail.check_turn(self, player)
             self.discard_pile.append(jail)
             if skipped:
                 self.current_turn = (self.current_turn + 1) % len(self.turn_order)

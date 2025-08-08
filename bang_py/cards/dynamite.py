@@ -9,6 +9,7 @@ from ..helpers import is_spade_between
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..deck import Deck
+    from ..game_manager_protocol import GameManagerProtocol
 
 
 class DynamiteCard(BaseCard):
@@ -29,28 +30,29 @@ class DynamiteCard(BaseCard):
             return
         target.equip(self, active=self.active)
 
-    def check_dynamite(self, current: Player, next_player: Player, deck: Deck) -> bool:
-        """Resolve Dynamite at the start of the current player's turn.
+    @override
+    def check_dynamite(self, gm: "GameManagerProtocol", player: Player) -> bool:
+        """Resolve Dynamite at the start of ``player``'s turn.
 
-        Returns True if it exploded on the current player.
+        Returns ``True`` if it exploded on the current player.
         """
-        gm = current.metadata.game
-        if current.metadata.lucky_duke:
-            c1 = deck.draw()
-            c2 = deck.draw()
+        if player.metadata.lucky_duke:
+            c1 = gm._draw_from_deck()
+            c2 = gm._draw_from_deck()
             card = c1 if not is_spade_between(c1, 2, 9) else c2
-            if gm:
-                if c1:
-                    gm.discard_pile.append(c1)
-                if c2:
-                    gm.discard_pile.append(c2)
+            if c1:
+                gm.discard_pile.append(c1)
+            if c2:
+                gm.discard_pile.append(c2)
         else:
-            card = deck.draw()
-            if gm and card:
+            card = gm._draw_from_deck()
+            if card:
                 gm.discard_pile.append(card)
-        current.unequip(self.card_name)
+        player.unequip(self.card_name)
         if is_spade_between(card, 2, 9):
-            current.take_damage(3)
+            player.take_damage(3)
             return True
-        next_player.equip(self)
+        next_player = gm._next_alive_player(player)
+        if next_player:
+            next_player.equip(self)
         return False

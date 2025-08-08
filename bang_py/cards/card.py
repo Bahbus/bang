@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checking only
     from ..player import Player
-    from ..deck import Deck
+    from ..game_manager_protocol import GameManagerProtocol
 
 
 class BaseCard(ABC):
@@ -35,6 +35,14 @@ class BaseCard(ABC):
         # changing the base class signature.
         raise NotImplementedError
 
-    def draw_check(self, deck: "Deck", player: "Player" | None = None) -> bool:
+    def check_dynamite(self, gm: "GameManagerProtocol", player: "Player") -> bool:
+        """Hook for start-of-turn Dynamite checks. Default implementation."""
+        return False
+
+    def check_turn(self, gm: "GameManagerProtocol", player: "Player") -> bool:
+        """Hook for start-of-turn Jail checks. Default implementation."""
+        return False
+
+    def draw_check(self, gm: "GameManagerProtocol", player: "Player") -> bool:
         """Hook for cards that perform a draw! check. Default implementation."""
         return False

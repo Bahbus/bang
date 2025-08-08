@@ -7,7 +7,6 @@ from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
-    from ..deck import Deck
 
 from .bang import BangCard
 
@@ -26,20 +25,18 @@ class PepperboxCard(BaseCard):
         target: Player | None,
         player: Player | None = None,
         game: GameManager | None = None,
-        deck: Deck | None = None,
         **kwargs: Any,
     ) -> None:
         if not target or not player:
             return
         if player.distance_to(target) > player.attack_range:
             return
-        d = deck or (game.deck if game else None)
         if game and game._auto_miss(target):
             return
         before = target.health
         BangCard().play(
             target,
-            d,
+            game=game,
             ignore_equipment=player.metadata.ignore_others_equipment if game else False,
         )
         if game and target.health < before:

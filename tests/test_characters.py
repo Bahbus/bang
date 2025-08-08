@@ -174,8 +174,10 @@ def test_jesse_jones_selects_card_index():
 def test_jourdonnais_has_virtual_barrel():
     deck = create_standard_deck()
     deck.push_top(BeerCard(suit="Hearts"))
+    gm = GameManager(deck=deck)
     target = Player("Jour", character=Jourdonnais())
-    BangCard().play(target, deck)
+    gm.add_player(target)
+    BangCard().play(target, game=gm)
     assert target.metadata.dodged is True
 
 
@@ -198,7 +200,7 @@ def test_lucky_duke_draw_two_on_jail():
     gm.add_player(player)
     jail = JailCard()
     jail.play(player)
-    skipped = jail.check_turn(player, deck)
+    skipped = jail.check_turn(gm, player)
     assert skipped is False
     assert len(gm.discard_pile) == 2
 
@@ -210,7 +212,7 @@ def test_barrel_draw_card_discarded():
     gm.add_player(player)
     barrel = BarrelCard()
     barrel.play(player)
-    assert barrel.draw_check(deck, player) is False
+    assert barrel.draw_check(gm, player) is False
     assert len(gm.discard_pile) == 1
 
 
