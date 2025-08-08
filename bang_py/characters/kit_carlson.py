@@ -22,18 +22,20 @@ class KitCarlson(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(KitCarlson)
 
-        def on_draw(p: "Player", opts: dict) -> bool:
+        def on_draw(p: "Player", opts: object) -> bool:
             if p is not player:
                 return True
+            options: dict[str, object] = opts if isinstance(opts, dict) else {}
             cards = [gm._draw_from_deck(), gm._draw_from_deck(), gm._draw_from_deck()]
-            back_index = opts.get("kit_back")
-            if back_index is None or not (0 <= back_index < len(cards)):
+            back_index = options.get("kit_back")
+            if not isinstance(back_index, int) or not (0 <= back_index < len(cards)):
                 back_index = len(cards) - 1
             for i, c in enumerate(cards):
                 if c is None:
                     continue
                 if i == back_index:
-                    gm.deck.push_top(c)
+                    if gm.deck is not None:
+                        gm.deck.push_top(c)
                 else:
                     player.hand.append(c)
             return True
