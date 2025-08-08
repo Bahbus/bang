@@ -32,9 +32,10 @@ Item {
     function playIndians() { indiansSound.play() }
     function playManyBangs() { manyBangsSound.play() }
 
-    Rectangle {
+    Image {
         anchors.fill: parent
-        color: theme === "dark" ? "#004000" : "#006400"
+        source: "../assets/table.png"
+        fillMode: Image.PreserveAspectCrop
     }
 
     Canvas {
@@ -131,11 +132,11 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 Repeater {
                     model: pl.health
-                    delegate: Rectangle {
+                    delegate: Image {
                         width: 8 * scale
                         height: 8 * scale
-                        color: "red"
-                        radius: 2 * scale
+                        source: "../assets/icons/bullet.png"
+                        fillMode: Image.PreserveAspectFit
                     }
                 }
             }
