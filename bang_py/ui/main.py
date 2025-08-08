@@ -13,7 +13,7 @@ from .components import ClientThread, ServerThread
 from .components.card_images import get_loader
 from .theme import get_current_theme
 from ..network.token_utils import parse_join_token
-from ..network.server import validate_player_name
+from ..network.validation import validate_player_name
 from cryptography.fernet import InvalidToken
 
 CHARACTER_ASSETS = resources.files("bang_py") / "assets" / "characters"

@@ -23,6 +23,7 @@ from ..characters.pedro_ramirez import PedroRamirez
 from ..characters.vera_custer import VeraCuster
 from ..cards.general_store import GeneralStoreCard
 from .token_utils import _token_key_bytes, generate_join_token, parse_join_token
+from .validation import validate_player_name
 
 logger = logging.getLogger(__name__)
 
@@ -137,15 +138,6 @@ def _serialize_players(players: Sequence[Player]) -> list[dict]:
         }
         for p in players
     ]
-
-
-def validate_player_name(name: str) -> bool:
-    """Return ``True`` if ``name`` is a valid player name."""
-
-    if not isinstance(name, str):
-        return False
-    name = name.strip()
-    return bool(name) and len(name) <= 20 and name.isprintable()
 
 
 class BangServer:
