@@ -8,6 +8,7 @@ from ..helpers import is_heart
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..deck import Deck
+    from ..game_manager_protocol import GameManagerProtocol
 
 
 class JailCard(BaseCard):
@@ -25,25 +26,24 @@ class JailCard(BaseCard):
             return
         target.equip(self, active=self.active)
 
-    def check_turn(self, player: Player, deck: Deck) -> bool:
+    @override
+    def check_turn(self, gm: "GameManagerProtocol", player: Player) -> bool:
         """Handle start-of-turn Jail check.
 
         Returns True if the player's turn is skipped.
         """
-        gm = player.metadata.game
         if player.metadata.lucky_duke:
-            card1 = deck.draw()
-            card2 = deck.draw()
+            card1 = gm._draw_from_deck()
+            card2 = gm._draw_from_deck()
             chosen = card1 if is_heart(card1) or not is_heart(card2) else card2
-            if gm:
-                if card1:
-                    gm.discard_pile.append(card1)
-                if card2:
-                    gm.discard_pile.append(card2)
+            if card1:
+                gm.discard_pile.append(card1)
+            if card2:
+                gm.discard_pile.append(card2)
             result = is_heart(chosen)
         else:
-            card = deck.draw()
-            if gm and card:
+            card = gm._draw_from_deck()
+            if card:
                 gm.discard_pile.append(card)
             result = is_heart(card)
         player.unequip(self.card_name)

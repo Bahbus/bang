@@ -31,12 +31,11 @@ class KnifeCard(BaseCard):
             return
         if player.distance_to(target) > 1:
             return
-        deck = game.deck if game else None
         if game and game._auto_miss(target):
             return
         BangCard().play(
             target,
-            deck,
+            game=game,
             ignore_equipment=player.metadata.ignore_others_equipment if game else False,
         )
         if game and target.health < target.max_health:

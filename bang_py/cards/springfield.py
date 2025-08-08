@@ -41,7 +41,7 @@ class SpringfieldCard(BaseCard):
         if not game._auto_miss(target):
             BangCard().play(
                 target,
-                game.deck,
+                game=game,
                 ignore_equipment=player.metadata.ignore_others_equipment,
             )
             if target.health < target.max_health:

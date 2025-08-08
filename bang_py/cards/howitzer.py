@@ -7,7 +7,6 @@ from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
-    from ..deck import Deck
 
 from .bang import BangCard
 
@@ -26,7 +25,6 @@ class HowitzerCard(BaseCard):
         target: Player | None,
         player: Player | None = None,
         game: GameManager | None = None,
-        deck: Deck | None = None,
         **kwargs: Any,
     ) -> None:
         if not game or not player:
@@ -37,7 +35,7 @@ class HowitzerCard(BaseCard):
             before = p.health
             BangCard().play(
                 p,
-                deck or game.deck,
+                game=game,
                 ignore_equipment=player.metadata.ignore_others_equipment,
             )
             if p.health < before:
