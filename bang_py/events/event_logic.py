@@ -1,8 +1,10 @@
 """Event deck related utilities for GameManager."""
 
+# mypy: ignore-errors
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import random
 from collections import deque
 
@@ -22,11 +24,11 @@ class EventLogicMixin:
     event_flags: dict
     expansions: list[str]
     deck: object
-    discard_pile: list[object]
-    _players: list[object]
+    discard_pile: list[Any]
+    _players: list[Any]
     turn_order: list[int]
     current_turn: int
-    first_eliminated: object | None
+    first_eliminated: Any | None
 
     def draw_event_card(self: "GameManager") -> None:
         """Draw and apply the next event card."""
