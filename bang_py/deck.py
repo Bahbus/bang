@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from random import shuffle
 from collections import deque
-from typing import Iterable
+from collections.abc import Iterable
 
 from .cards.card import BaseCard
 
