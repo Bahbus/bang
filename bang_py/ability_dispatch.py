@@ -82,7 +82,7 @@ class AbilityDispatchMixin:
         """Copy another living character's ability for the turn."""
         if not isinstance(player.character, VeraCuster):
             return
-        if not target.is_alive() or target is player:
+        if not target.is_alive() or target is player or target.character is None:
             return
         player.metadata.vera_copy = target.character.__class__
         player.metadata.abilities.add(target.character.__class__)
