@@ -9,6 +9,7 @@ import ssl
 from typing import override
 
 from PySide6 import QtCore
+from typing import TYPE_CHECKING
 
 from websockets.asyncio.client import ClientConnection, connect
 from websockets.exceptions import WebSocketException
@@ -16,7 +17,16 @@ from websockets.exceptions import WebSocketException
 from ...network.server import BangServer
 
 
-class ServerThread(QtCore.QThread):
+if TYPE_CHECKING:
+
+    class _QThread(QtCore.QThread):
+        def run(self) -> None: ...
+
+else:  # pragma: no cover - runtime alias
+    _QThread = QtCore.QThread
+
+
+class ServerThread(_QThread):
     """Run a :class:`BangServer` in a background thread."""
 
     def __init__(
@@ -41,7 +51,7 @@ class ServerThread(QtCore.QThread):
         self.server_task: asyncio.Task | None = None
 
     @override
-    def run(self) -> None:  # type: ignore[misc]
+    def run(self) -> None:
         asyncio.set_event_loop(self.loop)
         server = BangServer(
             self.host,
@@ -68,7 +78,7 @@ class ServerThread(QtCore.QThread):
             self.loop.call_soon_threadsafe(self.loop.stop)
 
 
-class ClientThread(QtCore.QThread):
+class ClientThread(_QThread):
     """Manage a websocket client connection in a background thread."""
 
     message_received = QtCore.Signal(str)
@@ -83,7 +93,7 @@ class ClientThread(QtCore.QThread):
         self.websocket: ClientConnection | None = None
 
     @override
-    def run(self) -> None:  # type: ignore[misc]
+    def run(self) -> None:
         asyncio.set_event_loop(self.loop)
         self.loop.run_until_complete(self._run())
         self.loop.close()
@@ -93,10 +103,8 @@ class ClientThread(QtCore.QThread):
             fut = asyncio.run_coroutine_threadsafe(self.websocket.close(), self.loop)
             try:
                 fut.result(timeout=1)
-            except asyncio.TimeoutError as exc:
-                logging.exception("Timed out while closing websocket: %s", exc)
-            except WebSocketException as exc:
-                logging.exception("Failed to close websocket: %s", exc)
+            except (asyncio.TimeoutError, WebSocketException) as exc:
+                logging.exception("Error while closing websocket: %s", exc)
             except Exception as exc:
                 logging.exception("Unexpected error while closing websocket: %s", exc)
                 raise
