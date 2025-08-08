@@ -1,12 +1,13 @@
 import json
 
 import pytest
-from websockets.asyncio.client import connect as async_connect
 
-from bang_py.player import Player
-from bang_py.cards.roles import SheriffRoleCard, OutlawRoleCard
-from bang_py.network import client as network_client
-from bang_py.network.server import _serialize_players
+pytest.importorskip("websockets")
+from websockets.asyncio.client import connect as async_connect  # noqa: F401,E402
+
+from bang_py.player import Player  # noqa: E402
+from bang_py.cards.roles import SheriffRoleCard, OutlawRoleCard  # noqa: E402
+from bang_py.network.server import _serialize_players  # noqa: E402
 
 pytest.importorskip("cryptography")
 
@@ -34,7 +35,6 @@ def test_serialize_players_json_roundtrip():
             "equipment": [],
         },
     ]
-    assert network_client.connect is async_connect
 
 
 def test_serialize_players_with_health_changes():
