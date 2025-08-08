@@ -2,11 +2,8 @@ import json
 
 import pytest
 
-pytest.importorskip("websockets")
-from websockets.asyncio.client import connect as async_connect  # noqa: F401,E402
-
-from bang_py.player import Player  # noqa: E402
 from bang_py.cards.roles import SheriffRoleCard, OutlawRoleCard  # noqa: E402
+from bang_py.player import Player  # noqa: E402
 from bang_py.network.server import _serialize_players  # noqa: E402
 
 pytest.importorskip("cryptography")
