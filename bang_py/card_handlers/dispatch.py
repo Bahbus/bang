@@ -109,7 +109,7 @@ class DispatchMixin:
         register_handler_groups(self, groups or HANDLER_MODULES.keys())
 
     def _dispatch_play(
-        self: GameManagerProtocol,
+        self,
         player: "Player",
         card: BaseCard,
         target: "Player" | None,

@@ -18,7 +18,7 @@ class BangHandlersMixin:
     """Mixin providing Bang-specific card resolution helpers."""
 
     def _play_bang_card(
-        self: GameManagerProtocol,
+        self,
         player: "Player",
         card: BangCard,
         target: "Player" | None,
@@ -67,7 +67,7 @@ class BangHandlersMixin:
         if not self.event_flags.get("river"):
             handle_out_of_turn_discard(self, player, card)
 
-    def _auto_miss(self: GameManagerProtocol, target: "Player") -> bool:
+    def _auto_miss(self, target: "Player") -> bool:
         """Attempt to satisfy a Bang! with automatic Missed! effects."""
         if not self._should_use_auto_miss(target):
             return False
@@ -85,7 +85,7 @@ class BangHandlersMixin:
             return False
         return target.metadata.auto_miss is not False
 
-    def _use_miss_card(self: GameManagerProtocol, target: "Player") -> bool:
+    def _use_miss_card(self, target: "Player") -> bool:
         """Use a Missed! card from ``target`` if available."""
         miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
         if miss:
@@ -95,7 +95,7 @@ class BangHandlersMixin:
             return True
         return False
 
-    def _use_bang_as_miss(self: GameManagerProtocol, target: "Player") -> bool:
+    def _use_bang_as_miss(self, target: "Player") -> bool:
         """Use a Bang! card as a Missed! if allowed."""
         if target.metadata.bang_as_missed:
             bang = next((c for c in target.hand if isinstance(c, BangCard)), None)
@@ -106,7 +106,7 @@ class BangHandlersMixin:
                 return True
         return False
 
-    def _use_any_card_as_miss(self: GameManagerProtocol, target: "Player") -> bool:
+    def _use_any_card_as_miss(self, target: "Player") -> bool:
         """Use any card as a Missed! if permitted by effects."""
         if target.metadata.any_card_as_missed and target.hand:
             card = target.hand.pop()

@@ -47,6 +47,9 @@ class GameManagerProtocol(Protocol):
     def _pass_left_or_discard(self, player: Player, card: BaseCard) -> None:
         """Discard ``card`` or pass it left based on active events."""
 
+    def discard_card(self, player: Player, card: BaseCard) -> None:
+        """Remove ``card`` from ``player``'s hand and discard it."""
+
     def play_card(self, player: Player, card: BaseCard, target: Player | None = None) -> None:
         """Play ``card`` from ``player`` targeting ``target`` if provided."""
 
