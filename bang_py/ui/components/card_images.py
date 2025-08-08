@@ -5,7 +5,8 @@ from __future__ import annotations
 from importlib import resources
 
 from contextlib import suppress
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
 from .ranksuit_loader import RankSuitIconLoader
 
 DEFAULT_SIZE = (60, 90)
-ASSETS_DIR = resources.files("bang_py") / "assets"
+ASSETS_DIR = cast(Path, resources.files("bang_py").joinpath("assets"))
 CHARACTER_DIR = ASSETS_DIR / "characters"
 AUDIO_DIR = ASSETS_DIR / "audio"
 ICON_DIR = ASSETS_DIR / "icons"
