@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from importlib import import_module
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from ..cards.bang import BangCard
 from ..cards.missed import MissedCard
@@ -17,6 +17,7 @@ from ..cards.panic import PanicCard
 from ..cards.jail import JailCard
 from ..cards.roles import SheriffRoleCard
 from ..helpers import handle_out_of_turn_discard
+from ..game_manager_protocol import GameManagerProtocol
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -293,10 +294,11 @@ class DispatchMixin:
     ) -> None:
         """Trigger damage or heal callbacks if ``target`` changed health."""
         if target and before is not None:
+            gm = cast(GameManagerProtocol, self)
             if target.health < before:
-                self.on_player_damaged(target, source)  # type: ignore[attr-defined]
+                gm.on_player_damaged(target, source)
             elif target.health > before:
-                self.on_player_healed(target)  # type: ignore[attr-defined]
+                gm.on_player_healed(target)
 
     def _draw_if_empty(self: "GameManager", player: "Player") -> None:
         """Draw a card if the player has an empty hand and may draw."""
