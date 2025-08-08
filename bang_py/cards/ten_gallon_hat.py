@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import override
+try:
+    from typing import override
+except ImportError:  # pragma: no cover - fallback for Python <3.12
+    from typing_extensions import override
 
 from .missed import MissedCard
 from ..player import Player

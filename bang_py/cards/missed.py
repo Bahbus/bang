@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import override
+try:
+    from typing import override
+except ImportError:  # pragma: no cover - fallback for Python <3.12
+    from typing_extensions import override
 
 from .card import BaseCard
 from ..player import Player
@@ -14,7 +17,7 @@ class MissedCard(BaseCard):
     card_set = "base"
     description = "Negates one Bang! targeting you."
 
-    @override
+    @override  # type: ignore[misc]
     def play(self, target: Player | None, **kwargs) -> None:
         if not target:
             return
