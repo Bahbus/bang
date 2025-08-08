@@ -1,4 +1,7 @@
-"""Character classes from the core, Dodge City, and Bullet expansions."""
+"""Character classes from the core, Dodge City, and Bullet expansions.
+
+See AGENTS.md for character guidelines.
+"""
 
 from __future__ import annotations
 
