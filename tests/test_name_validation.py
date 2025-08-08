@@ -3,6 +3,7 @@ import pytest
 pytest.importorskip("cryptography")
 pytest.importorskip("PySide6", exc_type=ImportError)
 pytest.importorskip("PySide6.QtWidgets", exc_type=ImportError)
+pytest.importorskip("pytestqt", exc_type=ImportError)
 
 from PySide6 import QtWidgets  # noqa: E402
 
