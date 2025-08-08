@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ..player import Player
 from .base import BaseCharacter
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
-    from ..player import Player
 
 
 class PatBrennan(BaseCharacter):
@@ -25,9 +25,11 @@ class PatBrennan(BaseCharacter):
             if p is not player:
                 return True
             options: dict[str, object] = opts if isinstance(opts, dict) else {}
-            target = options.get("pat_target")
-            card_name = options.get("pat_card")
-            if not gm.pat_brennan_draw(player, target, card_name):
+            target_obj = options.get("pat_target")
+            target_pl = target_obj if isinstance(target_obj, Player) else None
+            card_obj = options.get("pat_card")
+            card_name = card_obj if isinstance(card_obj, str) else None
+            if not gm.pat_brennan_draw(player, target_pl, card_name):
                 gm.draw_card(player)
             gm.draw_card(player)
             return True

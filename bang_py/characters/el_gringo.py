@@ -1,4 +1,5 @@
 """Steal a card from your attacker when wounded. Core set."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -21,7 +22,7 @@ class ElGringo(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(ElGringo)
 
-        def on_damaged(p: "Player", src: "Player | None", *__: object) -> None:
+        def on_damaged(p: "Player", src: "Player | None") -> None:
             if p is player and src and src.hand:
                 idx = player.metadata.gringo_index or 0
                 if idx < 0 or idx >= len(src.hand):
