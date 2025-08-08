@@ -1,5 +1,4 @@
 import random
-from typing import List
 
 import pytest
 
@@ -40,6 +39,8 @@ from bang_py.characters.vulture_sam import VultureSam
 from bang_py.characters.willy_the_kid import WillyTheKid
 from bang_py.game_manager import GameManager
 from bang_py.player import Player
+
+pytestmark = pytest.mark.slow
 
 CHAR_CLASSES = [
     BartCassidy,
@@ -178,7 +179,7 @@ def simulate_game(num_players: int) -> str:
     for i in range(num_players):
         player = Player(f"P{i}", role=roles[i](), character=chars[i]())
         gm.add_player(player)
-    result: List[str] = []
+    result: list[str] = []
 
     def _record_result(res: str) -> None:
         result.append(res)
@@ -193,7 +194,6 @@ def simulate_game(num_players: int) -> str:
     return result[0]
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize("num_players", range(4, 8))
 def test_full_game_simulation(num_players: int) -> None:
     outcome = simulate_game(num_players)
