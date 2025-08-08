@@ -1,12 +1,13 @@
 import pytest
-from bang_py.network.token_utils import (
+
+pytest.importorskip("cryptography")
+from cryptography.fernet import InvalidToken  # noqa: E402
+
+from bang_py.network.token_utils import (  # noqa: E402
     generate_join_token,
     parse_join_token,
     DEFAULT_TOKEN_KEY,
 )
-from cryptography.fernet import InvalidToken
-
-pytest.importorskip("cryptography")
 
 
 def test_generate_and_parse_token() -> None:
