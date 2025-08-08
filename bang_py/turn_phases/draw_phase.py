@@ -31,16 +31,17 @@ class DrawPhaseMixin:
     # Deck helpers
     def _draw_from_deck(self) -> BaseCard | None:
         """Draw a card reshuffling the discard pile if needed."""
-        if self.deck is None:
+        deck = self.deck
+        if deck is None:
             return None
-        card = self.deck.draw()
+        card = deck.draw()
         if card is None and self.discard_pile:
-            self.deck.cards.extend(self.discard_pile)
+            deck.cards.extend(self.discard_pile)
             self.discard_pile.clear()
-            cards = list(self.deck.cards)
+            cards = list(deck.cards)
             random.shuffle(cards)
-            self.deck.cards = deque(cards)
-            card = self.deck.draw()
+            deck.cards = deque(cards)
+            card = deck.draw()
         return card
 
     def draw_card(self, player: "Player", num: int = 1) -> None:
