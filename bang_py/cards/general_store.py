@@ -2,10 +2,9 @@
 order."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from ..game_manager import GameManager
@@ -17,12 +16,14 @@ class GeneralStoreCard(BaseCard):
     card_set = "base"
     description = "Reveal cards for all players to choose one in turn order."
 
+    @override
     def play(
         self,
-        target: Player,
+        target: Player | None,
         player: Player | None = None,
         game: GameManager | None = None,
         choices: list[int] | None = None,
+        **kwargs: Any,
     ) -> None:
         """Reveal cards equal to players and let each choose in order."""
         if not game or not player:

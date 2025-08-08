@@ -1,11 +1,9 @@
 """Beer card from the base game. Heals 1 health if allowed by the game rules."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
-
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -17,11 +15,13 @@ class BeerCard(BaseCard):
     card_set = "base"
     description = "Heals 1 health if allowed by the game rules."
 
+    @override
     def play(
         self,
-        target: Player,
+        target: Player | None,
         player: Player | None = None,
         game: "GameManager" | None = None,
+        **kwargs: Any,
     ) -> None:
         """Heal the target if allowed by game state and abilities."""
         if not target:

@@ -2,10 +2,9 @@
 health."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 from ..helpers import handle_out_of_turn_discard
 
 if TYPE_CHECKING:
@@ -20,13 +19,15 @@ class TequilaCard(BaseCard):
     card_set = "fistful_of_cards"
     description = "Discard another card with Tequila to heal 1 health."
 
+    @override
     def play(
         self,
-        target: Player,
+        target: Player | None,
         player: Player | None = None,
         game: GameManager | None = None,
         *,
         discard_idx: int = 0,
+        **kwargs: Any,
     ) -> None:
         if not target or not player or not game or not player.hand:
             return

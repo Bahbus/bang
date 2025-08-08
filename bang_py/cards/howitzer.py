@@ -1,10 +1,9 @@
 """Howitzer card from the Dodge City expansion. Bang all opponents ignoring distance."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -21,9 +20,14 @@ class HowitzerCard(BaseCard):
     card_set = "dodge_city"
     description = "Bang all opponents ignoring distance."
 
+    @override
     def play(
-        self, target: Player, player: Player | None = None, game: GameManager | None = None,
-        deck: Deck | None = None
+        self,
+        target: Player | None,
+        player: Player | None = None,
+        game: GameManager | None = None,
+        deck: Deck | None = None,
+        **kwargs: Any,
     ) -> None:
         if not game or not player:
             return

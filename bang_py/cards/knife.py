@@ -1,10 +1,9 @@
 """Knife card from the Dodge City expansion. Attack at distance 1 that can be dodged."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -20,8 +19,13 @@ class KnifeCard(BaseCard):
     card_set = "dodge_city"
     description = "Attack at distance 1 that can be dodged."
 
+    @override
     def play(
-        self, target: Player, player: Player | None = None, game: GameManager | None = None
+        self,
+        target: Player | None,
+        player: Player | None = None,
+        game: GameManager | None = None,
+        **kwargs: Any,
     ) -> None:
         if not target or not player:
             return

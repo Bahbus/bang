@@ -1,10 +1,9 @@
 """Springfield card from the Dodge City expansion. Discard another card to Bang! any player."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -21,13 +20,15 @@ class SpringfieldCard(BaseCard):
     card_set = "dodge_city"
     description = "Discard another card to Bang! any player."
 
+    @override
     def play(
         self,
-        target: Player,
+        target: Player | None,
         player: Player | None = None,
         game: GameManager | None = None,
         *,
         discard_idx: int = 0,
+        **kwargs: Any,
     ) -> None:
         if not target or not player or not game or not player.hand:
             return

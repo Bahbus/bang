@@ -1,10 +1,9 @@
 """Bang! card from the base game. Basic attack that deals 1 damage unless dodged."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 from .barrel import BarrelCard
 from ..characters.jourdonnais import Jourdonnais
 
@@ -18,21 +17,22 @@ class BangCard(BaseCard):
     card_set = "base"
     description = "Basic attack that deals 1 damage unless dodged."
 
+    @override
     def play(
         self,
-        target: Player,
+        target: Player | None,
         deck: Deck | None = None,
         *,
         ignore_equipment: bool = False,
+        **kwargs: Any,
     ) -> None:
         if not target:
             return
         if deck and not ignore_equipment:
             barrel = target.equipment.get("Barrel")
-            if barrel and getattr(barrel, "draw_check", None):
-                if barrel.draw_check(deck, target):
-                    target.metadata.dodged = True
-                    return
+            if isinstance(barrel, BarrelCard) and barrel.draw_check(deck, target):
+                target.metadata.dodged = True
+                return
             if isinstance(target.character, Jourdonnais) or target.metadata.virtual_barrel:
                 if BarrelCard().draw_check(deck, target):
                     target.metadata.dodged = True

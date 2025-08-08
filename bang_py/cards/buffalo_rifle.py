@@ -1,10 +1,9 @@
 """Buffalo Rifle card from the Dodge City expansion. Bang any player regardless of distance."""
 
 from __future__ import annotations
-
 from .card import BaseCard
 from ..player import Player
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
@@ -21,12 +20,14 @@ class BuffaloRifleCard(BaseCard):
     card_set = "dodge_city"
     description = "Bang any player regardless of distance."
 
+    @override
     def play(
         self,
-        target: Player,
+        target: Player | None,
         player: Player | None = None,
         game: GameManager | None = None,
         deck: Deck | None = None,
+        **kwargs: Any,
     ) -> None:
         if not target:
             return
