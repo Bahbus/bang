@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ..player import Player
 from .base import BaseCharacter
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
-    from ..player import Player
 
 
 class JesseJones(BaseCharacter):
@@ -28,12 +28,14 @@ class JesseJones(BaseCharacter):
             opponents = [t for t in gm.players if t is not player and t.hand]
             if opponents:
                 options: dict[str, object] = opts if isinstance(opts, dict) else {}
-                target = options.get("jesse_target")
-                idx = options.get("jesse_card", 0)
-                if target in opponents:
-                    if idx is None or idx < 0 or idx >= len(target.hand):
+                target_obj = options.get("jesse_target")
+                target_pl = target_obj if isinstance(target_obj, Player) else None
+                idx_obj = options.get("jesse_card", 0)
+                idx = idx_obj if isinstance(idx_obj, int) else 0
+                if target_pl in opponents:
+                    if idx < 0 or idx >= len(target_pl.hand):
                         idx = 0
-                    card = target.hand.pop(idx)
+                    card = target_pl.hand.pop(idx)
                     player.hand.append(card)
                     gm.draw_card(player)
                 else:

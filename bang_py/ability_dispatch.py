@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from .cards.bang import BangCard
 from .cards.missed import MissedCard
 from .cards.general_store import GeneralStoreCard
@@ -11,9 +9,7 @@ from .characters.vera_custer import VeraCuster
 from .cards.card import BaseCard
 from .game_manager_protocol import GameManagerProtocol
 from .helpers import handle_out_of_turn_discard
-
-if TYPE_CHECKING:  # pragma: no cover - imported for type checking
-    from .player import Player
+from .player import Player
 
 
 class AbilityDispatchMixin:
@@ -56,7 +52,12 @@ class AbilityDispatchMixin:
     ) -> bool:
         """During draw phase, draw a card in play instead of from deck."""
         targets = [t for t in self._players if t is not player]
-        if target in targets and card_name and card_name in target.equipment:
+        if (
+            isinstance(target, Player)
+            and isinstance(card_name, str)
+            and target in targets
+            and card_name in target.equipment
+        ):
             card = target.unequip(card_name)
             if card:
                 player.hand.append(card)
@@ -82,6 +83,8 @@ class AbilityDispatchMixin:
         """Copy another living character's ability for the turn."""
         if not isinstance(player.character, VeraCuster):
             return
+        if not isinstance(target, Player):
+            return
         if not target.is_alive() or target is player or target.character is None:
             return
         player.metadata.vera_copy = target.character.__class__
@@ -92,7 +95,11 @@ class AbilityDispatchMixin:
         self: GameManagerProtocol, player: "Player", target: "Player", card_name: str
     ) -> bool:
         """Discard a Bang! to shoot at ``card_name`` in front of ``target``."""
-        if not self.event_flags.get("ricochet"):
+        if (
+            not self.event_flags.get("ricochet")
+            or not isinstance(target, Player)
+            or not isinstance(card_name, str)
+        ):
             return False
         bang = next((c for c in player.hand if isinstance(c, BangCard)), None)
         card = target.equipment.get(card_name)

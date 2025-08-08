@@ -26,7 +26,7 @@ class JoseDelgado(BaseCharacter):
             equip = None
             options: dict[str, object] = opts if isinstance(opts, dict) else {}
             sel = options.get("jose_equipment")
-            if sel is not None and 0 <= sel < len(equips):
+            if isinstance(sel, int) and 0 <= sel < len(equips):
                 equip = equips[sel]
             elif equips:
                 equip = equips[0]

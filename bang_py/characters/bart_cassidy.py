@@ -1,4 +1,5 @@
 """Draw a card whenever you lose a life point. Core set."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -12,15 +13,13 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
 
 class BartCassidy(BaseCharacter):
     name = "Bart Cassidy"
-    description = (
-        "When you lose a life point, draw a card from the deck."
-    )
+    description = "When you lose a life point, draw a card from the deck."
     starting_health = 4
 
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(BartCassidy)
 
-        def on_damaged(p: "Player", _src: "Player | None", *__: object) -> None:
+        def on_damaged(p: "Player", _src: "Player | None") -> None:
             if p is player:
                 gm.draw_card(player)
 
