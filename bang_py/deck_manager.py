@@ -75,7 +75,8 @@ class DeckManagerMixin:
 
     # ------------------------------------------------------------------
     # Setup helpers
-    def _build_role_deck(self: GameManagerProtocol) -> list[BaseRole]:
+    def _build_role_deck(self: GameManagerProtocol) -> list[type[BaseRole]]:
+        """Return role classes for the current player count."""
         role_map = {
             3: [DeputyRoleCard, OutlawRoleCard, RenegadeRoleCard],
             4: [SheriffRoleCard, RenegadeRoleCard, OutlawRoleCard, OutlawRoleCard],
@@ -117,7 +118,7 @@ class DeckManagerMixin:
         classes = role_map.get(len(self._players))
         if not classes:
             raise ValueError("Unsupported player count")
-        return [cls() for cls in classes]
+        return list(classes)
 
     def _build_character_deck(self: GameManagerProtocol) -> list[type[BaseCharacter]]:
         from . import characters
@@ -131,12 +132,12 @@ class DeckManagerMixin:
         return options[0]
 
     def _deal_roles_and_characters(self: GameManagerProtocol) -> None:
-        role_deck = self._build_role_deck()
-        random.shuffle(role_deck)
+        role_classes = self._build_role_deck()
+        random.shuffle(role_classes)
         char_deck = [cls() for cls in self._build_character_deck()]
         random.shuffle(char_deck)
         for player in self._players:
-            player.role = role_deck.pop()
+            player.role = role_classes.pop()()
             choices = [char_deck.pop(), char_deck.pop()]
             chosen = self.choose_character(player, choices)
             player.character = chosen
