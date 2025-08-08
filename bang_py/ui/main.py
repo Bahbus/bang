@@ -13,6 +13,7 @@ from .components import ClientThread, ServerThread
 from .components.card_images import get_loader
 from .theme import get_current_theme
 from ..network.token_utils import parse_join_token
+from ..network.validation import validate_player_name
 from cryptography.fernet import InvalidToken
 
 CHARACTER_ASSETS = resources.files("bang_py") / "assets" / "characters"
@@ -60,7 +61,7 @@ class BangUI(QtCore.QObject):
         key: str,
     ) -> None:
         name = name.strip()
-        if not self._validate_name(name):
+        if not validate_player_name(name):
             QtWidgets.QMessageBox.critical(None, "Error", "Please enter a valid name")
             return
         try:
@@ -83,7 +84,7 @@ class BangUI(QtCore.QObject):
         cafile: str,
     ) -> None:
         name = name.strip()
-        if not self._validate_name(name):
+        if not validate_player_name(name):
             QtWidgets.QMessageBox.critical(None, "Error", "Please enter a valid name")
             return
         cafile_opt = cafile.strip() or None
@@ -269,9 +270,6 @@ class BangUI(QtCore.QObject):
             if self.game_root is not None:
                 cur = self.game_root.property("logText") or ""
                 self.game_root.setProperty("logText", cur + f"Prompt: {prompt}\n")
-
-    def _validate_name(self, name: str) -> bool:
-        return bool(name and len(name) <= 20 and name.isprintable())
 
     def show(self) -> None:
         self.view.setTitle("Bang!")
