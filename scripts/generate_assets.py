@@ -14,14 +14,18 @@ from pathlib import Path
 
 import os
 from importlib import import_module
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-from PySide6 import QtCore, QtGui, QtWidgets  # type: ignore[import-not-found]  # noqa: E402
-
-if TYPE_CHECKING:  # pragma: no cover - only for type hints
-    from pydub import AudioSegment  # type: ignore[import-not-found]
+if TYPE_CHECKING:
+    from PySide6 import QtCore, QtGui, QtWidgets  # noqa: F401
+    from pydub import AudioSegment  # noqa: F401
+else:  # pragma: no cover - PySide6 is required at runtime
+    try:
+        from PySide6 import QtCore, QtGui, QtWidgets  # noqa: E402
+    except ImportError as exc:  # pragma: no cover - fail fast if missing
+        raise ImportError("PySide6 is required for asset generation") from exc
 
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "bang_py" / "assets"
 CHAR_DIR = ASSETS_DIR / "characters"
@@ -110,10 +114,10 @@ def create_beep(path: Path, freq: int = 440) -> None:
     ]
     raw = b"".join(frames)
     try:  # Attempt MP3 export
-        segment_cls = cast(Any, import_module("pydub").AudioSegment)
-    except Exception:  # pydub not installed; skip MP3 export
+        from pydub import AudioSegment as PydubAudioSegment
+    except ImportError:  # pydub not installed; skip MP3 export
         return
-    audio: "AudioSegment" = segment_cls(
+    audio: "AudioSegment" = PydubAudioSegment(
         data=raw,
         sample_width=2,
         frame_rate=rate,
