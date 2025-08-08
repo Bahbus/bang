@@ -1,4 +1,5 @@
 """Draw a card from play instead of the deck. Dodge City expansion."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -20,11 +21,12 @@ class PatBrennan(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(PatBrennan)
 
-        def on_draw(p: "Player", opts: dict) -> bool:
+        def on_draw(p: "Player", opts: object) -> bool:
             if p is not player:
                 return True
-            target = opts.get("pat_target")
-            card_name = opts.get("pat_card")
+            options: dict[str, object] = opts if isinstance(opts, dict) else {}
+            target = options.get("pat_target")
+            card_name = options.get("pat_card")
             if not gm.pat_brennan_draw(player, target, card_name):
                 gm.draw_card(player)
             gm.draw_card(player)

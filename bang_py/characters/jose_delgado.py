@@ -1,4 +1,5 @@
 """Discard a blue card to draw two more. Dodge City expansion."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -18,12 +19,13 @@ class JoseDelgado(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(JoseDelgado)
 
-        def on_draw(p: "Player", opts: dict) -> bool:
+        def on_draw(p: "Player", opts: object) -> bool:
             if p is not player:
                 return True
             equips = [c for c in player.hand if hasattr(c, "slot")]
             equip = None
-            sel = opts.get("jose_equipment")
+            options: dict[str, object] = opts if isinstance(opts, dict) else {}
+            sel = options.get("jose_equipment")
             if sel is not None and 0 <= sel < len(equips):
                 equip = equips[sel]
             elif equips:

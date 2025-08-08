@@ -1,4 +1,5 @@
 """Steal a card instead of drawing the first. Core set."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -21,13 +22,14 @@ class JesseJones(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(JesseJones)
 
-        def on_draw(p: "Player", opts: dict) -> bool:
+        def on_draw(p: "Player", opts: object) -> bool:
             if p is not player:
                 return True
             opponents = [t for t in gm.players if t is not player and t.hand]
             if opponents:
-                target = opts.get("jesse_target")
-                idx = opts.get("jesse_card", 0)
+                options: dict[str, object] = opts if isinstance(opts, dict) else {}
+                target = options.get("jesse_target")
+                idx = options.get("jesse_card", 0)
                 if target in opponents:
                     if idx is None or idx < 0 or idx >= len(target.hand):
                         idx = 0

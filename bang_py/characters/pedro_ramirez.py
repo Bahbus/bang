@@ -1,4 +1,5 @@
 """May draw the top discard instead of from the deck. Core set."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -21,10 +22,11 @@ class PedroRamirez(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(PedroRamirez)
 
-        def on_draw(p: "Player", opts: dict) -> bool:
+        def on_draw(p: "Player", opts: object) -> bool:
             if p is not player or not gm.discard_pile:
                 return True
-            use_discard = opts.get("pedro_use_discard", True)
+            options: dict[str, object] = opts if isinstance(opts, dict) else {}
+            use_discard = bool(options.get("pedro_use_discard", True))
             if use_discard:
                 player.hand.append(gm.discard_pile.pop())
                 gm.draw_card(player)

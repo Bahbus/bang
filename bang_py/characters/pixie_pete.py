@@ -1,4 +1,5 @@
 """Draw three cards during phase 1. Dodge City expansion."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -18,7 +19,7 @@ class PixiePete(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(PixiePete)
 
-        def on_draw(p: "Player", _opts: dict) -> bool:
+        def on_draw(p: "Player", _opts: object) -> bool:
             if p is not player:
                 return True
             gm.draw_card(player, 3)
