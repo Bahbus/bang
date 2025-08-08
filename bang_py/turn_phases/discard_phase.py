@@ -22,7 +22,7 @@ class DiscardPhaseMixin:
         limit = self._hand_limit(player)
         self._discard_to_limit(player, limit)
 
-    def _hand_limit(self, player: "Player") -> int:
+    def _hand_limit(self: GameManagerProtocol, player: "Player") -> int:
         limit = player.health
         if player.metadata.hand_limit is not None:
             limit = max(limit, player.metadata.hand_limit)
@@ -32,7 +32,7 @@ class DiscardPhaseMixin:
             limit = min(limit, int(self.event_flags["reverend_limit"]))
         return limit
 
-    def _discard_to_limit(self, player: "Player", limit: int) -> None:
+    def _discard_to_limit(self: GameManagerProtocol, player: "Player", limit: int) -> None:
         while len(player.hand) > limit:
             card = player.hand.pop()
             if self.event_flags.get("abandoned_mine"):

@@ -47,6 +47,12 @@ class GameManagerProtocol(Protocol):
     def _pass_left_or_discard(self, player: Player, card: BaseCard) -> None:
         """Discard ``card`` or pass it left based on active events."""
 
+    def _hand_limit(self, player: Player) -> int:
+        """Return the maximum hand size for ``player``."""
+
+    def _discard_to_limit(self, player: Player, limit: int) -> None:
+        """Discard cards from ``player`` until ``limit`` is met."""
+
     def discard_card(self, player: Player, card: BaseCard) -> None:
         """Remove ``card`` from ``player``'s hand and discard it."""
 
@@ -65,6 +71,12 @@ class GameManagerProtocol(Protocol):
     def _check_win_conditions(self) -> None:
         """Verify whether the game has ended."""
 
+    def _deal_general_store_cards(self) -> list[BaseCard]:
+        """Deal cards for the General Store."""
+
+    def _set_general_store_order(self, player: Player) -> None:
+        """Initialize General Store pick order starting with ``player``."""
+
     def reset_turn_flags(self, player: Player) -> None:
         """Reset per-turn ability flags on ``player``."""
 
@@ -80,6 +92,15 @@ class GameManagerProtocol(Protocol):
     def _apply_event_start_effects(self, player: Player) -> Player | None:
         """Apply start-of-turn event effects returning the acting player."""
 
+    def _reactivate_green_equipment(self, player: Player) -> None:
+        """Reactivate green equipment on ``player``."""
+
+    def _resolve_dynamite(self, player: Player) -> bool:
+        """Return ``False`` if Dynamite eliminates ``player``."""
+
+    def _run_start_turn_checks(self, player: Player) -> Player | None:
+        """Run start-of-turn checks returning the acting player or ``None``."""
+
     def _maybe_revive_ghost_town(self, player: Player) -> bool:
         """Return True if Ghost Town revives ``player``."""
 
@@ -91,6 +112,33 @@ class GameManagerProtocol(Protocol):
 
     def prompt_new_identity(self, player: Player) -> bool:
         """Prompt ``player`` to swap characters during New Identity."""
+
+    def _pre_card_checks(self, player: Player, card: BaseCard, target: Player | None) -> bool:
+        """Return ``True`` if ``player`` may play ``card`` on ``target``."""
+
+    def _is_bang(self, player: Player, card: BaseCard, target: Player | None) -> bool:
+        """Return ``True`` if playing ``card`` counts as a Bang!."""
+
+    def _dispatch_play(self, player: Player, card: BaseCard, target: Player | None) -> None:
+        """Dispatch ``card`` to its handler."""
+
+    def _update_bang_counters(self, player: Player) -> None:
+        """Update per-turn Bang! counters for ``player``."""
+
+    def _current_player_obj(self) -> Player | None:
+        """Return the player whose turn it currently is."""
+
+    def _reindex_turn_order(self, removed_idx: int) -> None:
+        """Rebuild turn order after removing ``removed_idx``."""
+
+    def _deal_roles_and_characters(self) -> None:
+        """Assign roles and characters to all players."""
+
+    def _next_alive_player(self, player: Player) -> Player | None:
+        """Return the next living player to the left of ``player``."""
+
+    def _get_player_by_index(self, idx: int) -> Player | None:
+        """Return the player at ``idx`` if it exists."""
 
 
 __all__ = ["GameManagerProtocol"]
