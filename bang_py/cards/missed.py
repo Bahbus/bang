@@ -14,7 +14,7 @@ class MissedCard(BaseCard):
     card_set = "base"
     description = "Negates one Bang! targeting you."
 
-    @override
+    @override  # type: ignore[misc]
     def play(self, target: Player | None, **kwargs) -> None:
         if not target:
             return
