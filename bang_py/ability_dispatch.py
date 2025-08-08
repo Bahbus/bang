@@ -9,11 +9,11 @@ from .cards.missed import MissedCard
 from .cards.general_store import GeneralStoreCard
 from .characters.vera_custer import VeraCuster
 from .cards.card import BaseCard
+from .game_manager_protocol import GameManagerProtocol
 from .helpers import handle_out_of_turn_discard
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from .player import Player
-    from .game_manager import GameManager
 
 
 class AbilityDispatchMixin:
@@ -22,7 +22,7 @@ class AbilityDispatchMixin:
     event_flags: dict
     discard_pile: list[BaseCard]
 
-    def chuck_wengam_ability(self: 'GameManager', player: 'Player') -> None:
+    def chuck_wengam_ability(self: GameManagerProtocol, player: "Player") -> None:
         """Lose 1 life to draw 2 cards, usable multiple times per turn."""
         if player.health <= 1:
             return
@@ -31,7 +31,7 @@ class AbilityDispatchMixin:
         self.draw_card(player, 2)
 
     def doc_holyday_ability(
-        self, player: 'Player', indices: list[int] | None = None
+        self: GameManagerProtocol, player: "Player", indices: list[int] | None = None
     ) -> None:
         """Discard two cards to gain a Bang! that doesn't count toward the limit."""
         if player.metadata.doc_used:
@@ -49,9 +49,9 @@ class AbilityDispatchMixin:
         player.hand.append(BangCard())
 
     def pat_brennan_draw(
-        self,
-        player: 'Player',
-        target: 'Player' | None = None,
+        self: GameManagerProtocol,
+        player: "Player",
+        target: "Player" | None = None,
         card_name: str | None = None,
     ) -> bool:
         """During draw phase, draw a card in play instead of from deck."""
@@ -68,7 +68,7 @@ class AbilityDispatchMixin:
                 return True
         return False
 
-    def uncle_will_ability(self, player: 'Player', card: BaseCard) -> bool:
+    def uncle_will_ability(self: GameManagerProtocol, player: "Player", card: BaseCard) -> bool:
         """Play any card as General Store once per turn."""
         if player.metadata.uncle_used:
             return False
@@ -78,7 +78,7 @@ class AbilityDispatchMixin:
         self._pass_left_or_discard(player, card)
         return True
 
-    def vera_custer_copy(self, player: 'Player', target: 'Player') -> None:
+    def vera_custer_copy(self: GameManagerProtocol, player: "Player", target: "Player") -> None:
         """Copy another living character's ability for the turn."""
         if not isinstance(player.character, VeraCuster):
             return
@@ -89,7 +89,7 @@ class AbilityDispatchMixin:
         target.character.ability(self, player)
 
     def ricochet_shoot(
-        self, player: 'Player', target: 'Player', card_name: str
+        self: GameManagerProtocol, player: "Player", target: "Player", card_name: str
     ) -> bool:
         """Discard a Bang! to shoot at ``card_name`` in front of ``target``."""
         if not self.event_flags.get("ricochet"):
@@ -110,7 +110,7 @@ class AbilityDispatchMixin:
         self.discard_pile.append(card)
         return True
 
-    def reset_turn_flags(self, player: 'Player') -> None:
+    def reset_turn_flags(self: GameManagerProtocol, player: "Player") -> None:
         """Clear per-turn ability flags on ``player``."""
         player.metadata.doc_used = False
         player.metadata.doc_free_bang = 0

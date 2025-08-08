@@ -9,16 +9,16 @@ from ..characters.jose_delgado import JoseDelgado
 from ..characters.kit_carlson import KitCarlson
 from ..characters.pat_brennan import PatBrennan
 from ..characters.pedro_ramirez import PedroRamirez
+from ..game_manager_protocol import GameManagerProtocol
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from ..player import Player
-    from ..game_manager import GameManager
 
 
 class TurnFlowMixin:
     """Manage turn progression for :class:`GameManager`."""
 
-    _players: list['Player']
+    _players: list["Player"]
     turn_order: list[int]
     current_turn: int
     phase: str
@@ -29,21 +29,21 @@ class TurnFlowMixin:
     deck: object
     event_flags: dict
 
-    def play_phase(self: 'GameManager', player: 'Player') -> None:
+    def play_phase(self: GameManagerProtocol, player: "Player") -> None:
         self.phase = "play"
         for cb in self.play_phase_listeners:
             cb(player)
 
     # ------------------------------------------------------------------
     # Turn start helpers
-    def _handle_equipment_start(self: 'GameManager', player: 'Player') -> bool:
+    def _handle_equipment_start(self: GameManagerProtocol, player: "Player") -> bool:
         """Process start-of-turn equipment effects."""
         self._reactivate_green_equipment(player)
         if not self._resolve_dynamite(player):
             return False
         return self._process_jail(player)
 
-    def _reactivate_green_equipment(self: 'GameManager', player: 'Player') -> None:
+    def _reactivate_green_equipment(self: GameManagerProtocol, player: "Player") -> None:
         """Refresh green equipment and reapply modifiers."""
         for eq in list(player.equipment.values()):
             if eq.card_type == "green" and not getattr(eq, "active", True):
@@ -52,7 +52,7 @@ class TurnFlowMixin:
                 if modifier:
                     player._apply_health_modifier(modifier)
 
-    def _resolve_dynamite(self: 'GameManager', player: 'Player') -> bool:
+    def _resolve_dynamite(self: GameManagerProtocol, player: "Player") -> bool:
         """Handle Dynamite at turn start. Returns ``False`` if the player dies."""
         dyn = player.equipment.get("Dynamite")
         if dyn and getattr(dyn, "check_dynamite", None):
@@ -67,7 +67,7 @@ class TurnFlowMixin:
                     return False
         return True
 
-    def _process_jail(self: 'GameManager', player: 'Player') -> bool:
+    def _process_jail(self: GameManagerProtocol, player: "Player") -> bool:
         """Resolve Jail effects and return ``False`` if the turn is skipped."""
         jail = player.equipment.get("Jail")
         if not jail:
@@ -85,9 +85,7 @@ class TurnFlowMixin:
                 return False
         return True
 
-    def _handle_character_draw_abilities(
-        self: 'GameManager', player: 'Player'
-    ) -> bool:
+    def _handle_character_draw_abilities(self: GameManagerProtocol, player: "Player") -> bool:
         """Trigger characters that modify the draw phase."""
         ability_chars = (
             JesseJones,
@@ -103,7 +101,7 @@ class TurnFlowMixin:
             return True
         return False
 
-    def _begin_turn(self: 'GameManager', *, blood_target: 'Player' | None = None) -> None:
+    def _begin_turn(self: GameManagerProtocol, *, blood_target: "Player" | None = None) -> None:
         if not self.turn_order:
             return
         self.current_turn %= len(self.turn_order)
@@ -120,9 +118,7 @@ class TurnFlowMixin:
         for cb in self.turn_started_listeners:
             cb(player)
 
-    def _run_start_turn_checks(
-        self: 'GameManager', player: 'Player'
-    ) -> 'Player' | None:
+    def _run_start_turn_checks(self: GameManagerProtocol, player: "Player") -> "Player" | None:
         """Apply start-of-turn effects returning the acting player or ``None``."""
         player = self._apply_event_start_effects(player)
         if not player:
@@ -135,7 +131,7 @@ class TurnFlowMixin:
             return None
         return player
 
-    def end_turn(self: 'GameManager') -> None:
+    def end_turn(self: GameManagerProtocol) -> None:
         """Finish the current player's turn and advance to the next."""
         if not self.turn_order:
             return
@@ -152,7 +148,7 @@ class TurnFlowMixin:
 
     # ------------------------------------------------------------------
     # Turn end helpers
-    def _reset_green_equipment(self: 'GameManager', player: 'Player') -> None:
+    def _reset_green_equipment(self: GameManagerProtocol, player: "Player") -> None:
         """Reactivate green equipment at the end of the turn."""
         for eq in list(player.equipment.values()):
             if eq.card_type == "green" and not getattr(eq, "active", True):
@@ -161,7 +157,7 @@ class TurnFlowMixin:
                 if modifier:
                     player._apply_health_modifier(modifier)
 
-    def _advance_turn(self: 'GameManager') -> None:
+    def _advance_turn(self: GameManagerProtocol) -> None:
         """Move the turn pointer and start the next turn."""
         if self.event_flags.get("reverse_turn"):
             self.current_turn = (self.current_turn - 1) % len(self.turn_order)
