@@ -18,3 +18,7 @@
 - `test_icon_usage` ensures every file in `bang_py/assets/icons/` is referenced
   by the codebase. Any intentionally unused icons must be added to
   `KNOWN_UNUSED` within `tests/test_icon_usage.py`.
+- `test_root_asset_usage` checks that PNG files in `bang_py/assets/`, excluding
+  `audio/`, `icons/`, and `characters/`, are referenced by the codebase. Any
+  intentionally unused files must be added to `KNOWN_UNUSED` within
+  `tests/test_root_asset_usage.py`.
