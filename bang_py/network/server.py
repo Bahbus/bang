@@ -520,7 +520,10 @@ class BangServer:
     def _start_kit_carlson(self, conn: Connection, player: Player) -> bool:
         if not isinstance(player.character, KitCarlson):
             return False
-        cards = [self.game.deck.draw() for _ in range(3)]
+        deck = self.game.deck
+        if deck is None:
+            return False
+        cards = [deck.draw() for _ in range(3)]
         player.metadata.kit_cards = [c for c in cards if c]
         names = [c.card_name for c in player.metadata.kit_cards or []]
         payload = json.dumps({"prompt": "kit_carlson", "cards": names})
@@ -573,7 +576,10 @@ class BangServer:
     def _start_lucky_duke(self, conn: Connection, player: Player) -> bool:
         if not isinstance(player.character, LuckyDuke):
             return False
-        cards = [self.game.deck.draw(), self.game.deck.draw()]
+        deck = self.game.deck
+        if deck is None:
+            return False
+        cards = [deck.draw(), deck.draw()]
         player.metadata.lucky_cards = [c for c in cards if c]
         names = [c.card_name for c in player.metadata.lucky_cards or []]
         if names:
