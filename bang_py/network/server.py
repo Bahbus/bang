@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # Maximum allowed size for incoming websocket messages
 MAX_MESSAGE_SIZE = 4096
 
-__all__ = ["BangServer", "generate_join_token", "parse_join_token"]
+__all__ = ["BangServer", "generate_join_token", "parse_join_token", "validate_player_name"]
 
 
 # Use slots to reduce memory footprint and prevent dynamic attribute assignment.
