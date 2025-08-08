@@ -1,4 +1,5 @@
 """Draw for all, keep two, gift the rest. Bullet expansion exclusive."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -21,7 +22,7 @@ class ClausTheSaint(BaseCharacter):
     def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(ClausTheSaint)
 
-        def on_draw(p: "Player", _opts: dict) -> bool:
+        def on_draw(p: "Player", _opts: object) -> bool:
             if p is not player:
                 return True
             alive = [pl for pl in gm.players if pl.is_alive()]
