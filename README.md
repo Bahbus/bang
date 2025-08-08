@@ -32,7 +32,7 @@ Install the package using **Python 3.13+**. This pulls in
 `websockets>=15.0.1` and the Qt bindings (`PySide6>=6.9.1`):
 
 ```bash
-pip install .
+pip install .[dev]
 bang-server
 ```
 
