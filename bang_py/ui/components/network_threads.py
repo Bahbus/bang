@@ -6,7 +6,11 @@ import asyncio
 import json
 import logging
 import ssl
-from typing import override
+
+try:
+    from typing import override
+except ImportError:  # pragma: no cover - fallback for Python <3.12
+    from typing_extensions import override
 
 from PySide6 import QtCore
 
