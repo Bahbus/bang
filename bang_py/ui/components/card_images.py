@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover - optional dependency
 if TYPE_CHECKING:
     from PySide6 import QtMultimedia
 
-from ...helpers import RankSuitIconLoader
+from .ranksuit_loader import RankSuitIconLoader
 
 DEFAULT_SIZE = (60, 90)
 ASSETS_DIR = resources.files("bang_py") / "assets"

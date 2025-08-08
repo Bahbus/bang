@@ -15,7 +15,7 @@ pytest.importorskip(
 )
 
 from PySide6 import QtGui  # noqa: E402
-from bang_py.helpers import RankSuitIconLoader  # noqa: E402
+from bang_py.ui.components.ranksuit_loader import RankSuitIconLoader  # noqa: E402
 from bang_py.ui.components.card_images import (  # noqa: E402
     CardImageLoader,
     ACTION_ICON_MAP,
