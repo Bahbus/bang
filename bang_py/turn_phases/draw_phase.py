@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
-import random
 from collections import deque
+import random
 
 from ..cards.card import BaseCard
 from ..deck import Deck
 from ..game_manager_protocol import GameManagerProtocol
+from ..event_flags import EventFlags
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from ..player import Player
@@ -19,7 +20,7 @@ class DrawPhaseMixin:
 
     deck: Deck | None
     discard_pile: list[BaseCard]
-    event_flags: dict
+    event_flags: EventFlags
     _players: list["Player"]
     turn_order: list[int]
     current_turn: int
@@ -47,7 +48,7 @@ class DrawPhaseMixin:
 
     def draw_card(self, player: "Player", num: int = 1) -> None:
         """Draw ``num`` cards for ``player`` applying event modifiers."""
-        bonus = int(self.event_flags.get("peyote_bonus", 0))
+        bonus = self.event_flags.get("peyote_bonus", 0)
         for _ in range(num + bonus):
             card: BaseCard | None
             if self.event_flags.get("abandoned_mine") and self.discard_pile:

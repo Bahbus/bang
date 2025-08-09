@@ -5,8 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import random
 
-from .deck import Deck
-from .deck_factory import create_standard_deck
 from .cards.card import BaseCard
 from .cards.roles import (
     BaseRole,
@@ -16,6 +14,9 @@ from .cards.roles import (
     SheriffRoleCard,
 )
 from .characters.base import BaseCharacter
+from .deck import Deck
+from .deck_factory import create_standard_deck
+from .event_flags import EventFlags
 from .game_manager_protocol import GameManagerProtocol
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
@@ -29,7 +30,7 @@ class DeckManagerMixin:
     expansions: list[str]
     _players: list["Player"]
     discard_pile: list[BaseCard]
-    event_flags: dict
+    event_flags: EventFlags
     current_turn: int
     turn_order: list[int]
 

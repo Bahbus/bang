@@ -1,4 +1,5 @@
 """Play a card and discard all copies in play. Bullet expansion exclusive."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -6,7 +7,7 @@ from typing import TYPE_CHECKING
 from .base import BaseCharacter
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
     from ..player import Player
     from ..cards.card import BaseCard
 
@@ -18,7 +19,7 @@ class JohnnyKisch(BaseCharacter):
     )
     starting_health = 4
 
-    def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
+    def ability(self, gm: "GameManagerProtocol", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(JohnnyKisch)
 
         def on_play(p: "Player", card: "BaseCard", _t: "Player | None") -> None:

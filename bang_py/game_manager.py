@@ -6,17 +6,18 @@ from dataclasses import dataclass, field
 from collections.abc import Callable, Iterable, Sequence
 from collections import deque
 
-from .deck import Deck
-from .cards.card import BaseCard
-from .player import Player
-from .events.event_decks import EventCard
-from .events.event_logic import EventLogicMixin
-from .card_handlers import CardHandlersMixin
-from .general_store import GeneralStoreMixin
-from .turn_phases import TurnPhasesMixin
-from .deck_manager import DeckManagerMixin
 from .ability_dispatch import AbilityDispatchMixin
+from .card_handlers import CardHandlersMixin
+from .cards.card import BaseCard
+from .deck import Deck
+from .deck_manager import DeckManagerMixin
+from .event_flags import EventFlags
+from .events.event_decks import EventCard
 from .events.event_hooks import EventHooksMixin
+from .events.event_logic import EventLogicMixin
+from .general_store import GeneralStoreMixin
+from .player import Player
+from .turn_phases import TurnPhasesMixin
 
 
 @dataclass(slots=True)
@@ -39,7 +40,7 @@ class GameManager(
     turn_order: list[int] = field(default_factory=list)
     event_deck: deque[EventCard] | None = None
     current_event: EventCard | None = None
-    event_flags: dict = field(default_factory=dict)
+    event_flags: EventFlags = field(default_factory=dict)
     first_eliminated: Player | None = None
     sheriff_turns: int = 0
     phase: str = "draw"
