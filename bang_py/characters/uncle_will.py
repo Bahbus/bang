@@ -1,4 +1,5 @@
 """Once per turn, any card becomes a General Store. Bullet expansion exclusive."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -6,24 +7,22 @@ from typing import TYPE_CHECKING
 from .base import BaseCharacter
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
     from ..player import Player
 
 
 class UncleWill(BaseCharacter):
     name = "Uncle Will"
-    description = (
-        "Once during your turn, you may play any card from your hand as a General Store."
-    )
+    description = "Once during your turn, you may play any card from your hand as a General Store."
     starting_health = 4
 
-    def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
+    def ability(self, gm: "GameManagerProtocol", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(UncleWill)
         return True
 
     def use_ability(
         self,
-        gm: "GameManager",
+        gm: "GameManagerProtocol",
         player: "Player",
         card,
     ) -> bool:
