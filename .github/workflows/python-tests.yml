@@ -22,14 +22,17 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libxcb-cursor0 libxkbcommon-x11-0 libegl1
-      - name: Install dependencies
+      - name: Install uv
         run: |
-          pip install .[dev] --pre
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Install dependencies
+        run: uv sync --extra dev
       - name: Run pre-commit
         run: |
           files=$(git diff --name-only HEAD^ -- '*.py')
           if [ -n "$files" ]; then
-            pre-commit run --files $files
+            uv run pre-commit run --files $files
           fi
       - name: Run tests
-        run: pytest
+        run: uv run pytest
