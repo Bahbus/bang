@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from typing import Protocol, TYPE_CHECKING
 
 from .event_flags import EventFlags
@@ -40,7 +40,17 @@ class GameManagerProtocol(Protocol):
     turn_started_listeners: list[Callable[[Player], None]]
     card_play_checks: list[Callable[[Player, BaseCard, Player | None], bool]]
     card_played_listeners: list[Callable[[Player, BaseCard, Player | None], None]]
+    player_damaged_listeners: list[Callable[[Player, Player | None], None]]
+    player_healed_listeners: list[Callable[[Player], None]]
+    player_death_listeners: list[Callable[[Player, Player | None], None]]
+    game_over_listeners: list[Callable[[str], None]]
     _card_handlers: dict
+    _duel_counts: dict | None
+
+    @property
+    def players(self) -> Sequence[Player]:
+        """Players in turn order."""
+        ...
 
     def initialize_main_deck(self) -> None:
         """Create the main deck and reset event flags."""
@@ -78,11 +88,35 @@ class GameManagerProtocol(Protocol):
     def on_player_healed(self, player: Player) -> None:
         """Handle ``player`` regaining health."""
 
+    def _notify_damage_listeners(self, player: Player, source: Player | None) -> None:
+        """Inform damage listeners of health loss."""
+
+    def _handle_ghost_town_revive(self, player: Player) -> bool:
+        """Return True if Ghost Town revives ``player``."""
+
+    def _record_first_elimination(self, player: Player) -> None:
+        """Record the first eliminated player."""
+
+    def _bounty_reward(self, source: Player | None) -> None:
+        """Award Bounty rewards to ``source`` if applicable."""
+
+    def _notify_death_listeners(self, player: Player, source: Player | None) -> None:
+        """Inform listeners that ``player`` has been eliminated."""
+
+    def _update_turn_order_post_death(self) -> None:
+        """Adjust turn order after a player is eliminated."""
+
+    def _determine_winner(self, alive: list[Player], has_sheriff: bool) -> str | None:
+        """Return a victory message if a win condition is met."""
+
+    def get_hand(self, viewer: Player, target: Player) -> list[str]:
+        """Return the visible hand of ``target`` for ``viewer``."""
+
     def _begin_turn(self, *, blood_target: Player | None = None) -> None:
         """Start a new turn, optionally applying Blood Brothers."""
 
-    def _check_win_conditions(self) -> None:
-        """Verify whether the game has ended."""
+    def _check_win_conditions(self) -> str | None:
+        """Return a victory message if the game has ended."""
 
     def _deal_general_store_cards(self) -> list[BaseCard]:
         """Deal cards for the General Store."""
@@ -117,6 +151,15 @@ class GameManagerProtocol(Protocol):
     def _resolve_dynamite(self, player: Player) -> bool:
         """Return ``False`` if Dynamite eliminates ``player``."""
 
+    def _process_jail(self, player: Player) -> bool:
+        """Resolve Jail effects and return ``False`` if the turn is skipped."""
+
+    def _handle_equipment_start(self, player: Player) -> bool:
+        """Process start-of-turn equipment effects."""
+
+    def _handle_character_draw_abilities(self, player: Player) -> bool:
+        """Trigger characters that modify the draw phase."""
+
     def _run_start_turn_checks(self, player: Player) -> Player | None:
         """Run start-of-turn checks returning the acting player or ``None``."""
 
@@ -128,6 +171,12 @@ class GameManagerProtocol(Protocol):
 
     def _finish_ghost_town(self, player: Player) -> None:
         """Finalize Ghost Town effects on ``player``."""
+
+    def _reset_green_equipment(self, player: Player) -> None:
+        """Reactivate green equipment at the end of the turn."""
+
+    def _advance_turn(self) -> None:
+        """Move the turn pointer and start the next turn."""
 
     def prompt_new_identity(self, player: Player) -> bool:
         """Prompt ``player`` to swap characters during New Identity."""
@@ -232,6 +281,9 @@ class GameManagerProtocol(Protocol):
 
     def _get_player_by_index(self, idx: int) -> Player | None:
         """Return the player at ``idx`` if it exists."""
+
+    def _reset_current_turn(self, current_obj: Player | None) -> None:
+        """Adjust ``current_turn`` when removing a player."""
 
 
 __all__ = ["GameManagerProtocol"]
