@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from .base import BaseCharacter
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
     from ..player import Player
 
 
@@ -16,11 +16,11 @@ class VeraCuster(BaseCharacter):
     description = "At the start of your turn, copy another living character's ability."
     starting_health = 4
 
-    def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
+    def ability(self, gm: "GameManagerProtocol", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(VeraCuster)
         return True
 
-    def copy_ability(self, gm: "GameManager", player: "Player", target: "Player") -> bool:
+    def copy_ability(self, gm: "GameManagerProtocol", player: "Player", target: "Player") -> bool:
         if not target.is_alive() or target is player:
             return True
         if target.character is None:

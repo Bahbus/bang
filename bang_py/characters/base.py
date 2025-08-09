@@ -1,11 +1,12 @@
 """Abstract base class for Bang characters."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
     from ..player import Player
 
 
@@ -23,7 +24,7 @@ class BaseCharacter(ABC):
     starting_health: int = 4
 
     @abstractmethod
-    def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
+    def ability(self, gm: "GameManagerProtocol", player: "Player", **_: object) -> bool:
         """Perform the character's special ability."""
         # ``**_`` allows subclasses to declare additional keyword arguments
         # without breaking this abstract method's signature.

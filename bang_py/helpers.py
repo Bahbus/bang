@@ -9,7 +9,7 @@ from .characters.vera_custer import VeraCuster
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from .game_manager import GameManager
+    from .game_manager_protocol import GameManagerProtocol
 
 
 def is_heart(card: BaseCard | None) -> bool:
@@ -39,7 +39,7 @@ def has_ability(player: Player, char_cls: type[BaseCharacter]) -> bool:
     return char_cls in getattr(player.metadata, "abilities", set())
 
 
-def handle_out_of_turn_discard(game: "GameManager", player: Player, card: BaseCard) -> None:
+def handle_out_of_turn_discard(game: "GameManagerProtocol", player: Player, card: BaseCard) -> None:
     """Notify the player's character of an out-of-turn discard."""
     if not game or not player:
         return
