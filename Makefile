@@ -4,10 +4,10 @@
 build-exe:
 >mkdir -p build/bang
 >echo "[Paths]\nPrefix=." > build/bang/qt.conf
->pyinstaller scripts/bang.spec
+>uv run pyinstaller scripts/bang.spec
 
 lint:
->@pre-commit run --files $(if $(FILES),$(FILES),$(shell git ls-files '*.py'))
+>@uv run pre-commit run --files $(if $(FILES),$(FILES),$(shell git ls-files '*.py'))
 
 test:
->@pytest
+>@uv run pytest
