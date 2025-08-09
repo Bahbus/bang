@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from .base import BaseRole
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ...game_manager import GameManager
+    from ...game_manager_protocol import GameManagerProtocol
     from ...player import Player
 
 
@@ -17,7 +17,7 @@ class SheriffRoleCard(BaseRole):
     card_name = "Sheriff"
     victory_message = "Sheriff and Deputies win!"
 
-    def check_win(self, gm: GameManager, player: Player) -> bool:
+    def check_win(self, gm: GameManagerProtocol, player: Player) -> bool:
         from .outlaw import OutlawRoleCard
         from .renegade import RenegadeRoleCard
 

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from .base import BaseCharacter
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
     from ..player import Player
     from ..cards.card import BaseCard
 
@@ -20,12 +20,14 @@ class MollyStark(BaseCharacter):
     )
     starting_health = 4
 
-    def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
+    def ability(self, gm: "GameManagerProtocol", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(MollyStark)
         player.metadata.molly_choices = player.metadata.molly_choices or {}
         return True
 
-    def on_out_of_turn_discard(self, gm: "GameManager", player: "Player", card: "BaseCard") -> None:
+    def on_out_of_turn_discard(
+        self, gm: "GameManagerProtocol", player: "Player", card: "BaseCard"
+    ) -> None:
         from ..cards.bang import BangCard
 
         if isinstance(card, BangCard) and getattr(gm, "_duel_counts", None) is not None:

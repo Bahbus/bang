@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from .base import BaseCharacter
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
     from ..player import Player
 
 
@@ -19,7 +19,7 @@ class ClausTheSaint(BaseCharacter):
     )
     starting_health = 3
 
-    def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
+    def ability(self, gm: "GameManagerProtocol", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(ClausTheSaint)
 
         def on_draw(p: "Player", _opts: object) -> bool:

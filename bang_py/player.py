@@ -15,14 +15,14 @@ from .cards.roles import (
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from .characters.base import BaseCharacter
     from .cards.card import BaseCard
-    from .game_manager import GameManager
+    from .game_manager_protocol import GameManagerProtocol
 
 
 @dataclass(slots=True)
 class PlayerMetadata:
     """State information associated with a player."""
 
-    game: "GameManager | None" = None
+    game: "GameManagerProtocol | None" = None
     auto_miss: bool = True
     awaiting_draw: bool = False
     bangs_played: int = 0

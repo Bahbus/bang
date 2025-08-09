@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from .base import BaseCharacter
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
     from ..player import Player
 
 
@@ -16,7 +16,7 @@ class BartCassidy(BaseCharacter):
     description = "When you lose a life point, draw a card from the deck."
     starting_health = 4
 
-    def ability(self, gm: "GameManager", player: "Player", **_: object) -> bool:
+    def ability(self, gm: "GameManagerProtocol", player: "Player", **_: object) -> bool:
         player.metadata.abilities.add(BartCassidy)
 
         def on_damaged(p: "Player", _src: "Player | None") -> None:
