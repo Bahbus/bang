@@ -38,7 +38,7 @@ class BeerCard(BaseCard):
             alive = [p for p in game.players if p.is_alive()]
             if len(alive) <= 2:
                 return
-            heal_amt = int(game.event_flags.get("beer_heal", 1))
+            heal_amt = game.event_flags.get("beer_heal", 1)
         else:
             heal_amt = 1
 
