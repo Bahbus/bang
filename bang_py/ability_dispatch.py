@@ -49,24 +49,24 @@ class AbilityDispatchMixin:
         self: GameManagerProtocol,
         player: "Player",
         target: "Player" | None = None,
-        card_name: str | None = None,
+        card: str | None = None,
     ) -> bool:
         """During draw phase, draw a card in play instead of from deck."""
         targets = [t for t in self._players if t is not player]
         if (
             isinstance(target, Player)
-            and isinstance(card_name, str)
+            and isinstance(card, str)
             and target in targets
-            and card_name in target.equipment
+            and card in target.equipment
         ):
-            card = target.unequip(card_name)
-            if card:
-                player.hand.append(card)
+            drawn = target.unequip(card)
+            if drawn:
+                player.hand.append(drawn)
                 return True
         for p in targets:
-            for card in list(p.equipment.values()):
-                p.unequip(card.card_name)
-                player.hand.append(card)
+            for eq in list(p.equipment.values()):
+                p.unequip(eq.card_name)
+                player.hand.append(eq)
                 return True
         return False
 

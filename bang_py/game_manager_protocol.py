@@ -140,6 +140,10 @@ class GameManagerProtocol(Protocol):
     def _cleanup_general_store_leftovers(self) -> None:
         """Discard any remaining General Store cards and reset state."""
 
+    def pat_brennan_draw(self, player: Player, target: Player | None, card: str | None) -> bool:
+        """Draw a card in play for Pat Brennan's ability."""
+        ...
+
     def reset_turn_flags(self, player: Player) -> None:
         """Reset per-turn ability flags on ``player``."""
 
