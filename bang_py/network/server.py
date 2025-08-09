@@ -8,13 +8,14 @@ import secrets
 import ssl
 from collections.abc import Coroutine, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 import logging
 
 from websockets.asyncio.server import serve, ServerConnection
 from websockets.exceptions import WebSocketException
 
 from ..game_manager import GameManager
+from ..game_manager_protocol import GameManagerProtocol
 from ..player import Player
 from ..cards.general_store import GeneralStoreCard
 from .messages import (
@@ -88,7 +89,7 @@ class BangServer:
         # Generate a random six-character room code using a cryptographically
         # secure RNG to avoid predictable codes.
         self.room_code = room_code or secrets.token_hex(3)
-        self.game = GameManager(expansions=expansions or [])
+        self.game: GameManagerProtocol = GameManager(expansions=expansions or [])
         self.token_key = _token_key_bytes(token_key)
         self.connections: dict[ServerConnection, Connection] = {}
         self.max_players = max_players
@@ -231,17 +232,17 @@ class BangServer:
 
         action = payload.get("action")
         if action == "draw":
-            await self._handle_draw(websocket, payload)
+            await self._handle_draw(websocket, cast(DrawPayload, payload))
         elif action == "discard":
-            await self._handle_discard(websocket, payload)
+            await self._handle_discard(websocket, cast(DiscardPayload, payload))
         elif action == "play_card":
-            await self._handle_play_card(websocket, payload)
+            await self._handle_play_card(websocket, cast(PlayCardPayload, payload))
         elif action == "general_store_pick":
-            await self._handle_general_store_pick(websocket, payload)
+            await self._handle_general_store_pick(websocket, cast(GeneralStorePickPayload, payload))
         elif action == "use_ability":
-            await self._handle_use_ability(websocket, payload)
+            await self._handle_use_ability(websocket, cast(UseAbilityPayload, payload))
         elif action == "set_auto_miss":
-            await self._handle_set_auto_miss(websocket, payload)
+            await self._handle_set_auto_miss(websocket, cast(SetAutoMissPayload, payload))
 
     async def _handle_draw(self, websocket: ServerConnection, payload: DrawPayload) -> None:
         num = int(payload.get("num", 1))
@@ -283,8 +284,8 @@ class BangServer:
                 first = order[0]
                 conn = self._find_connection(first)
                 if conn:
-                    payload = json.dumps({"prompt": "general_store", "cards": names})
-                    self._create_send_task(conn, payload)
+                    message = json.dumps({"prompt": "general_store", "cards": names})
+                    self._create_send_task(conn, message)
         else:
             self.game.play_card(player, card, target)
             desc = f"{player.name} played {card.__class__.__name__}"
@@ -303,16 +304,18 @@ class BangServer:
         if self.game.general_store_pick(player, idx):
             await self.broadcast_state()
             if self.game.general_store_cards is not None:
-                nxt = self.game.general_store_order[self.game.general_store_index]
-                conn = self._find_connection(nxt)
-                if conn:
-                    payload = json.dumps(
-                        {
-                            "prompt": "general_store",
-                            "cards": [c.card_name for c in self.game.general_store_cards],
-                        }
-                    )
-                    self._create_send_task(conn, payload)
+                order = self.game.general_store_order
+                if order is not None:
+                    nxt = order[self.game.general_store_index]
+                    conn = self._find_connection(nxt)
+                    if conn:
+                        message = json.dumps(
+                            {
+                                "prompt": "general_store",
+                                "cards": [c.card_name for c in self.game.general_store_cards],
+                            }
+                        )
+                        self._create_send_task(conn, message)
 
     async def _handle_use_ability(
         self, websocket: ServerConnection, payload: UseAbilityPayload
@@ -328,7 +331,8 @@ class BangServer:
 
     async def _ability_sid_ketchum(self, player: Player, payload: SidKetchumPayload) -> bool:
         idxs = payload.get("indices") or []
-        self.game.sid_ketchum_ability(player, idxs)
+        if player.character and hasattr(player.character, "use_ability"):
+            player.character.use_ability(self.game, player, indices=idxs)
         return False
 
     async def _ability_chuck_wengam(self, player: Player, _payload: ChuckWengamPayload) -> bool:
@@ -380,7 +384,7 @@ class BangServer:
 
     async def _ability_pat_brennan(self, player: Player, payload: PatBrennanPayload) -> bool:
         idx = payload.get("target")
-        card = payload.get("card")
+        card = cast(str | None, payload.get("card"))
         target = self.game.get_player_by_index(idx) if idx is not None else None
         self.game.draw_phase(player, pat_target=target, pat_card=card)
         return False
@@ -477,7 +481,7 @@ class BangServer:
         options = [
             {"index": i, "name": p.character.name}
             for i, p in enumerate(self.game.players)
-            if p is not player and p.is_alive()
+            if p is not player and p.is_alive() and p.character is not None
         ]
         if options:
             payload = json.dumps({"prompt": "vera", "options": options})

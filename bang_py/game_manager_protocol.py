@@ -72,6 +72,12 @@ class GameManagerProtocol(Protocol):
     def _register_card_handlers(self, groups: Iterable[str] | None = None) -> None:
         """Populate the card handler registry."""
 
+    def add_player(self, player: Player) -> None:
+        """Add ``player`` to the game."""
+
+    def remove_player(self, player: Player) -> None:
+        """Remove ``player`` from the game."""
+
     def draw_card(self, player: Player, num: int = 1) -> None:
         """Draw ``num`` cards for ``player``."""
 
@@ -151,13 +157,41 @@ class GameManagerProtocol(Protocol):
         """Draw a card in play for Pat Brennan's ability."""
         ...
 
+    def chuck_wengam_ability(self, player: Player) -> None:
+        """Lose 1 life to draw 2 cards."""
+
+    def doc_holyday_ability(self, player: Player, indices: list[int] | None = None) -> None:
+        """Discard two cards to gain a free Bang!."""
+
+    def vera_custer_copy(self, player: Player, target: Player) -> None:
+        """Copy ``target``'s ability for the turn."""
+
+    def uncle_will_ability(self, player: Player, card: BaseCard) -> bool:
+        """Play ``card`` as a General Store once per turn."""
+
     def reset_turn_flags(self, player: Player) -> None:
         """Reset per-turn ability flags on ``player``."""
 
     def discard_phase(self, player: Player) -> None:
         """Execute the discard phase for ``player``."""
 
-    def draw_phase(self, player: Player, **kwargs: object) -> None:
+    def draw_phase(
+        self,
+        player: Player,
+        *,
+        jesse_target: Player | None = None,
+        jesse_card: int | None = None,
+        kit_back: int | None = None,
+        pedro_use_discard: bool | None = None,
+        jose_equipment: int | None = None,
+        pat_target: Player | None = None,
+        pat_card: str | None = None,
+        skip_heal: bool | None = None,
+        peyote_guesses: list[str] | None = None,
+        ranch_discards: list[int] | None = None,
+        handcuffs_suit: str | None = None,
+        blood_target: Player | None = None,
+    ) -> None:
         """Execute the draw phase for ``player``."""
 
     def play_phase(self, player: Player) -> None:
@@ -183,6 +217,9 @@ class GameManagerProtocol(Protocol):
 
     def _run_start_turn_checks(self, player: Player) -> Player | None:
         """Run start-of-turn checks returning the acting player or ``None``."""
+
+    def end_turn(self) -> None:
+        """Finish the current player's turn and advance to the next."""
 
     def _maybe_revive_ghost_town(self, player: Player) -> bool:
         """Return True if Ghost Town revives ``player``."""
@@ -317,6 +354,9 @@ class GameManagerProtocol(Protocol):
 
     def _next_alive_player(self, player: Player) -> Player | None:
         """Return the next living player to the left of ``player``."""
+
+    def get_player_by_index(self, idx: int) -> Player | None:
+        """Return the player at ``idx`` if it exists."""
 
     def _get_player_by_index(self, idx: int) -> Player | None:
         """Return the player at ``idx`` if it exists."""
