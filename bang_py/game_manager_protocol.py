@@ -35,6 +35,7 @@ class GameManagerProtocol(Protocol):
     general_store_cards: list[BaseCard] | None
     general_store_order: list[Player] | None
     general_store_index: int
+    # Event listeners
     draw_phase_listeners: list[Callable[[Player, object], bool]]
     play_phase_listeners: list[Callable[[Player], None]]
     turn_started_listeners: list[Callable[[Player], None]]
