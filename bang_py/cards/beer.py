@@ -6,7 +6,7 @@ from ..player import Player
 from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
 
 
 class BeerCard(BaseCard):
@@ -20,7 +20,7 @@ class BeerCard(BaseCard):
         self,
         target: Player | None,
         player: Player | None = None,
-        game: "GameManager" | None = None,
+        game: "GameManagerProtocol" | None = None,
         **kwargs: Any,
     ) -> None:
         """Heal the target if allowed by game state and abilities."""

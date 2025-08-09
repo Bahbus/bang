@@ -8,7 +8,7 @@ from ...player import Player
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...game_manager import GameManager
+    from ...game_manager_protocol import GameManagerProtocol
 
 
 class AmbushEventCard(BaseEventCard):
@@ -17,15 +17,14 @@ class AmbushEventCard(BaseEventCard):
     card_name = "Ambush"
     card_set = "fistful_of_cards"
     description = (
-        "The distance between any two players is 1. "
-        "Only other cards in play may modify this."
+        "The distance between any two players is 1. " "Only other cards in play may modify this."
     )
 
     def play(
         self,
         target: Player | None = None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
     ) -> None:
         """Activate the Ambush event."""
         if game:

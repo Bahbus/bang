@@ -8,7 +8,7 @@ from ...player import Player
 from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
-    from ...game_manager import GameManager
+    from ...game_manager_protocol import GameManagerProtocol
 
 
 class TheReverendEventCard(BaseEventCard):
@@ -23,7 +23,7 @@ class TheReverendEventCard(BaseEventCard):
         self,
         target: Player | None = None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
     ) -> None:
         """Activate the Reverend event."""
         if game:

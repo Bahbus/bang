@@ -6,7 +6,7 @@ from ...player import Player
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints
-    from ...game_manager import GameManager
+    from ...game_manager_protocol import GameManagerProtocol
 
 
 class BaseEventCard:
@@ -26,10 +26,10 @@ class BaseEventCard:
         self,
         target: Player | None = None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
     ) -> None:
         raise NotImplementedError
 
-    def apply(self, game: GameManager) -> None:
+    def apply(self, game: GameManagerProtocol) -> None:
         """Execute this event's effect."""
         self.play(game=game)

@@ -7,7 +7,7 @@ from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from ..deck import Deck
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
 
 
 class StagecoachCard(BaseCard):
@@ -20,7 +20,7 @@ class StagecoachCard(BaseCard):
     def play(
         self,
         target: Player | None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
         deck: Deck | None = None,
         **kwargs: Any,
     ) -> None:

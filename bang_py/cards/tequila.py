@@ -8,7 +8,7 @@ from typing import Any, TYPE_CHECKING, override
 from ..helpers import handle_out_of_turn_discard
 
 if TYPE_CHECKING:
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
 
 
 class TequilaCard(BaseCard):
@@ -24,7 +24,7 @@ class TequilaCard(BaseCard):
         self,
         target: Player | None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
         *,
         discard_idx: int = 0,
         **kwargs: Any,
