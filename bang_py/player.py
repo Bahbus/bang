@@ -1,9 +1,11 @@
 """Player representation and related helper data for Bang."""
 
 from __future__ import annotations
+
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from .cards.roles import (
     BaseRole,
@@ -72,7 +74,7 @@ class Player:
 
     @property
     def metadata(self) -> PlayerMetadata:
-        """Player metadata (read-only reference)."""
+        """Return player metadata as a read-only reference."""
         return self._metadata
 
     @property
