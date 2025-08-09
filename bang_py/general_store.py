@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .cards.card import BaseCard
+from .deck import Deck
 from .game_manager_protocol import GameManagerProtocol
 
 if TYPE_CHECKING:
@@ -17,7 +18,7 @@ class GeneralStoreMixin:
     general_store_cards: list[BaseCard] | None
     general_store_order: list["Player"] | None
     general_store_index: int
-    deck: object
+    deck: Deck | None
     discard_pile: list[BaseCard]
     _players: list["Player"]
 

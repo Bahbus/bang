@@ -9,6 +9,7 @@ from ..characters.jose_delgado import JoseDelgado
 from ..characters.kit_carlson import KitCarlson
 from ..characters.pat_brennan import PatBrennan
 from ..characters.pedro_ramirez import PedroRamirez
+from ..deck import Deck
 from ..event_flags import EventFlags
 from ..game_manager_protocol import GameManagerProtocol
 
@@ -27,7 +28,7 @@ class TurnFlowMixin:
     play_phase_listeners: list
     turn_started_listeners: list
     discard_pile: list
-    deck: object
+    deck: Deck | None
     event_flags: EventFlags
 
     def play_phase(self: GameManagerProtocol, player: "Player") -> None:

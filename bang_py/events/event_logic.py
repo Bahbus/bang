@@ -10,9 +10,10 @@ from typing import Any
 
 from .event_decks import EventCard, create_high_noon_deck, create_fistful_deck
 from ..cards.roles import SheriffRoleCard
-from ..player import Player
-from ..game_manager_protocol import GameManagerProtocol
+from ..deck import Deck
 from ..event_flags import EventFlags
+from ..game_manager_protocol import GameManagerProtocol
+from ..player import Player
 
 
 class EventLogicMixin:
@@ -22,7 +23,7 @@ class EventLogicMixin:
     current_event: EventCard | None
     event_flags: EventFlags
     expansions: list[str]
-    deck: object
+    deck: Deck | None
     discard_pile: list[Any]
     _players: list[Any]
     turn_order: list[int]
