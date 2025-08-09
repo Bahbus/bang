@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import logging
 from collections.abc import Sequence
 
 from .server import BangServer
@@ -38,7 +39,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     )
 
     if args.show_token:
-        print(server.generate_join_token())
+        logging.info(server.generate_join_token())
         return
 
     asyncio.run(server.start())
