@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from collections import deque
 
 from .deck import Deck
@@ -79,8 +79,22 @@ class GameManager(
         """Return True if the player opts to switch characters."""
         return True
 
+    # ------------------------------------------------------------------
+    # Protocol wrappers
+    def initialize_main_deck(self) -> None:
+        """Create the main deck and reset event flags."""
+        self._initialize_main_deck()
+
+    def initialize_event_deck(self) -> None:
+        """Build the event deck based on active expansions."""
+        self._initialize_event_deck()
+
+    def register_card_handlers(self, groups: Iterable[str] | None = None) -> None:
+        """Populate the card handler registry."""
+        self._register_card_handlers(groups)
+
     def __post_init__(self) -> None:
         """Initialize decks and register card handlers."""
-        self._initialize_main_deck()
-        self._initialize_event_deck()
-        self._register_card_handlers()
+        self.initialize_main_deck()
+        self.initialize_event_deck()
+        self.register_card_handlers()
