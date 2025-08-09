@@ -10,6 +10,9 @@ from bang_py.card_handlers import (
 
 
 def test_register_specific_handler_groups():
+    assert hasattr(CardHandlersMixin, "_dispatch_play")
+    assert hasattr(CardHandlersMixin, "_play_bang_card")
+
     deck = Deck([BangCard(), BangCard(), BangCard()])
     gm = GameManager(deck=deck)
     gm._card_handlers = {}
@@ -26,9 +29,3 @@ def test_register_specific_handler_groups():
     register_handler_groups(gm, ["basic", "green"])
     gm.play_card(p1, p1.hand[0])
     assert len(p1.hand) == 3
-
-
-def test_card_handlers_mixin_includes_methods() -> None:
-    """CardHandlersMixin should expose combined dispatch helpers."""
-    assert hasattr(CardHandlersMixin, "_dispatch_play")
-    assert hasattr(CardHandlersMixin, "_play_bang_card")
