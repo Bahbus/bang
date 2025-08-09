@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import Protocol, TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
@@ -39,6 +39,15 @@ class GameManagerProtocol(Protocol):
     card_play_checks: list[Callable[[Player, BaseCard, Player | None], bool]]
     card_played_listeners: list[Callable[[Player, BaseCard, Player | None], None]]
     _card_handlers: dict
+
+    def initialize_main_deck(self) -> None:
+        """Create the main deck and reset event flags."""
+
+    def initialize_event_deck(self) -> None:
+        """Build and shuffle the event deck based on expansions."""
+
+    def register_card_handlers(self, groups: Iterable[str] | None = None) -> None:
+        """Populate the card handler registry."""
 
     def draw_card(self, player: Player, num: int = 1) -> None:
         """Draw ``num`` cards for ``player``."""
