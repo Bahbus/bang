@@ -69,6 +69,7 @@ Item {
                 id: portField
                 placeholderText: qsTr("Port (1-65535)")
                 text: qsTr("8765")
+                maximumLength: 5
                 validator: IntValidator { bottom: 1; top: 65535 }
             }
             Label {
@@ -141,6 +142,7 @@ Item {
                 id: portJoinField
                 placeholderText: qsTr("Port (1-65535)")
                 text: qsTr("8765")
+                maximumLength: 5
                 validator: IntValidator { bottom: 1; top: 65535 }
             }
             Label {
