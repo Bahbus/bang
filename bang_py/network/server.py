@@ -16,13 +16,6 @@ from websockets.exceptions import WebSocketException
 
 from ..game_manager import GameManager
 from ..player import Player
-from ..characters.jesse_jones import JesseJones
-from ..characters.jose_delgado import JoseDelgado
-from ..characters.kit_carlson import KitCarlson
-from ..characters.lucky_duke import LuckyDuke
-from ..characters.pat_brennan import PatBrennan
-from ..characters.pedro_ramirez import PedroRamirez
-from ..characters.vera_custer import VeraCuster
 from ..cards.general_store import GeneralStoreCard
 from .messages import (
     ChuckWengamPayload,
@@ -470,6 +463,8 @@ class BangServer:
         if not conn:
             return
 
+        from ..characters.vera_custer import VeraCuster
+
         if isinstance(player.character, VeraCuster):
             self._start_vera_custer(conn, player)
             return
@@ -504,6 +499,8 @@ class BangServer:
         self._spawn_broadcast(self.broadcast_state())
 
     def _start_jesse_jones(self, conn: Connection, player: Player) -> bool:
+        from ..characters.jesse_jones import JesseJones
+
         if not isinstance(player.character, JesseJones):
             return False
         targets = [
@@ -520,6 +517,8 @@ class BangServer:
         return True
 
     def _start_kit_carlson(self, conn: Connection, player: Player) -> bool:
+        from ..characters.kit_carlson import KitCarlson
+
         if not isinstance(player.character, KitCarlson):
             return False
         deck = self.game.deck
@@ -533,6 +532,8 @@ class BangServer:
         return True
 
     def _start_pedro_ramirez(self, conn: Connection, player: Player) -> bool:
+        from ..characters.pedro_ramirez import PedroRamirez
+
         if not isinstance(player.character, PedroRamirez):
             return False
         if self.game.discard_pile:
@@ -544,6 +545,8 @@ class BangServer:
         return True
 
     def _start_jose_delgado(self, conn: Connection, player: Player) -> bool:
+        from ..characters.jose_delgado import JoseDelgado
+
         if not isinstance(player.character, JoseDelgado):
             return False
         equips = [
@@ -560,6 +563,8 @@ class BangServer:
         return True
 
     def _start_pat_brennan(self, conn: Connection, player: Player) -> bool:
+        from ..characters.pat_brennan import PatBrennan
+
         if not isinstance(player.character, PatBrennan):
             return False
         targets = []
@@ -576,6 +581,8 @@ class BangServer:
         return True
 
     def _start_lucky_duke(self, conn: Connection, player: Player) -> bool:
+        from ..characters.lucky_duke import LuckyDuke
+
         if not isinstance(player.character, LuckyDuke):
             return False
         deck = self.game.deck
