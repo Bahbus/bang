@@ -99,6 +99,35 @@ class GameManager(
         gm: GameManagerProtocol = cast(GameManagerProtocol, self)
         gm._register_card_handlers(groups)
 
+    def start_general_store(self, player: Player) -> list[str]:
+        """Deal cards for the General Store and establish the pick order."""
+        gm: GameManagerProtocol = cast(GameManagerProtocol, self)
+        if not gm.deck:
+            gm.general_store_cards = []
+            gm.general_store_order = []
+            gm.general_store_index = 0
+            return []
+        cards = gm._deal_general_store_cards()
+        gm.general_store_cards = cards
+        gm._set_general_store_order(player)
+        return [c.card_name for c in cards]
+
+    def general_store_pick(self, player: Player, index: int) -> bool:
+        """Allow ``player`` to take a card from the General Store."""
+        gm: GameManagerProtocol = cast(GameManagerProtocol, self)
+        if not gm._valid_general_store_pick(player, index):
+            return False
+        cards = gm.general_store_cards
+        order = gm.general_store_order
+        if cards is None or order is None:
+            return False
+        card = cards.pop(index)
+        player.hand.append(card)
+        gm.general_store_index += 1
+        if gm.general_store_index >= len(order):
+            gm._cleanup_general_store_leftovers()
+        return True
+
     def __post_init__(self) -> None:
         """Initialize decks and register card handlers."""
         self.initialize_main_deck()

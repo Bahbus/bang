@@ -128,6 +128,12 @@ class GameManagerProtocol(Protocol):
     def _check_win_conditions(self) -> str | None:
         """Return a victory message if the game has ended."""
 
+    def start_general_store(self, player: Player) -> list[str]:
+        """Deal cards for the General Store and set pick order."""
+
+    def general_store_pick(self, player: Player, index: int) -> bool:
+        """Let ``player`` take the card at ``index`` from the General Store."""
+
     def _deal_general_store_cards(self) -> list[BaseCard]:
         """Deal cards for the General Store."""
 
