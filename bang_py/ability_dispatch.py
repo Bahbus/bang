@@ -85,8 +85,10 @@ class AbilityDispatchMixin:
             return
         if not isinstance(target, Player):
             return
-        if not target.is_alive() or target is player or target.character is None:
+        if not target.is_alive() or target is player:
             return
+        if target.character is None:
+            raise ValueError("Target has no character to copy")
         player.metadata.vera_copy = target.character.__class__
         player.metadata.abilities.add(target.character.__class__)
         target.character.ability(self, player)
