@@ -28,6 +28,10 @@ ICON_DIR = ASSETS_DIR / "icons"
 
 _character_image_cache: dict[str, QtGui.QPixmap] = {}
 _sound_cache: dict[str, QtCore.QObject] = {}
+_composed_pixmap_cache: dict[
+    tuple[str, int | str | None, str | None, str | None, str | None],
+    QtGui.QPixmap,
+] = {}
 
 
 def clear_character_image_cache() -> None:
@@ -42,6 +46,11 @@ clear_pixmap_cache = clear_character_image_cache
 def clear_sound_cache() -> None:
     """Clear the module level sound cache."""
     _sound_cache.clear()
+
+
+def clear_composed_pixmap_cache() -> None:
+    """Clear the module level composed card pixmap cache."""
+    _composed_pixmap_cache.clear()
 
 
 # Mapping of card/ability identifiers to icon filenames.
@@ -172,10 +181,6 @@ class CardImageLoader:
         self.card_backs = self._load_card_backs(width, height)
         self.rank_loader = RankSuitIconLoader()
         self.action_icons = self._load_action_icons()
-        self._compose_cache: dict[
-            tuple[str, int | str | None, str | None, str | None, str | None],
-            QtGui.QPixmap,
-        ] = {}
 
     @staticmethod
     def _fallback_pixmap(width: int, height: int) -> QtGui.QPixmap:
@@ -247,7 +252,7 @@ class CardImageLoader:
 
     def clear_cache(self) -> None:
         """Remove all cached composed card pixmaps."""
-        self._compose_cache.clear()
+        clear_composed_pixmap_cache()
 
     def reload_assets(self) -> None:
         """Reload templates and icons, invalidating the compose cache."""
@@ -266,7 +271,7 @@ class CardImageLoader:
     ) -> QtGui.QPixmap:
         """Return a card pixmap with optional rank/suit and action icon overlays."""
         key = (card_type, rank, suit, card_set, name)
-        cached = self._compose_cache.get(key)
+        cached = _composed_pixmap_cache.get(key)
         if cached is not None:
             return cached
         template_name = self._template_for(card_type, card_set)
@@ -297,7 +302,7 @@ class CardImageLoader:
                 y = self.height - action_icon.height()
                 painter.drawPixmap(x, y, action_icon)
         painter.end()
-        self._compose_cache[key] = base
+        _composed_pixmap_cache[key] = base
         return base
 
     @staticmethod
