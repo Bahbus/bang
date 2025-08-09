@@ -26,13 +26,17 @@ CHARACTER_DIR = ASSETS_DIR / "characters"
 AUDIO_DIR = ASSETS_DIR / "audio"
 ICON_DIR = ASSETS_DIR / "icons"
 
-_pixmap_cache: dict[str, QtGui.QPixmap] = {}
+_character_image_cache: dict[str, QtGui.QPixmap] = {}
 _sound_cache: dict[str, QtCore.QObject] = {}
 
 
-def clear_pixmap_cache() -> None:
-    """Clear the module level pixmap cache."""
-    _pixmap_cache.clear()
+def clear_character_image_cache() -> None:
+    """Clear the module level character image cache."""
+    _character_image_cache.clear()
+
+
+# Backwards compatible alias for older tests
+clear_pixmap_cache = clear_character_image_cache
 
 
 def clear_sound_cache() -> None:
@@ -79,8 +83,9 @@ def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.
     """Return a portrait pixmap for ``name`` or a default image."""
     base = name.lower().replace(" ", "_")
     cache_key = f"{base}:{width}x{height}"
-    if cache_key in _pixmap_cache:
-        return _pixmap_cache[cache_key]
+    cached = _character_image_cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     for ext in (".webp", ".png", ".jpg", ".jpeg"):
         path = CHARACTER_DIR / f"{base}{ext}"
@@ -91,7 +96,7 @@ def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.
     if not path.exists():
         pix = QtGui.QPixmap(width, height)
         pix.fill(QtGui.QColor("gray"))
-        _pixmap_cache[cache_key] = pix
+        _character_image_cache[cache_key] = pix
         return pix
     with resources.as_file(path) as file_path:
         pix = QtGui.QPixmap(str(file_path))
@@ -105,7 +110,7 @@ def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.
             QtCore.Qt.KeepAspectRatio,
             QtCore.Qt.SmoothTransformation,
         )
-    _pixmap_cache[cache_key] = pix
+    _character_image_cache[cache_key] = pix
     return pix
 
 
