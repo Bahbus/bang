@@ -11,7 +11,7 @@ from typing import override
 from PySide6 import QtCore
 from typing import TYPE_CHECKING
 
-from websockets.asyncio import ClientConnection, WebSocketException, connect
+from websockets import ClientConnection, WebSocketException, connect
 
 from ...network.server import BangServer
 
