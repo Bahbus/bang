@@ -21,8 +21,10 @@ class VeraCuster(BaseCharacter):
         return True
 
     def copy_ability(self, gm: "GameManager", player: "Player", target: "Player") -> bool:
-        if not target.is_alive() or target is player or target.character is None:
+        if not target.is_alive() or target is player:
             return True
+        if target.character is None:
+            raise ValueError("Target has no character to copy")
         player.metadata.vera_copy = target.character.__class__
         player.metadata.abilities.add(target.character.__class__)
         target.character.ability(gm, player)
