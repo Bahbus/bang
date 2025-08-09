@@ -99,3 +99,11 @@ class GameManager(
         self.initialize_main_deck()
         self.initialize_event_deck()
         self.register_card_handlers()
+
+    def on_player_damaged(self, player: Player, source: Player | None = None) -> None:
+        """Hook fired when a player takes damage."""
+        super().on_player_damaged(player, source)
+
+    def on_player_healed(self, player: Player) -> None:
+        """Hook fired when a player regains health."""
+        super().on_player_healed(player)

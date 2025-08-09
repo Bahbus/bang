@@ -74,7 +74,7 @@ class DispatchMixin:
         target: "Player" | None,
     ) -> None:
         if target:
-            card.play(target, player, game=self)
+            card.play(target, player=player, game=self)
 
     def _handler_self_player_game(
         self: GameManagerProtocol,
@@ -82,7 +82,7 @@ class DispatchMixin:
         card: BaseCard,
         target: "Player" | None,
     ) -> None:
-        card.play(player, player, game=self)
+        card.play(player, player=player, game=self)
 
     def _handler_target_or_self_player_game(
         self: GameManagerProtocol,
@@ -90,7 +90,7 @@ class DispatchMixin:
         card: BaseCard,
         target: "Player" | None,
     ) -> None:
-        card.play(target or player, player, game=self)
+        card.play(target or player, player=player, game=self)
 
     def _handler_target_player(
         self: GameManagerProtocol,
@@ -99,7 +99,7 @@ class DispatchMixin:
         target: "Player" | None,
     ) -> None:
         if target:
-            card.play(target, player)
+            card.play(target, player=player)
 
     def _register_card_handlers(
         self: GameManagerProtocol, groups: Iterable[str] | None = None
