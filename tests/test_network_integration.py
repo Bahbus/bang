@@ -9,8 +9,7 @@ pytest.importorskip("trustme")
 pytest.importorskip("websockets")
 
 import trustme  # noqa: E402
-from websockets.asyncio.client import connect  # noqa: E402
-from websockets.asyncio.server import serve  # noqa: E402
+from websockets.asyncio import connect, serve  # noqa: E402
 
 from bang_py.cards.bang import BangCard  # noqa: E402
 from bang_py.network.server import BangServer  # noqa: E402
