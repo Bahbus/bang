@@ -130,17 +130,17 @@ class GameManager(
 
     def _handle_missed_as_bang(self, player: Player, card: BaseCard, target: Player | None) -> bool:
         """Treat Missed! cards as Bang."""
-        return super()._handle_missed_as_bang(player, card, target)
+        return super(GameManager, self)._handle_missed_as_bang(player, card, target)
 
     def _advance_turn(self) -> None:
         """Advance to the next player's turn."""
-        super()._advance_turn()
+        super(GameManager, self)._advance_turn()
 
     def pat_brennan_draw(
         self, player: Player, target: Player | None = None, card: str | None = None
     ) -> bool:
         """Handle Pat Brennan's draw ability."""
-        return super().pat_brennan_draw(player, target, card)
+        return super(GameManager, self).pat_brennan_draw(player, target, card)
 
     def __post_init__(self) -> None:
         """Initialize decks and register card handlers."""
