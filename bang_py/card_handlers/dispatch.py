@@ -290,10 +290,11 @@ class DispatchMixin:
     ) -> None:
         """Handle damage, discard and Bang! bookkeeping."""
         self._apply_damage_and_healing(player, target, before)
-        self._pass_left_or_discard(player, card)
+        gm = cast(GameManagerProtocol, self)
+        gm._pass_left_or_discard(player, card)
         if is_bang:
-            self._update_bang_counters(player)
-        self._draw_if_empty(player)
+            gm._update_bang_counters(player)
+        gm._draw_if_empty(player)
 
     def _apply_damage_and_healing(
         self, source: "Player", target: "Player" | None, before: int | None
@@ -322,11 +323,12 @@ class DispatchMixin:
         """Discard ``card`` from ``player`` and process event effects."""
         if card in player.hand:
             player.hand.remove(card)
-            self._pass_left_or_discard(player, card)
-            if not self.event_flags.get("river"):
-                handle_out_of_turn_discard(self, player, card)
+            gm = cast(GameManagerProtocol, self)
+            gm._pass_left_or_discard(player, card)
+            if not gm.event_flags.get("river"):
+                handle_out_of_turn_discard(gm, player, card)
             if player.metadata.draw_when_empty and not player.hand:
-                self.draw_card(player)
+                gm.draw_card(player)
 
     def _pass_left_or_discard(self: GameManagerProtocol, player: "Player", card: BaseCard) -> None:
         """Pass card to the left during River, otherwise discard."""
