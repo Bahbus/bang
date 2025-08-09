@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
-from collections import deque
-import random
 
 from ..cards.card import BaseCard
 from ..deck import Deck
@@ -38,11 +36,9 @@ class DrawPhaseMixin:
             raise RuntimeError("Deck required")
         card = deck.draw()
         if card is None and self.discard_pile:
-            deck.cards.extend(self.discard_pile)
+            deck.extend(self.discard_pile)
             self.discard_pile.clear()
-            cards = list(deck.cards)
-            random.shuffle(cards)
-            deck.cards = deque(cards)
+            deck.shuffle()
             card = deck.draw()
         return card
 
