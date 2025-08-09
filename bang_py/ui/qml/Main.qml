@@ -74,7 +74,7 @@ Item {
             Label {
                 text: qsTr("Enter a valid port")
                 color: "red"
-                visible: !portField.acceptableInput
+                visible: portField.text !== "" && !portField.acceptableInput
             }
             TextField {
                 id: maxField
@@ -85,7 +85,7 @@ Item {
             Label {
                 text: qsTr("Players must be 2-8")
                 color: "red"
-                visible: !maxField.acceptableInput
+                visible: maxField.text !== "" && !maxField.acceptableInput
             }
             TextField {
                 id: certField
@@ -123,7 +123,8 @@ Item {
             TextField {
                 id: tokenField
                 placeholderText: qsTr("Token")
-                validator: RegExpValidator { regExp: /^[A-Za-z0-9+\/_=-]{0,256}$/ }
+                maximumLength: 256
+                validator: RegExpValidator { regExp: /^[A-Za-z0-9+\/_=-]*$/ }
             }
             Label {
                 text: qsTr("Invalid token")
@@ -145,11 +146,12 @@ Item {
             Label {
                 text: qsTr("Enter a valid port")
                 color: "red"
-                visible: !portJoinField.acceptableInput
+                visible: portJoinField.text !== "" && !portJoinField.acceptableInput
             }
             TextField {
                 id: codeField
                 placeholderText: qsTr("Room Code (6 hex)")
+                maximumLength: 6
                 validator: RegExpValidator { regExp: /^[0-9A-Fa-f]{6}$/ }
             }
             Label {
