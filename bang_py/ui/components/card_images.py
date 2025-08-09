@@ -1,4 +1,4 @@
-"""Load card images, templates, action icons and audio used by the Bang UI."""
+"""Load and cache card assets and audio used by the Bang UI."""
 
 from __future__ import annotations
 
@@ -145,7 +145,7 @@ def load_sound(name: str, parent: QtCore.QObject | None = None) -> QtCore.QObjec
         """Small helper to ensure playback stops when deleted."""
 
         def __del__(self) -> None:  # pragma: no cover - best effort
-            with suppress(Exception):
+            with suppress(RuntimeError):
                 self.stop()
 
     path = None
