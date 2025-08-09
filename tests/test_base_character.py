@@ -1,5 +1,6 @@
 from bang_py.characters.base import BaseCharacter
 from bang_py.game_manager import GameManager
+from bang_py.game_manager_protocol import GameManagerProtocol
 from bang_py.player import Player
 import pytest
 
@@ -7,7 +8,7 @@ import pytest
 class Dummy(BaseCharacter):
     """Minimal concrete character for testing."""
 
-    def ability(self, gm: GameManager, player: Player, **_: object) -> bool:
+    def ability(self, gm: GameManagerProtocol, player: Player, **_: object) -> bool:
         return True
 
 
@@ -17,7 +18,7 @@ def test_base_character_is_abstract() -> None:
 
 
 class NullChar(BaseCharacter):
-    def ability(self, gm: GameManager, player: Player, **_: object) -> bool:
+    def ability(self, gm: GameManagerProtocol, player: Player, **_: object) -> bool:
         return False
 
 
