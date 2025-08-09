@@ -232,22 +232,22 @@ class BangServer:
 
         action = payload.get("action")
         if action == "draw":
-            draw_payload = cast(DrawPayload, payload)
+            draw_payload: DrawPayload = cast(DrawPayload, payload)
             await self._handle_draw(websocket, draw_payload)
         elif action == "discard":
-            discard_payload = cast(DiscardPayload, payload)
+            discard_payload: DiscardPayload = cast(DiscardPayload, payload)
             await self._handle_discard(websocket, discard_payload)
         elif action == "play_card":
-            play_payload = cast(PlayCardPayload, payload)
+            play_payload: PlayCardPayload = cast(PlayCardPayload, payload)
             await self._handle_play_card(websocket, play_payload)
         elif action == "general_store_pick":
-            store_payload = cast(GeneralStorePickPayload, payload)
+            store_payload: GeneralStorePickPayload = cast(GeneralStorePickPayload, payload)
             await self._handle_general_store_pick(websocket, store_payload)
         elif action == "use_ability":
-            ability_payload = cast(UseAbilityPayload, payload)
+            ability_payload: UseAbilityPayload = cast(UseAbilityPayload, payload)
             await self._handle_use_ability(websocket, ability_payload)
         elif action == "set_auto_miss":
-            auto_miss_payload = cast(SetAutoMissPayload, payload)
+            auto_miss_payload: SetAutoMissPayload = cast(SetAutoMissPayload, payload)
             await self._handle_set_auto_miss(websocket, auto_miss_payload)
 
     async def _handle_draw(self, websocket: ServerConnection, payload: DrawPayload) -> None:
@@ -276,6 +276,8 @@ class BangServer:
         target = None
         if target_idx is not None:
             target = self.game.get_player_by_index(target_idx)
+            if target is None:
+                return
 
         card = player.hand[idx]
         if isinstance(card, GeneralStoreCard):
@@ -352,15 +354,22 @@ class BangServer:
 
     async def _ability_vera_custer(self, player: Player, payload: VeraCusterPayload) -> bool:
         idx = payload.get("target")
-        target = self.game.get_player_by_index(idx) if idx is not None else None
-        if target:
-            self.game.vera_custer_copy(player, target)
+        target = None
+        if idx is not None:
+            target = self.game.get_player_by_index(idx)
+        if target is None:
+            return False
+        self.game.vera_custer_copy(player, target)
         return False
 
     async def _ability_jesse_jones(self, player: Player, payload: JesseJonesPayload) -> bool:
         idx = payload.get("target")
         card_idx = payload.get("card_index")
-        target = self.game.get_player_by_index(idx) if idx is not None else None
+        target = None
+        if idx is not None:
+            target = self.game.get_player_by_index(idx)
+            if target is None:
+                return False
         self.game.draw_phase(player, jesse_target=target, jesse_card=card_idx)
         return False
 
@@ -391,7 +400,11 @@ class BangServer:
     async def _ability_pat_brennan(self, player: Player, payload: PatBrennanPayload) -> bool:
         idx = payload.get("target")
         card = cast(str | None, payload.get("card"))
-        target = self.game.get_player_by_index(idx) if idx is not None else None
+        target = None
+        if idx is not None:
+            target = self.game.get_player_by_index(idx)
+            if target is None:
+                return False
         self.game.draw_phase(player, pat_target=target, pat_card=card)
         return False
 
