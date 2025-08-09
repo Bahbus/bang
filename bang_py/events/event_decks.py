@@ -42,8 +42,8 @@ from ..cards.events import (
 )
 from ..player import Player
 
-if TYPE_CHECKING:
-    from ..game_manager import GameManager
+if TYPE_CHECKING:  # pragma: no cover - imported for type checking
+    from ..game_manager_protocol import GameManagerProtocol
 
 
 EVENT_CARD_MAP: dict[str, type[BaseEventCard]] = {
@@ -85,7 +85,7 @@ class EventCard:
     """Card used in event deck expansions."""
 
     name: str
-    effect: Callable[[GameManager], None]
+    effect: Callable[[GameManagerProtocol], None]
     description: str = ""
 
     card_type: str = "event"
@@ -98,7 +98,7 @@ class EventCard:
         """Set ``card_name`` to the event name."""
         self.card_name = self.name
 
-    def apply(self, game: GameManager) -> None:
+    def apply(self, game: GameManagerProtocol) -> None:
         """Execute this event's effect."""
         self.effect(game)
 
@@ -106,7 +106,7 @@ class EventCard:
         self,
         target: Player | None = None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
     ) -> None:  # pragma: no cover - simple passthrough
         """Play this event card if a game is provided."""
         if game:
