@@ -18,12 +18,17 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.13-dev'
+      - name: Install uv
+        shell: bash
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install dependencies
-        run: |
-          python -m pip install .[dev] --pre
+        shell: bash
+        run: uv sync --extra dev
       - name: Build executable
-        run: |
-          pyinstaller scripts/bang.spec
+        shell: bash
+        run: uv run pyinstaller scripts/bang.spec
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
