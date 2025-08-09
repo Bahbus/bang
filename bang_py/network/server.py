@@ -232,17 +232,23 @@ class BangServer:
 
         action = payload.get("action")
         if action == "draw":
-            await self._handle_draw(websocket, cast(DrawPayload, payload))
+            draw_payload = cast(DrawPayload, payload)
+            await self._handle_draw(websocket, draw_payload)
         elif action == "discard":
-            await self._handle_discard(websocket, cast(DiscardPayload, payload))
+            discard_payload = cast(DiscardPayload, payload)
+            await self._handle_discard(websocket, discard_payload)
         elif action == "play_card":
-            await self._handle_play_card(websocket, cast(PlayCardPayload, payload))
+            play_payload = cast(PlayCardPayload, payload)
+            await self._handle_play_card(websocket, play_payload)
         elif action == "general_store_pick":
-            await self._handle_general_store_pick(websocket, cast(GeneralStorePickPayload, payload))
+            store_payload = cast(GeneralStorePickPayload, payload)
+            await self._handle_general_store_pick(websocket, store_payload)
         elif action == "use_ability":
-            await self._handle_use_ability(websocket, cast(UseAbilityPayload, payload))
+            ability_payload = cast(UseAbilityPayload, payload)
+            await self._handle_use_ability(websocket, ability_payload)
         elif action == "set_auto_miss":
-            await self._handle_set_auto_miss(websocket, cast(SetAutoMissPayload, payload))
+            auto_miss_payload = cast(SetAutoMissPayload, payload)
+            await self._handle_set_auto_miss(websocket, auto_miss_payload)
 
     async def _handle_draw(self, websocket: ServerConnection, payload: DrawPayload) -> None:
         num = int(payload.get("num", 1))
