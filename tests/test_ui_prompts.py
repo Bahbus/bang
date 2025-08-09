@@ -28,7 +28,9 @@ def _load_component(name: str) -> QtQml.QQmlComponent:
     qml_dir = resources.files("bang_py.ui") / "qml"
     with resources.as_file(qml_dir / name) as path:
         engine = QtQml.QQmlEngine()
-        return QtQml.QQmlComponent(engine, str(path))
+        comp = QtQml.QQmlComponent(engine, str(path))
+        comp._engine = engine  # prevent engine from being garbage-collected
+        return comp
 
 
 def test_option_prompt_emits_index(qt_app):

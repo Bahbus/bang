@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 
 Dialog {
     id: root
@@ -9,9 +10,10 @@ Dialog {
     title: titleText
     standardButtons: Dialog.Ok | Dialog.Cancel
 
-    contentItem: Column {
+    contentItem: ColumnLayout {
         spacing: 8
         Label {
+            Layout.fillWidth: true
             text: root.message
             wrapMode: Text.Wrap
         }
