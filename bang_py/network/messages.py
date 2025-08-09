@@ -6,27 +6,37 @@ from typing import Literal, TypedDict
 
 
 class DrawPayload(TypedDict, total=False):
+    """Payload for drawing cards from the deck."""
+
     action: Literal["draw"]
     num: int
 
 
 class DiscardPayload(TypedDict):
+    """Payload for discarding a card from the player's hand."""
+
     action: Literal["discard"]
     card_index: int
 
 
 class PlayCardPayload(TypedDict, total=False):
+    """Payload for playing a card, optionally targeting another player."""
+
     action: Literal["play_card"]
     card_index: int
     target: int
 
 
 class GeneralStorePickPayload(TypedDict):
+    """Payload for choosing a card from the general store."""
+
     action: Literal["general_store_pick"]
     index: int
 
 
 class UseAbilityPayload(TypedDict, total=False):
+    """Payload for invoking a character ability."""
+
     action: Literal["use_ability"]
     ability: str
     indices: list[int]
@@ -40,6 +50,8 @@ class UseAbilityPayload(TypedDict, total=False):
 
 
 class SetAutoMissPayload(TypedDict, total=False):
+    """Payload for toggling automatic responses to BANG! cards."""
+
     action: Literal["set_auto_miss"]
     enabled: bool
 

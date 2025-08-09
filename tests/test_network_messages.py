@@ -36,7 +36,7 @@ def test_oversized_message_closes_connection() -> None:
     asyncio.run(run_flow())
 
 
-def test_malformed_message_ignored() -> None:
+def test_malformed_message_returns_error() -> None:
     async def run_flow() -> None:
         server = BangServer(host="localhost", port=0, room_code="z998")
         async with serve(server.handler, server.host, server.port) as ws_server:
@@ -49,10 +49,27 @@ def test_malformed_message_ignored() -> None:
                 await ws.recv()
                 await ws.recv()
                 await ws.send("{not-json")
-                # Connection should remain open
-                await ws.send("end_turn")
                 data = json.loads(await ws.recv())
-                assert "players" in data
+                assert data.get("error") == "invalid json"
+
+    asyncio.run(run_flow())
+
+
+def test_non_object_payload_rejected() -> None:
+    async def run_flow() -> None:
+        server = BangServer(host="localhost", port=0, room_code="z996")
+        async with serve(server.handler, server.host, server.port) as ws_server:
+            server.port = ws_server.sockets[0].getsockname()[1]
+            async with connect(f"ws://localhost:{server.port}") as ws:
+                await ws.recv()
+                await ws.send("z996")
+                await ws.recv()
+                await ws.send("Carl")
+                await ws.recv()
+                await ws.recv()
+                await ws.send(json.dumps([1, 2, 3]))
+                data = json.loads(await ws.recv())
+                assert data.get("error") == "invalid message"
 
     asyncio.run(run_flow())
 
