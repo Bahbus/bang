@@ -29,10 +29,10 @@ class BangHandlersMixin:
         need_two = player.metadata.double_miss or extra_bang
         if target and need_two:
             if not self._attempt_double_dodge(target):
-                card.play(target, self.deck, ignore_equipment=ignore_eq)
+                card.play(target, game=self, ignore_equipment=ignore_eq)
         else:
             if not (target and self._auto_miss(target)):
-                card.play(target, self.deck, ignore_equipment=ignore_eq)
+                card.play(target, game=self, ignore_equipment=ignore_eq)
 
     def _consume_sniper_extra(self: GameManagerProtocol, player: "Player", card: BangCard) -> bool:
         """Discard an extra Bang! when Sniper event is active and return True if consumed."""
