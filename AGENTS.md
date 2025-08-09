@@ -5,11 +5,14 @@ websocket server, and a Qt-based interface. To maintain consistency, follow
 these rules when making changes.
 
 ## Development
+- Install dependencies with `uv sync`.
+- Run tools via `uv run`.
 - Use Python 3.13+.
 - Target `websockets>=15.0.1`, `PySide6>=6.9.1` and `PyInstaller>=6.14.2`.
-- After modifying code, run `pytest` from the repository root to ensure tests
+- After modifying code, run `uv run pytest` from the repository root to ensure tests
   pass.
-- Before committing, run `pre-commit run --files` on the files you've changed.
+- Before committing, run `uv run pre-commit run --files` on the files you've
+  changed.
 - Keep tests deterministic. If randomness is needed, seed the RNG inside the tests or offer hooks to bypass shuffling.
 - Set `BANG_AUTO_CLOSE=1` when launching the UI in tests so it quits automatically.
 
