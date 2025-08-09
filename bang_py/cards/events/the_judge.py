@@ -10,7 +10,7 @@ from ...player import Player
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...game_manager import GameManager
+    from ...game_manager_protocol import GameManagerProtocol
 
 
 class TheJudgeEventCard(BaseEventCard):
@@ -24,7 +24,7 @@ class TheJudgeEventCard(BaseEventCard):
         self,
         target: Player | None = None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
     ) -> None:
         """Activate the Judge event."""
         if game:

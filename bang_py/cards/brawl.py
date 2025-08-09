@@ -6,7 +6,7 @@ from ..player import Player
 from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
 
 from ..helpers import handle_out_of_turn_discard
 
@@ -24,7 +24,7 @@ class BrawlCard(BaseCard):
         self,
         target: Player | None = None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
         *,
         discard_idx: int = 0,
         victim_indices: dict[int, int] | None = None,

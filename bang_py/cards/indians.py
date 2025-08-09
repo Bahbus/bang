@@ -7,7 +7,7 @@ from ..helpers import handle_out_of_turn_discard
 from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
 
 
 class IndiansCard(BaseCard):
@@ -21,7 +21,7 @@ class IndiansCard(BaseCard):
         self,
         target: Player | None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
         **kwargs: Any,
     ) -> None:
         if not game or not player:

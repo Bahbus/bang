@@ -6,7 +6,7 @@ from ..player import Player
 from typing import Any, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
-    from ..game_manager import GameManager
+    from ..game_manager_protocol import GameManagerProtocol
 
 
 class ConestogaCard(BaseCard):
@@ -22,7 +22,7 @@ class ConestogaCard(BaseCard):
         self,
         target: Player | None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
         *,
         hand_idx: int | None = None,
         equip_name: str | None = None,

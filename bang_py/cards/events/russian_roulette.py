@@ -11,7 +11,7 @@ from ..missed import MissedCard
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...game_manager import GameManager
+    from ...game_manager_protocol import GameManagerProtocol
 
 
 class RussianRouletteEventCard(BaseEventCard):
@@ -28,7 +28,7 @@ class RussianRouletteEventCard(BaseEventCard):
         self,
         target: Player | None = None,
         player: Player | None = None,
-        game: GameManager | None = None,
+        game: GameManagerProtocol | None = None,
     ) -> None:
         """Activate the Russian Roulette event."""
         if not game:
