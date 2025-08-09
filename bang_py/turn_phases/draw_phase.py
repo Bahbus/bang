@@ -7,6 +7,7 @@ from collections import deque
 import random
 
 from ..cards.card import BaseCard
+from ..deck import Deck
 from ..game_manager_protocol import GameManagerProtocol
 from ..event_flags import EventFlags
 
@@ -17,7 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover - imported for type checking
 class DrawPhaseMixin:
     """Provide draw phase logic for :class:`GameManager`."""
 
-    deck: object
+    deck: Deck | None
     discard_pile: list[BaseCard]
     event_flags: EventFlags
     _players: list["Player"]
@@ -34,7 +35,7 @@ class DrawPhaseMixin:
         """Draw a card reshuffling the discard pile if needed."""
         deck = self.deck
         if deck is None:
-            return None
+            raise RuntimeError("Deck required")
         card = deck.draw()
         if card is None and self.discard_pile:
             deck.cards.extend(self.discard_pile)

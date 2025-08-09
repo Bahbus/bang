@@ -15,7 +15,7 @@ if TYPE_CHECKING:  # pragma: no cover - imported for type checking
 class DiscardPhaseMixin:
     """Provide discard phase logic for :class:`GameManager`."""
 
-    deck: object
+    deck: Deck | None
     discard_pile: list[BaseCard]
     event_flags: EventFlags
 
@@ -37,8 +37,9 @@ class DiscardPhaseMixin:
         while len(player.hand) > limit:
             card = player.hand.pop()
             if self.event_flags.get("abandoned_mine"):
-                if self.deck is None:
-                    raise RuntimeError("Deck is required for abandoned mine")
-                self.deck.push_top(card)
+                deck = self.deck
+                if deck is None:
+                    raise RuntimeError("Deck required")
+                deck.push_top(card)
             else:
                 self._pass_left_or_discard(player, card)
