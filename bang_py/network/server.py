@@ -137,6 +137,7 @@ class BangServer:
 
     async def handler(self, websocket: ServerConnection) -> None:
         """Register a new client and process game commands sent over the socket."""
+
         await websocket.send("Enter room code:")
         code = await websocket.recv()
         if code != self.room_code:
@@ -158,11 +159,7 @@ class BangServer:
         conn = Connection(websocket, player)
         self.connections[websocket] = conn
 
-        async with conn.task_group:
-            self.game.add_player(player)
-            await websocket.send(f"Joined game as {player.name}")
-            await self.broadcast_state()
-
+        async def client_loop() -> None:
             try:
                 async for message in websocket:
                     if len(message) > MAX_MESSAGE_SIZE:
@@ -173,6 +170,12 @@ class BangServer:
                 self.game.remove_player(player)
                 self.connections.pop(websocket, None)
                 await self.broadcast_state()
+
+        async with conn.task_group as tg:
+            self.game.add_player(player)
+            await websocket.send(f"Joined game as {player.name}")
+            await self.broadcast_state()
+            tg.create_task(client_loop())
 
     def _validate_payload(self, payload: dict[str, object]) -> bool:
         """Validate that ``payload`` conforms to the expected schema."""
@@ -218,20 +221,26 @@ class BangServer:
 
     async def _process_message(self, websocket: ServerConnection, message: str | bytes) -> None:
         """Parse and route a single message from ``websocket``."""
-        try:
-            payload = json.loads(message)
-        except json.JSONDecodeError:
-            payload = message
 
-        if payload == "end_turn":
+        if message == "end_turn":
             self.game.end_turn()
             await self.broadcast_state()
             return
 
+        try:
+            payload = json.loads(message)
+        except json.JSONDecodeError:
+            logger.warning("Malformed JSON from client: %r", message)
+            await websocket.send(json.dumps({"error": "invalid json"}))
+            return
+
         if not isinstance(payload, dict):
+            logger.warning("Non-object payload received: %r", payload)
+            await websocket.send(json.dumps({"error": "invalid message"}))
             return
 
         if not self._validate_payload(payload):
+            logger.warning("Invalid payload received: %r", payload)
             await websocket.send(json.dumps({"error": "invalid message"}))
             return
 
