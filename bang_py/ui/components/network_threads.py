@@ -105,9 +105,6 @@ class ClientThread(_QThread):
                 fut.result(timeout=1)
             except (asyncio.TimeoutError, WebSocketException) as exc:
                 logging.exception("Error while closing websocket: %s", exc)
-            except Exception as exc:
-                logging.exception("Unexpected error while closing websocket: %s", exc)
-                raise
         if self.loop.is_running():
             self.loop.call_soon_threadsafe(self.loop.stop)
 
