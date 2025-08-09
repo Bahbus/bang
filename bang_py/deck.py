@@ -37,5 +37,15 @@ class Deck:
         """
         self.cards.extendleft(cards)
 
+    def extend(self, cards: Iterable[BaseCard]) -> None:
+        """Append multiple cards to the bottom of the deck."""
+        self.cards.extend(cards)
+
+    def shuffle(self) -> None:
+        """Shuffle the deck in-place."""
+        card_list = list(self.cards)
+        shuffle(card_list)
+        self.cards = deque(card_list)
+
     def __len__(self) -> int:
         return len(self.cards)
