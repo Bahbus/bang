@@ -6,23 +6,24 @@ This repository now contains a Python implementation of the Bang card game along
 
 This project uses [pre-commit](https://pre-commit.com/) to run linters,
 formatters and static type checks (Black, Flake8, pydocstyle and mypy).
+Use [uv](https://astral.sh/uv) to manage the development environment.
 Install the project with its development dependencies and set up the hooks:
 
 ```bash
-pip install .[dev]
-pre-commit install
+uv sync --extra dev
+uv run pre-commit install
 ```
 
 Run the checks on changed files before committing:
 
 ```bash
-pre-commit run --files <path> [<path> ...]
+uv run pre-commit run --files <path> [<path> ...]
 ```
 
 Run the type checker directly with:
 
 ```bash
-mypy bang_py tests
+uv run mypy bang_py tests
 ```
 
 Alternatively, use the Makefile targets:
@@ -38,8 +39,9 @@ Install the package using **Python 3.13+**. This pulls in
 `websockets>=15.0.1` and the Qt bindings (`PySide6>=6.9.1`):
 
 ```bash
-pip install .[dev]
-bang-server
+uv sync --extra dev
+uv run pre-commit install
+uv run bang-server
 ```
 
 This starts a websocket server on `ws://localhost:8765`.
@@ -52,27 +54,27 @@ A join token encryption key is required and may be supplied with
 Pass `--certfile` and `--keyfile` to start the server with TLS:
 
 ```bash
-bang-server --certfile server.pem --keyfile server.key
+uv run bang-server --certfile server.pem --keyfile server.key
 ```
 
 Use the `wss://` scheme when connecting and provide the CA file if needed:
 
 ```bash
-bang-client wss://localhost:8765 --cafile ca.pem
+uv run bang-client wss://localhost:8765 --cafile ca.pem
 ```
 
 The Qt interface exposes these paths in the host and join dialogs.
 
 ### Join tokens
 
-Running ``bang-server --show-token`` prints an encrypted string containing the
-host, port and room code. Start the Qt UI or ``bang-client`` with ``--token`` to
+Running ``uv run bang-server --show-token`` prints an encrypted string containing the
+host, port and room code. Start the Qt UI or ``uv run bang-client`` with ``--token`` to
 join automatically. The server and client must share the same base64 key. You
 can generate one and export it before launching the server:
 
 ```bash
 export BANG_TOKEN_KEY=$(openssl rand -base64 32)
-bang-server --show-token
+uv run bang-server --show-token
 ```
 
 Clients can either set ``BANG_TOKEN_KEY`` or pass ``--token-key``/``token_key``
@@ -81,7 +83,7 @@ explicitly so they can decrypt the token.
 ## Connecting a client
 
 ```bash
-bang-client
+uv run bang-client
 ```
 
 You will be prompted for a name and then receive updates about the game state.
@@ -98,7 +100,8 @@ signals that the Python backend connects to.
 Install the package first; it pulls in the Qt requirements (PySide6 6.9.1 or newer):
 
 ```bash
-pip install .[dev]
+uv sync --extra dev
+uv run pre-commit install
 ```
 
 On Linux, the UI and tests also require the system packages
@@ -108,7 +111,7 @@ On Linux, the UI and tests also require the system packages
 Then run the interface with:
 
 ```bash
-bang-ui
+uv run bang-ui
 ```
 
 Set `BANG_AUTO_CLOSE=1` to automatically close the window. This is mainly useful
@@ -170,7 +173,8 @@ These packages provide the OpenGL and keyboard functionality that PySide6 needs.
 build dependencies and run the target:
 
 ```bash
-pip install .[dev]
+uv sync --extra dev
+uv run pre-commit install
 make build-exe
 ```
 
@@ -192,8 +196,9 @@ needs the `contents: write` permission (or a PAT) to upload the file.
 Install the development dependencies before running the test suite:
 
 ```bash
-pip install .[dev]
-pytest
+uv sync --extra dev
+uv run pre-commit install
+uv run pytest
 ```
 
 Tests that rely on the GUI use `pytest.importorskip("PySide6")` so they are skipped
