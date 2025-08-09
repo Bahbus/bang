@@ -108,27 +108,27 @@ class TurnFlowMixin:
         player = self._players[idx]
         self.phase = "draw"
         self.reset_turn_flags(player)
-        player = self._run_start_turn_checks(player)
-        if not player:
+        next_player: Player | None = self._run_start_turn_checks(player)
+        if next_player is None:
             return
-        self.draw_phase(player, blood_target=blood_target)
-        self.play_phase(player)
-        player.metadata.bangs_played = 0
+        self.draw_phase(next_player, blood_target=blood_target)
+        self.play_phase(next_player)
+        next_player.metadata.bangs_played = 0
         for cb in self.turn_started_listeners:
-            cb(player)
+            cb(next_player)
 
     def _run_start_turn_checks(self: GameManagerProtocol, player: "Player") -> "Player" | None:
         """Apply start-of-turn effects returning the acting player or ``None``."""
-        player = self._apply_event_start_effects(player)
-        if not player:
+        next_player: Player | None = self._apply_event_start_effects(player)
+        if next_player is None:
             return None
-        if self._maybe_revive_ghost_town(player):
+        if self._maybe_revive_ghost_town(next_player):
             return None
-        if not self._handle_equipment_start(player):
+        if not self._handle_equipment_start(next_player):
             return None
-        if self._handle_character_draw_abilities(player):
+        if self._handle_character_draw_abilities(next_player):
             return None
-        return player
+        return next_player
 
     def end_turn(self: GameManagerProtocol) -> None:
         """Finish the current player's turn and advance to the next."""
