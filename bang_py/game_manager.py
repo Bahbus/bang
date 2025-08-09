@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from collections.abc import Callable, Iterable, Sequence
 from collections import deque
+from typing import cast
 
 from .ability_dispatch import AbilityDispatchMixin
 from .card_handlers import CardHandlersMixin
@@ -16,6 +17,7 @@ from .events.event_decks import EventCard
 from .events.event_hooks import EventHooksMixin
 from .events.event_logic import EventLogicMixin
 from .general_store import GeneralStoreMixin
+from .game_manager_protocol import GameManagerProtocol
 from .player import Player
 from .turn_phases import TurnPhasesMixin
 
@@ -40,7 +42,7 @@ class GameManager(
     turn_order: list[int] = field(default_factory=list)
     event_deck: deque[EventCard] | None = None
     current_event: EventCard | None = None
-    event_flags: EventFlags = field(default_factory=dict)
+    event_flags: EventFlags = field(default_factory=lambda: cast(EventFlags, {}))
     first_eliminated: Player | None = None
     sheriff_turns: int = 0
     phase: str = "draw"
@@ -84,15 +86,18 @@ class GameManager(
     # Protocol wrappers
     def initialize_main_deck(self) -> None:
         """Create the main deck and reset event flags."""
-        self._initialize_main_deck()
+        gm: GameManagerProtocol = cast(GameManagerProtocol, self)
+        gm._initialize_main_deck()
 
     def initialize_event_deck(self) -> None:
         """Build the event deck based on active expansions."""
-        self._initialize_event_deck()
+        gm: GameManagerProtocol = cast(GameManagerProtocol, self)
+        gm._initialize_event_deck()
 
     def register_card_handlers(self, groups: Iterable[str] | None = None) -> None:
         """Populate the card handler registry."""
-        self._register_card_handlers(groups)
+        gm: GameManagerProtocol = cast(GameManagerProtocol, self)
+        gm._register_card_handlers(groups)
 
     def __post_init__(self) -> None:
         """Initialize decks and register card handlers."""

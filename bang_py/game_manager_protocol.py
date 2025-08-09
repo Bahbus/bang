@@ -62,6 +62,15 @@ class GameManagerProtocol(Protocol):
     def register_card_handlers(self, groups: Iterable[str] | None = None) -> None:
         """Populate the card handler registry."""
 
+    def _initialize_main_deck(self) -> None:
+        """Create the main deck if needed and ensure event flags exist."""
+
+    def _initialize_event_deck(self) -> None:
+        """Build and shuffle the event deck based on active expansions."""
+
+    def _register_card_handlers(self, groups: Iterable[str] | None = None) -> None:
+        """Populate the card handler registry."""
+
     def draw_card(self, player: Player, num: int = 1) -> None:
         """Draw ``num`` cards for ``player``."""
 
