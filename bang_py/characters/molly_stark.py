@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .base import BaseCharacter
 
@@ -21,8 +21,17 @@ class MollyStark(BaseCharacter):
     starting_health = 4
 
     def ability(self, gm: "GameManagerProtocol", player: "Player", **_: object) -> bool:
-        player.metadata.abilities.add(MollyStark)
-        player.metadata.molly_choices = player.metadata.molly_choices or {}
+        try:
+            player.metadata = player.metadata or {}  # type: ignore[misc, assignment]
+        except AttributeError:
+            pass
+        metadata: Any = player.metadata
+        if isinstance(metadata, dict):
+            metadata.setdefault("abilities", set()).add(MollyStark)
+            metadata.setdefault("molly_choices", {})
+        else:
+            metadata.abilities.add(MollyStark)
+            metadata.molly_choices = metadata.molly_choices or {}
         return True
 
     def on_out_of_turn_discard(
@@ -30,8 +39,9 @@ class MollyStark(BaseCharacter):
     ) -> None:
         from ..cards.bang import BangCard
 
-        if isinstance(card, BangCard) and getattr(gm, "_duel_counts", None) is not None:
+        counts = getattr(gm, "_duel_counts", None)
+        if isinstance(card, BangCard) and counts is not None:
             name = player.name
-            gm._duel_counts[name] = gm._duel_counts.get(name, 0) + 1
+            counts[name] = counts.get(name, 0) + 1
         else:
             gm.draw_card(player)
