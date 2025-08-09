@@ -6,7 +6,7 @@ import asyncio
 import json
 import secrets
 import ssl
-from collections.abc import Coroutine, Sequence
+from collections.abc import Coroutine, Sequence, Mapping
 from dataclasses import dataclass, field
 from typing import Any, cast
 import logging
@@ -110,12 +110,17 @@ class BangServer:
 
         return generate_join_token(self.host, self.port, self.room_code, self.token_key)
 
-    def _create_send_task(self, conn: Connection, payload: str) -> None:
-        """Create a supervised task to send ``payload``."""
+    def _create_send_task(self, conn: Connection, payload: str | Mapping[str, object]) -> None:
+        """Create a supervised task to send ``payload``.
+
+        ``payload`` may be a JSON string or a mapping that will be serialized.
+        """
+
+        payload_str = payload if isinstance(payload, str) else json.dumps(payload)
 
         async def _send() -> None:
             try:
-                await conn.websocket.send(payload)
+                await conn.websocket.send(payload_str)
             except asyncio.CancelledError as exc:  # pragma: no cover - network
                 logger.warning("Send to %s cancelled", conn.player.name, exc_info=exc)
                 raise
