@@ -133,11 +133,76 @@ class GameManagerProtocol(Protocol):
     def _pre_card_checks(self, player: Player, card: BaseCard, target: Player | None) -> bool:
         """Return ``True`` if ``player`` may play ``card`` on ``target``."""
 
+    def _card_in_hand(self, player: Player, card: BaseCard) -> bool:
+        """Return ``True`` if ``card`` is currently in ``player``'s hand."""
+
+    def _run_card_play_checks(self, player: Player, card: BaseCard, target: Player | None) -> bool:
+        """Execute registered pre-play checks."""
+
+    def _check_target_restrictions(
+        self, player: Player, card: BaseCard, target: Player | None
+    ) -> bool:
+        """Validate distance and target based limitations."""
+
+    def _bang_target_valid(self, player: Player, card: BaseCard, target: Player | None) -> bool:
+        """Check range and sniper restrictions for Bang! cards."""
+
+    def _panic_target_valid(self, player: Player, card: BaseCard, target: Player | None) -> bool:
+        """Return ``True`` if Panic! can target ``target``."""
+
+    def _jail_target_valid(self, card: BaseCard, target: Player | None) -> bool:
+        """Return ``True`` if Jail may be played on ``target``."""
+
+    def _check_event_restrictions(self, player: Player, card: BaseCard) -> bool:
+        """Check event related card play restrictions."""
+
+    def _jail_blocked(self, card: BaseCard) -> bool:
+        """Return ``True`` if Jail cards are currently banned."""
+
+    def _judge_blocked(self, card: BaseCard) -> bool:
+        """Return ``True`` if blue or green cards are disallowed."""
+
+    def _handcuffs_blocked(self, player: Player, card: BaseCard) -> bool:
+        """Return ``True`` if Handcuffs prevents ``player`` from playing ``card``."""
+
     def _is_bang(self, player: Player, card: BaseCard, target: Player | None) -> bool:
         """Return ``True`` if playing ``card`` counts as a Bang!."""
 
+    def _handle_missed_as_bang(self, player: Player, card: BaseCard, target: Player | None) -> bool:
+        """Treat Missed! cards as Bang! when allowed."""
+
+    def _can_play_bang(self, player: Player) -> bool:
+        """Return ``True`` if ``player`` may play a Bang!."""
+
     def _dispatch_play(self, player: Player, card: BaseCard, target: Player | None) -> None:
         """Dispatch ``card`` to its handler."""
+
+    def _notify_card_played(self, player: Player, card: BaseCard, target: Player | None) -> None:
+        """Call registered card played listeners."""
+
+    def _apply_post_play(
+        self,
+        player: Player,
+        card: BaseCard,
+        target: Player | None,
+        before: int | None,
+        is_bang: bool,
+    ) -> None:
+        """Handle aftermath of playing ``card``."""
+
+    def _apply_damage_and_healing(
+        self, source: Player, target: Player | None, before: int | None
+    ) -> None:
+        """Trigger damage or heal callbacks if ``target`` changed health."""
+
+    def _draw_if_empty(self, player: Player) -> None:
+        """Draw a card if ``player`` has an empty hand and may draw."""
+
+    def _discard_and_record(self, player: Player, card: BaseCard) -> None:
+        """Discard ``card`` from ``player`` and record out-of-turn discard."""
+
+    def _should_use_auto_miss(self, target: Player) -> bool:
+        """Return ``True`` if automatic Missed! effects may apply."""
 
     def _update_bang_counters(self, player: Player) -> None:
         """Update per-turn Bang! counters for ``player``."""
