@@ -153,7 +153,9 @@ class GameManagerProtocol(Protocol):
     def _cleanup_general_store_leftovers(self) -> None:
         """Discard any remaining General Store cards and reset state."""
 
-    def pat_brennan_draw(self, player: Player, target: Player | None, card: str | None) -> bool:
+    def pat_brennan_draw(
+        self, player: Player, target: Player | None = None, card: str | None = None
+    ) -> bool:
         """Draw a card in play for Pat Brennan's ability."""
         ...
 
@@ -235,6 +237,7 @@ class GameManagerProtocol(Protocol):
 
     def _advance_turn(self) -> None:
         """Move the turn pointer and start the next turn."""
+        ...
 
     def prompt_new_identity(self, player: Player) -> bool:
         """Prompt ``player`` to swap characters during New Identity."""
@@ -279,6 +282,7 @@ class GameManagerProtocol(Protocol):
 
     def _handle_missed_as_bang(self, player: Player, card: BaseCard, target: Player | None) -> bool:
         """Treat Missed! cards as Bang! when allowed."""
+        ...
 
     def _can_play_bang(self, player: Player) -> bool:
         """Return ``True`` if ``player`` may play a Bang!."""

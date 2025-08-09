@@ -27,7 +27,7 @@ class SidKetchum(BaseCharacter):
         indices: list[int] | None = None,
     ) -> bool:
         if len(player.hand) < 2 or player.health >= player.max_health:
-            return True
+            return False
         discard_indices = sorted(indices or list(range(2)), reverse=True)[:2]
         for idx in discard_indices:
             if 0 <= idx < len(player.hand):
