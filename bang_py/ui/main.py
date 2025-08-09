@@ -7,7 +7,7 @@ import os
 import secrets
 from importlib import resources
 
-from PySide6 import QtCore, QtWidgets, QtQuick
+from PySide6 import QtCore, QtWidgets, QtQuick, QtQml
 
 from .components import ClientThread, ServerThread
 from .components.card_images import get_loader
@@ -158,6 +158,72 @@ class BangUI(QtCore.QObject):
             if self.game_root is not None:
                 self.game_root.setProperty("theme", self.theme)
 
+    def _option_prompt(self, title: str, options: list[str]) -> int | None:
+        qml_dir = resources.files("bang_py.ui") / "qml"
+        with resources.as_file(qml_dir / "OptionPrompt.qml") as qml_path:
+            comp = QtQml.QQmlComponent(self.view.engine(), str(qml_path))
+        dialog = comp.create()
+        if dialog is None:
+            return None
+        dialog.setProperty("titleText", title)
+        dialog.setProperty("options", options)
+        loop = QtCore.QEventLoop()
+        result: dict[str, int | None] = {"index": None}
+
+        def _accepted(i: int) -> None:
+            result["index"] = int(i)
+            loop.quit()
+
+        def _rejected() -> None:
+            loop.quit()
+
+        dialog.acceptedIndex.connect(_accepted)
+        dialog.rejected.connect(_rejected)
+        dialog.open()
+        loop.exec()
+        dialog.deleteLater()
+        return result["index"]
+
+    def _confirm_prompt(self, text: str) -> bool:
+        qml_dir = resources.files("bang_py.ui") / "qml"
+        with resources.as_file(qml_dir / "ConfirmPrompt.qml") as qml_path:
+            comp = QtQml.QQmlComponent(self.view.engine(), str(qml_path))
+        dialog = comp.create()
+        if dialog is None:
+            return False
+        dialog.setProperty("message", text)
+        loop = QtCore.QEventLoop()
+        result = {"ok": False}
+
+        def _accepted() -> None:
+            result["ok"] = True
+            loop.quit()
+
+        def _rejected() -> None:
+            loop.quit()
+
+        dialog.accepted.connect(_accepted)
+        dialog.rejected.connect(_rejected)
+        dialog.open()
+        loop.exec()
+        dialog.deleteLater()
+        return result["ok"]
+
+    def _message_dialog(self, text: str, error: bool = False) -> None:
+        qml_dir = resources.files("bang_py.ui") / "qml"
+        with resources.as_file(qml_dir / "MessageDialog.qml") as qml_path:
+            comp = QtQml.QQmlComponent(self.view.engine(), str(qml_path))
+        dialog = comp.create()
+        if dialog is None:
+            return
+        dialog.setProperty("message", text)
+        dialog.setProperty("error", error)
+        loop = QtCore.QEventLoop()
+        dialog.accepted.connect(loop.quit)
+        dialog.open()
+        loop.exec()
+        dialog.deleteLater()
+
     def _append_message(self, msg: str) -> None:
         try:
             data = json.loads(msg)
@@ -168,6 +234,12 @@ class BangUI(QtCore.QObject):
             return
 
         if isinstance(data, dict):
+            if "error" in data:
+                self._message_dialog(str(data["error"]), True)
+                return
+            if "result" in data:
+                self._message_dialog(str(data["result"]))
+                return
             if "message" in data and self.game_root is not None:
                 cur = self.game_root.property("logText") or ""
                 text = str(data["message"])
@@ -246,26 +318,30 @@ class BangUI(QtCore.QObject):
     def _show_prompt(self, prompt: str, data: dict) -> None:
         if prompt == "general_store":
             cards = data.get("cards", [])
-            item, ok = QtWidgets.QInputDialog.getItem(
-                None, "General Store", "Pick a card:", cards, 0, False
-            )
-            if ok:
-                index = cards.index(item)
+            index = self._option_prompt("General Store", cards)
+            if index is not None:
                 self._send_action({"action": "general_store_pick", "index": index})
+            else:
+                self._message_dialog("Selection canceled", True)
         elif "options" in data:
             opts = [o.get("name", str(i)) for i, o in enumerate(data["options"])]
-            item, ok = QtWidgets.QInputDialog.getItem(
-                None, prompt.replace("_", " ").title(), "Choose:", opts, 0, False
-            )
-            if ok:
-                idx = opts.index(item)
+            index = self._option_prompt(prompt.replace("_", " ").title(), opts)
+            if index is not None:
                 self._send_action(
                     {
                         "action": "use_ability",
                         "ability": prompt,
-                        "target": data["options"][idx]["index"],
+                        "target": data["options"][index]["index"],
                     }
                 )
+            else:
+                self._message_dialog("Selection canceled", True)
+        elif prompt == "confirm_discard":
+            msg = data.get("message", "Discard card?")
+            if self._confirm_prompt(msg):
+                self._send_action({"action": "confirm_discard"})
+            else:
+                self._message_dialog("Discard canceled", True)
         else:
             if self.game_root is not None:
                 cur = self.game_root.property("logText") or ""

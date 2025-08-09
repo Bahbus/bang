@@ -30,6 +30,7 @@ Rectangle {
             id: nameField
             placeholderText: qsTr("Name (1-20 printable chars)")
             width: 200 * scale
+            maximumLength: 20
             color: theme === "dark" ? "white" : "black"
             background: Rectangle {
                 color: theme === "dark" ? "#3c3c3c" : "#fff8dc"
