@@ -6,6 +6,8 @@ from collections import deque
 from collections.abc import Callable, Iterable
 from typing import Protocol, TYPE_CHECKING
 
+from .event_flags import EventFlags
+
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from .cards.card import BaseCard
     from .cards.roles import BaseRole
@@ -20,7 +22,7 @@ class GameManagerProtocol(Protocol):
 
     deck: Deck | None
     discard_pile: list[BaseCard]
-    event_flags: dict[str, object]
+    event_flags: EventFlags
     expansions: list[str]
     _players: list[Player]
     turn_order: list[int]

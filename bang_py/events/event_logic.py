@@ -4,14 +4,15 @@
 
 from __future__ import annotations
 
-from typing import Any
-import random
 from collections import deque
+import random
+from typing import Any
 
 from .event_decks import EventCard, create_high_noon_deck, create_fistful_deck
 from ..cards.roles import SheriffRoleCard
 from ..player import Player
 from ..game_manager_protocol import GameManagerProtocol
+from ..event_flags import EventFlags
 
 
 class EventLogicMixin:
@@ -19,7 +20,7 @@ class EventLogicMixin:
 
     event_deck: deque[EventCard] | None
     current_event: EventCard | None
-    event_flags: dict
+    event_flags: EventFlags
     expansions: list[str]
     deck: object
     discard_pile: list[Any]

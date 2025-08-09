@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from .cards.bang import BangCard
-from .cards.missed import MissedCard
-from .cards.general_store import GeneralStoreCard
-from .characters.vera_custer import VeraCuster
 from .cards.card import BaseCard
+from .cards.general_store import GeneralStoreCard
+from .cards.missed import MissedCard
+from .characters.vera_custer import VeraCuster
+from .event_flags import EventFlags
 from .game_manager_protocol import GameManagerProtocol
 from .helpers import handle_out_of_turn_discard
 from .player import Player
@@ -15,7 +16,7 @@ from .player import Player
 class AbilityDispatchMixin:
     """Implement miscellaneous character abilities."""
 
-    event_flags: dict
+    event_flags: EventFlags
     discard_pile: list[BaseCard]
 
     def chuck_wengam_ability(self: GameManagerProtocol, player: "Player") -> None:

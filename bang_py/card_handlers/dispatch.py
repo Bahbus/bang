@@ -11,13 +11,14 @@ from collections.abc import Iterable
 from typing import TYPE_CHECKING, cast
 
 from ..cards.bang import BangCard
-from ..cards.missed import MissedCard
 from ..cards.card import BaseCard
-from ..cards.panic import PanicCard
 from ..cards.jail import JailCard
+from ..cards.missed import MissedCard
+from ..cards.panic import PanicCard
 from ..cards.roles import SheriffRoleCard
-from ..helpers import handle_out_of_turn_discard
+from ..event_flags import EventFlags
 from ..game_manager_protocol import GameManagerProtocol
+from ..helpers import handle_out_of_turn_discard
 
 if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..player import Player
@@ -43,7 +44,7 @@ class DispatchMixin:
     card_played_listeners: list
     card_play_checks: list
     discard_pile: list
-    event_flags: dict
+    event_flags: EventFlags
     _card_handlers: dict
     _players: list["Player"]
     turn_order: list[int]

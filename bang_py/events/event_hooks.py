@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from ..cards.roles import SheriffRoleCard
 from ..cards.card import BaseCard
 from ..game_manager_protocol import GameManagerProtocol
+from ..event_flags import EventFlags
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from ..player import Player
@@ -18,7 +19,7 @@ class EventHooksMixin:
     _players: list[Player]
     turn_order: list[int]
     current_turn: int
-    event_flags: dict
+    event_flags: EventFlags
     discard_pile: list[BaseCard]
     first_eliminated: Player | None
     game_over_listeners: list
