@@ -48,16 +48,16 @@ class BangHandlersMixin:
                 return True
         return False
 
-    def _attempt_double_dodge(self: GameManagerProtocol, target: "Player") -> bool:
-        """Let ``target`` discard two Missed! cards to dodge a Bang!."""
-        misses = [c for c in target.hand if isinstance(c, MissedCard)]
+    def _attempt_double_dodge(self: GameManagerProtocol, player: "Player") -> bool:
+        """Let ``player`` discard two Missed! cards to dodge a Bang!."""
+        misses = [c for c in player.hand if isinstance(c, MissedCard)]
         if len(misses) >= 2:
             for _ in range(2):
                 mcard = misses.pop()
-                target.hand.remove(mcard)
+                player.hand.remove(mcard)
                 self.discard_pile.append(mcard)
-                handle_out_of_turn_discard(self, target, mcard)
-            target.metadata.dodged = True
+                handle_out_of_turn_discard(self, player, mcard)
+            player.metadata.dodged = True
             return True
         return False
 
@@ -85,33 +85,33 @@ class BangHandlersMixin:
             return False
         return target.metadata.auto_miss is not False
 
-    def _use_miss_card(self: GameManagerProtocol, target: "Player") -> bool:
-        """Use a Missed! card from ``target`` if available."""
-        miss = next((c for c in target.hand if isinstance(c, MissedCard)), None)
+    def _use_miss_card(self: GameManagerProtocol, player: "Player") -> bool:
+        """Use a Missed! card from ``player`` if available."""
+        miss = next((c for c in player.hand if isinstance(c, MissedCard)), None)
         if miss:
-            target.hand.remove(miss)
-            self._discard_and_record(target, miss)
-            target.metadata.dodged = True
+            player.hand.remove(miss)
+            self._discard_and_record(player, miss)
+            player.metadata.dodged = True
             return True
         return False
 
-    def _use_bang_as_miss(self: GameManagerProtocol, target: "Player") -> bool:
+    def _use_bang_as_miss(self: GameManagerProtocol, player: "Player") -> bool:
         """Use a Bang! card as a Missed! if allowed."""
-        if target.metadata.bang_as_missed:
-            bang = next((c for c in target.hand if isinstance(c, BangCard)), None)
+        if player.metadata.bang_as_missed:
+            bang = next((c for c in player.hand if isinstance(c, BangCard)), None)
             if bang:
-                target.hand.remove(bang)
-                self._discard_and_record(target, bang)
-                target.metadata.dodged = True
+                player.hand.remove(bang)
+                self._discard_and_record(player, bang)
+                player.metadata.dodged = True
                 return True
         return False
 
-    def _use_any_card_as_miss(self: GameManagerProtocol, target: "Player") -> bool:
+    def _use_any_card_as_miss(self: GameManagerProtocol, player: "Player") -> bool:
         """Use any card as a Missed! if permitted by effects."""
-        if target.metadata.any_card_as_missed and target.hand:
-            card = target.hand.pop()
-            self._discard_and_record(target, card)
-            target.metadata.dodged = True
+        if player.metadata.any_card_as_missed and player.hand:
+            card = player.hand.pop()
+            self._discard_and_record(player, card)
+            player.metadata.dodged = True
             return True
         return False
 

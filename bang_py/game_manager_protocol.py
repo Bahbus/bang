@@ -10,6 +10,7 @@ from .event_flags import EventFlags
 
 if TYPE_CHECKING:  # pragma: no cover - imported for type checking
     from .cards.card import BaseCard
+    from .cards.bang import BangCard
     from .cards.roles import BaseRole
     from .characters.base import BaseCharacter
     from .deck import Deck
@@ -269,11 +270,29 @@ class GameManagerProtocol(Protocol):
     def _draw_if_empty(self, player: Player) -> None:
         """Draw a card if ``player`` has an empty hand and may draw."""
 
+    def _consume_sniper_extra(self, player: Player, card: BangCard) -> bool:
+        """Discard an extra Bang! for Sniper and return ``True`` if used."""
+
+    def _attempt_double_dodge(self, player: Player) -> bool:
+        """Let ``player`` discard two Missed! cards to dodge a Bang!."""
+
     def _discard_and_record(self, player: Player, card: BaseCard) -> None:
         """Discard ``card`` from ``player`` and record out-of-turn discard."""
 
+    def _auto_miss(self, player: Player) -> bool:
+        """Attempt to satisfy a Bang! with automatic Missed! effects."""
+
     def _should_use_auto_miss(self, target: Player) -> bool:
         """Return ``True`` if automatic Missed! effects may apply."""
+
+    def _use_miss_card(self, player: Player) -> bool:
+        """Use a Missed! card from ``player`` if available."""
+
+    def _use_bang_as_miss(self, player: Player) -> bool:
+        """Use a Bang! card as a Missed! if allowed."""
+
+    def _use_any_card_as_miss(self, player: Player) -> bool:
+        """Use any card as a Missed! when permitted."""
 
     def _update_bang_counters(self, player: Player) -> None:
         """Update per-turn Bang! counters for ``player``."""
