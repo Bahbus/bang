@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from .base import BaseCharacter
 
@@ -21,11 +21,10 @@ class MollyStark(BaseCharacter):
     starting_health = 4
 
     def ability(self, gm: "GameManagerProtocol", player: "Player", **_: object) -> bool:
-        try:
-            player.metadata = player.metadata or {}  # type: ignore[misc, assignment]
-        except AttributeError:
-            pass
-        metadata: Any = player.metadata
+        player_any = cast(Any, player)
+        if player_any.metadata is None:
+            player_any.metadata = {}
+        metadata: Any = player_any.metadata
         if isinstance(metadata, dict):
             metadata.setdefault("abilities", set()).add(MollyStark)
             metadata.setdefault("molly_choices", {})
