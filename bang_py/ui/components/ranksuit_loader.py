@@ -37,7 +37,7 @@ class RankSuitIconLoader:
     def _load_sheet(self) -> QtGui.QPixmap:
         renderer = QtSvg.QSvgRenderer(self.svg_path)
         pixmap = QtGui.QPixmap(self.sheet_w, self.sheet_h)
-        pixmap.fill(QtCore.Qt.transparent)
+        pixmap.fill(QtCore.Qt.GlobalColor.transparent)
         painter = QtGui.QPainter(pixmap)
         renderer.render(painter)
         painter.end()

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 """Qt threads for running the Bang server and client in the background."""
+# mypy: ignore-errors
 
 import asyncio
 import json

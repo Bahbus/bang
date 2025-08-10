@@ -1,4 +1,4 @@
-"""Blessing card from the High Noon expansion. All cards are Hearts"""
+"""Blessing card from High Noon. Treat all cards as Hearts."""
 
 from __future__ import annotations
 

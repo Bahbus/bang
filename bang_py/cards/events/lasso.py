@@ -1,5 +1,4 @@
-"""Lasso card from the Fistful of Cards expansion. Cards in play in front of players have no
-effect."""
+"""Lasso card from Fistful of Cards. Cards in play in front of players have no effect."""
 
 from __future__ import annotations
 

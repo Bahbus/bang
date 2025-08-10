@@ -36,13 +36,13 @@ class BaseCard(ABC):
         raise NotImplementedError
 
     def check_dynamite(self, gm: "GameManagerProtocol", player: "Player") -> bool:
-        """Hook for start-of-turn Dynamite checks. Default implementation."""
+        """Perform the start-of-turn Dynamite check."""
         return False
 
     def check_turn(self, gm: "GameManagerProtocol", player: "Player") -> bool:
-        """Hook for start-of-turn Jail checks. Default implementation."""
+        """Perform the start-of-turn Jail check."""
         return False
 
     def draw_check(self, gm: "GameManagerProtocol", player: "Player") -> bool:
-        """Hook for cards that perform a draw! check. Default implementation."""
+        """Perform a draw! check."""
         return False

@@ -145,7 +145,8 @@ class BangServer:
             return
 
         await websocket.send("Enter your name:")
-        name = await websocket.recv()
+        raw_name = await websocket.recv()
+        name = raw_name.decode() if isinstance(raw_name, bytes) else raw_name
         if not validate_player_name(name):
             await websocket.send("Invalid name")
             return

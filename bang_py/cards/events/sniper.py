@@ -1,6 +1,4 @@
-"""Sniper card from the Fistful of Cards expansion. During their turn, each player may discard 2
-Bang! cards together against a player. It counts as 1 Bang!, but can only be countered by 2
-Missed!"""
+"""Sniper card from Fistful of Cards. Discard 2 Bang! to hit, only 2 Missed! can block."""
 
 from __future__ import annotations
 

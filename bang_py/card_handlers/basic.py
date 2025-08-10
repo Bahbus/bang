@@ -26,7 +26,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type hints only
     from ..game_manager import GameManager
 
 
-def register(game: 'GameManager') -> None:
+def register(game: "GameManager") -> None:
     """Register handlers for basic cards on ``game``."""
     game._card_handlers.update(
         {

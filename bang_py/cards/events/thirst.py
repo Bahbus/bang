@@ -1,4 +1,4 @@
-"""Thirst card from the High Noon expansion. Players draw only one card"""
+"""Thirst card from High Noon. Players draw only one card."""
 
 from __future__ import annotations
 

@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.13-dev"]
+        python-version: ["3.12", "3.13-dev"]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -29,10 +29,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
       - name: Run pre-commit
-        run: |
-          files=$(git diff --name-only HEAD^ -- '*.py')
-          if [ -n "$files" ]; then
-            uv run pre-commit run --files $files
-          fi
+        run: uv run --extra dev pre-commit run --files $(git ls-files '*.py')
+      - name: Run mypy
+        run: uv run --extra dev mypy --ignore-missing-imports bang_py tests
       - name: Run tests
-        run: uv run pytest
+        run: uv run --extra dev pytest

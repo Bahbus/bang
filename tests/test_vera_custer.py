@@ -15,6 +15,8 @@ def test_vera_custer_copies_other_ability() -> None:
     gm.add_player(willy)
     gm.add_player(target)
 
+    assert isinstance(vera.character, VeraCuster)
+    assert isinstance(willy.character, WillyTheKid)
     vera.character.copy_ability(gm, vera, willy)
     assert has_ability(vera, WillyTheKid)
 

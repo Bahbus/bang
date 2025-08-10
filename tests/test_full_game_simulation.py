@@ -177,7 +177,11 @@ def simulate_game(num_players: int) -> str:
     chars = CHAR_CLASSES[:]
     random.shuffle(chars)
     for i in range(num_players):
-        player = Player(f"P{i}", role=roles[i](), character=chars[i]())
+        player = Player(
+            f"P{i}",
+            role=roles[i](),  # type: ignore[abstract]
+            character=chars[i](),  # type: ignore[abstract]
+        )
         gm.add_player(player)
     result: list[str] = []
 

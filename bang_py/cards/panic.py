@@ -1,5 +1,4 @@
-"""Panic! card from the base game. Range 1: choose a card from the target's hand or in play and take
-it."""
+"""Panic! card from the base game. Range 1: take a card from the target."""
 
 from __future__ import annotations
 from .card import BaseCard

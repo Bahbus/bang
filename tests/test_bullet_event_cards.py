@@ -13,7 +13,6 @@ from bang_py.cards.events import (
 )
 from bang_py.cards import BangCard, MissedCard
 from bang_py.deck import Deck
-from collections import deque
 
 
 def test_handcuffs_restricts_suit():
@@ -49,6 +48,7 @@ def test_new_identity_event_redraw():
 
 def test_lasso_event_ignores_equipment():
     from bang_py.cards import MustangCard
+
     gm = GameManager()
     a = Player("A")
     b = Player("B")
@@ -108,6 +108,7 @@ def test_russian_roulette_players_discard_missed():
 
 def test_rev_carabine_range():
     from bang_py.cards import RevCarabineCard
+
     p = Player("P")
     RevCarabineCard().play(p)
     assert p.attack_range == 4

@@ -1,5 +1,4 @@
-"""Handcuffs card from the High Noon expansion. After their draw phase, each player announces a suit
-and can only play that suit for the rest of their turn."""
+"""Handcuffs card from High Noon. After drawing, choose a suit and play only that suit."""
 
 from __future__ import annotations
 

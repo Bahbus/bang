@@ -1,4 +1,4 @@
-"""Hard Liquor card from the Fistful of Cards expansion. Skip draw to heal 1"""
+"""Hard Liquor card from Fistful of Cards. Skip drawing to heal 1."""
 
 from __future__ import annotations
 

@@ -1,5 +1,4 @@
-"""Law of the West card from the Fistful of Cards expansion. During their draw phase, each player
-must reveal the second card they drew and play it immediately if possible."""
+"""Law of the West card from Fistful of Cards. Reveal and play the second drawn card."""
 
 from __future__ import annotations
 

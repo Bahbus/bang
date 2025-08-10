@@ -14,7 +14,7 @@ class Dummy(BaseCharacter):
 
 def test_base_character_is_abstract() -> None:
     with pytest.raises(TypeError):
-        BaseCharacter()
+        BaseCharacter()  # type: ignore[abstract]
 
 
 class NullChar(BaseCharacter):
@@ -26,4 +26,5 @@ def test_simple_character_ability_returns_false() -> None:
     gm = GameManager()
     player = Player("Hero", character=NullChar())
     gm.add_player(player)
+    assert player.character is not None
     assert player.character.ability(gm, player) is False

@@ -1,4 +1,4 @@
-"""The Sermon card from the High Noon expansion. Bang! cannot be played"""
+"""The Sermon card from High Noon. Bang! cards cannot be played."""
 
 from __future__ import annotations
 

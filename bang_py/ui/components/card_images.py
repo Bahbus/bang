@@ -6,19 +6,21 @@ from importlib import resources
 
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from PySide6 import QtCore, QtGui, QtWidgets
+from .ranksuit_loader import RankSuitIconLoader
 
+QtMultimedia: Any | None
 try:
-    from PySide6 import QtMultimedia
+    from PySide6 import QtMultimedia as QtMultimediaMod
 except ImportError:  # pragma: no cover - optional dependency
     QtMultimedia = None
+else:
+    QtMultimedia = QtMultimediaMod
 
 if TYPE_CHECKING:
-    from PySide6 import QtMultimedia
-
-from .ranksuit_loader import RankSuitIconLoader
+    from PySide6 import QtMultimedia as _QtMultimedia  # noqa: F401
 
 DEFAULT_SIZE = (60, 90)
 ASSETS_DIR = cast(Path, resources.files("bang_py").joinpath("assets"))
@@ -116,8 +118,8 @@ def load_character_image(name: str, width: int = 60, height: int = 90) -> QtGui.
         pix = pix.scaled(
             width,
             height,
-            QtCore.Qt.KeepAspectRatio,
-            QtCore.Qt.SmoothTransformation,
+            QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+            QtCore.Qt.TransformationMode.SmoothTransformation,
         )
     _character_image_cache[cache_key] = pix
     return pix
@@ -135,13 +137,14 @@ def load_sound(name: str, parent: QtCore.QObject | None = None) -> QtCore.QObjec
 
     if QtMultimedia is None:
         return None
+    assert QtMultimedia is not None
 
     base = name.lower().replace(" ", "_")
     cached = _sound_cache.get(base)
     if cached is not None:
         return cached
 
-    class _MediaPlayer(QtMultimedia.QMediaPlayer):
+    class _MediaPlayer(QtMultimedia.QMediaPlayer):  # type: ignore[name-defined]
         """Small helper to ensure playback stops when deleted."""
 
         def __del__(self) -> None:  # pragma: no cover - best effort
@@ -206,8 +209,8 @@ class CardImageLoader:
                 pix = pix.scaled(
                     width,
                     height,
-                    QtCore.Qt.KeepAspectRatio,
-                    QtCore.Qt.SmoothTransformation,
+                    QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                    QtCore.Qt.TransformationMode.SmoothTransformation,
                 )
             templates[key] = pix
         return templates
@@ -225,8 +228,8 @@ class CardImageLoader:
                 pix = pix.scaled(
                     width,
                     height,
-                    QtCore.Qt.KeepAspectRatio,
-                    QtCore.Qt.SmoothTransformation,
+                    QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                    QtCore.Qt.TransformationMode.SmoothTransformation,
                 )
             backs[key] = pix
         return backs
@@ -282,8 +285,8 @@ class CardImageLoader:
             icon = icon.scaled(
                 int(self.width * 0.6),
                 int(self.height * 0.6),
-                QtCore.Qt.KeepAspectRatio,
-                QtCore.Qt.SmoothTransformation,
+                QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                QtCore.Qt.TransformationMode.SmoothTransformation,
             )
             x = (self.width - icon.width()) // 2
             y = (self.height - icon.height()) // 2
@@ -295,8 +298,8 @@ class CardImageLoader:
                 action_icon = action_icon.scaled(
                     int(self.width * 0.35),
                     int(self.width * 0.35),
-                    QtCore.Qt.KeepAspectRatio,
-                    QtCore.Qt.SmoothTransformation,
+                    QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                    QtCore.Qt.TransformationMode.SmoothTransformation,
                 )
                 x = self.width - action_icon.width()
                 y = self.height - action_icon.height()

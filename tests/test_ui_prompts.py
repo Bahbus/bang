@@ -1,5 +1,7 @@
 import pytest
 
+# mypy: ignore-errors
+
 pytest.importorskip(
     "PySide6", reason="PySide6 not installed; skipping GUI tests", exc_type=ImportError
 )

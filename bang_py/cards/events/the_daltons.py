@@ -1,5 +1,4 @@
-"""The Daltons card from the High Noon expansion. When The Daltons enters play, each player that has
-any blue cards in front of them must choose one to discard."""
+"""The Daltons card from High Noon. Players with blue cards must discard one."""
 
 from __future__ import annotations
 

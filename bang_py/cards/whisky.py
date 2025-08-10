@@ -1,5 +1,4 @@
-"""Whisky card from the Fistful of Cards expansion. Discard another card with Whisky to heal 2
-health."""
+"""Whisky card from Fistful of Cards. Discard another card with Whisky to heal 2 health."""
 
 from __future__ import annotations
 from .card import BaseCard

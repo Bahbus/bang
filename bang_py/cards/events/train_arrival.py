@@ -1,5 +1,4 @@
-"""Train Arrival card from the High Noon expansion. During their draw phase, each player draws an
-additional card."""
+"""Train Arrival card from High Noon. Players draw an extra card during the draw phase."""
 
 from __future__ import annotations
 

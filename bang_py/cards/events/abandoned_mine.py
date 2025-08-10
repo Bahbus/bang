@@ -1,5 +1,4 @@
-"""Abandoned Mine card from the Fistful of Cards expansion. During draw, draw from discard pile if
-possible. Discards go face down on top of the deck."""
+"""Abandoned Mine card from Fistful of Cards. Draw from discard instead of the deck."""
 
 from __future__ import annotations
 
