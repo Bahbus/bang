@@ -142,6 +142,10 @@ class GameManager(
         """Handle Pat Brennan's draw ability."""
         return super(GameManager, self).pat_brennan_draw(player, target, card)
 
+    def ricochet_shoot(self, player: Player, target: Player, card_name: str) -> bool:
+        """Discard a Bang! to shoot at ``card_name`` in front of ``target``."""
+        return super(GameManager, self).ricochet_shoot(player, target, card_name)
+
     # ------------------------------------------------------------------
     # Hook stubs
     def _hand_limit(self, player: Player) -> int:

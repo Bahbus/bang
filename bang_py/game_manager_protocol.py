@@ -177,6 +177,9 @@ class GameManagerProtocol(Protocol):
     def uncle_will_ability(self, player: Player, card: BaseCard) -> bool:
         """Play ``card`` as a General Store once per turn."""
 
+    def ricochet_shoot(self, player: Player, target: Player, card_name: str) -> bool:
+        """Discard a Bang! to shoot at ``card_name`` in front of ``target``."""
+
     def reset_turn_flags(self, player: Player) -> None:
         """Reset per-turn ability flags on ``player``."""
 
