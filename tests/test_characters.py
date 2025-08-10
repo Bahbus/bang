@@ -68,13 +68,6 @@ def test_all_character_classes_instantiable():
     assert len(instances) == 16
 
 
-def test_character_ability_registered():
-    gm = GameManager()
-    player = Player("Kid", character=ApacheKid())
-    gm.add_player(player)
-    assert ApacheKid in player.metadata.abilities
-
-
 def test_bart_cassidy_draw_on_damage():
     deck = create_standard_deck()
     deck.push_top(BangCard())

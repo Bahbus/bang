@@ -1,7 +1,6 @@
 import random
 
 import pytest
-
 from bang_py.cards import (
     BangCard,
     BeerCard,
