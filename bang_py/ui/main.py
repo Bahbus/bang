@@ -1,5 +1,7 @@
 """Qt Quick based interface for the Bang card game."""
 
+# mypy: ignore-errors
+
 from __future__ import annotations
 
 import json

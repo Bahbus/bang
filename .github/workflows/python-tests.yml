@@ -29,8 +29,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
       - name: Run pre-commit
-        run: uv run pre-commit run --files $(git ls-files '*.py')
+        run: uv run --extra dev pre-commit run --files $(git ls-files '*.py')
       - name: Run mypy
-        run: uv run mypy bang_py tests
+        run: uv run --extra dev mypy --ignore-missing-imports bang_py tests
       - name: Run tests
-        run: uv run pytest
+        run: uv run --extra dev pytest

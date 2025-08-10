@@ -4,6 +4,7 @@ import importlib.util
 import os
 import pathlib
 import sys
+from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 import pytest
@@ -55,7 +56,7 @@ def _set_token_key(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def qt_app() -> QtWidgets.QApplication:
+def qt_app() -> Iterator[QtWidgets.QApplication]:
     """Create a ``QApplication`` instance for Qt tests."""
     pytest.importorskip("PySide6")
     pytest.importorskip("PySide6.QtWidgets")
@@ -65,9 +66,10 @@ def qt_app() -> QtWidgets.QApplication:
     os.environ.setdefault("BANG_AUTO_CLOSE", "1")
 
     app = QtWidgets.QApplication.instance()
-    created = app is None
+    created = not isinstance(app, QtWidgets.QApplication)
     if created:
         app = QtWidgets.QApplication([])
+    assert isinstance(app, QtWidgets.QApplication)
     yield app
     if created:
         app.quit()

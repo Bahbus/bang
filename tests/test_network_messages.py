@@ -20,7 +20,7 @@ def test_oversized_message_closes_connection() -> None:
         async with serve(
             server.handler, server.host, server.port, max_size=MAX_MESSAGE_SIZE
         ) as ws_server:
-            server.port = ws_server.sockets[0].getsockname()[1]
+            server.port = next(iter(ws_server.sockets)).getsockname()[1]
             async with connect(f"ws://localhost:{server.port}") as ws:
                 await ws.recv()
                 await ws.send("z999")
@@ -40,7 +40,7 @@ def test_malformed_message_returns_error() -> None:
     async def run_flow() -> None:
         server = BangServer(host="localhost", port=0, room_code="z998")
         async with serve(server.handler, server.host, server.port) as ws_server:
-            server.port = ws_server.sockets[0].getsockname()[1]
+            server.port = next(iter(ws_server.sockets)).getsockname()[1]
             async with connect(f"ws://localhost:{server.port}") as ws:
                 await ws.recv()
                 await ws.send("z998")
@@ -59,7 +59,7 @@ def test_non_object_payload_rejected() -> None:
     async def run_flow() -> None:
         server = BangServer(host="localhost", port=0, room_code="z996")
         async with serve(server.handler, server.host, server.port) as ws_server:
-            server.port = ws_server.sockets[0].getsockname()[1]
+            server.port = next(iter(ws_server.sockets)).getsockname()[1]
             async with connect(f"ws://localhost:{server.port}") as ws:
                 await ws.recv()
                 await ws.send("z996")
@@ -78,7 +78,7 @@ def test_invalid_payload_rejected() -> None:
     async def run_flow() -> None:
         server = BangServer(host="localhost", port=0, room_code="z997")
         async with serve(server.handler, server.host, server.port) as ws_server:
-            server.port = ws_server.sockets[0].getsockname()[1]
+            server.port = next(iter(ws_server.sockets)).getsockname()[1]
             async with connect(f"ws://localhost:{server.port}") as ws:
                 await ws.recv()
                 await ws.send("z997")
