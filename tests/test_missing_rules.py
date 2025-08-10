@@ -20,6 +20,7 @@ def test_bang_requires_range():
     target.health = target.max_health
     # give target Mustang to increase distance to 2
     from bang_py.cards.mustang import MustangCard
+
     MustangCard().play(target)
     attacker.hand.append(BangCard())
     gm.play_card(attacker, attacker.hand[-1], target)
@@ -38,6 +39,7 @@ def test_panic_requires_range_one():
     p1.hand.append(PanicCard())
     # Increase distance to 2
     from bang_py.cards.mustang import MustangCard
+
     MustangCard().play(p2)
     gm.play_card(p1, p1.hand[0], p2)
     assert len(p2.hand) == 1

@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Utility functions for styling the Qt interface."""
+
+from __future__ import annotations
 
 import os
 
@@ -15,8 +15,7 @@ def get_current_theme() -> str:
 def get_stylesheet(theme: str) -> str:
     """Return a Qt stylesheet string for the requested theme."""
     if theme == "dark":
-        return (
-            """
+        return """
             QWidget {
                 background-color: #2b2b2b;
                 color: #dddddd;
@@ -34,9 +33,7 @@ def get_stylesheet(theme: str) -> str:
                 color: #ffffff;
             }
             """
-        )
-    return (
-        """
+    return """
         QWidget {
             background-color: #deb887;
             color: #000000;
@@ -54,4 +51,3 @@ def get_stylesheet(theme: str) -> str:
             color: #000000;
         }
         """
-    )

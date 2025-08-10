@@ -6,6 +6,7 @@ from bang_py.characters.base import BaseCharacter
 class BonusLife(BaseCharacter):
     def ability(self, *_: object, **__: object) -> bool:
         return False
+
     starting_health = 5
 
 
