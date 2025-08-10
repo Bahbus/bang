@@ -16,4 +16,9 @@ Do not add other formats without a compelling reason.
 - Record the origin and license for every asset in `ATTRIBUTION.md` whenever assets change.
 
 ## Tests
-- `tests/test_audio_usage.py`, `tests/test_icon_usage.py`, and `tests/test_root_asset_usage.py` check that assets referenced by the code exist and that unused files are avoided. Run `pytest` after modifying assets to ensure they pass.
+- `tests/test_audio_usage.py`, `tests/test_icon_usage.py`, and
+  `tests/test_root_asset_usage.py` check that assets referenced by the code
+  exist and that unused files are avoided.
+- After changing assets, run `uv run pre-commit run --files <file> [<file> ...]`
+  and `uv run pytest tests/test_audio_usage.py tests/test_icon_usage.py
+  tests/test_root_asset_usage.py`.
