@@ -46,6 +46,18 @@ make lint FILES="<path> [<path> ...]"  # run pre-commit on specific files
 make test                              # execute the test suite
 ```
 
+### Adding cards or UI components
+
+- To add a new card, create its definition under `bang_py/cards` and any
+  handlers in `bang_py/card_handlers`. Include related assets in
+  `bang_py/assets`, document them in `bang_py/assets/ATTRIBUTION.md`, and update
+  or add tests. Run `uv run pre-commit run --files <file> [<file> ...]` and
+  `uv run pytest` before committing.
+- To add a new UI component, put helper modules in `bang_py/ui/components` and
+  QML files in `bang_py/ui/qml`. Follow the `AGENTS.md` guidelines, reference
+  any assets, update `ATTRIBUTION.md` if needed, and run `uv run pre-commit run
+  --files <file> [<file> ...]` and `uv run pytest`.
+
 ## Running the server
 
 Install the package using **Python 3.13+**. This pulls in
