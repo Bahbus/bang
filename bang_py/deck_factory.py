@@ -1,4 +1,4 @@
-"""Create decks with balanced suits and optional expansion cards for Bang!."""
+"""Build decks with balanced suits and optional expansion cards."""
 
 from __future__ import annotations
 
