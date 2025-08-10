@@ -1,5 +1,4 @@
-"""General Store card from the base game. Reveal cards for all players to choose one in turn
-order."""
+"""General Store card from the base game. Reveal cards for players to choose in turn order."""
 
 from __future__ import annotations
 from .card import BaseCard

@@ -1,5 +1,4 @@
-"""The Reverend card from the High Noon expansion. Beer cannot be played and
-hand limit is 2."""
+"""The Reverend card from High Noon. Beer cannot be played and hand limit is 2."""
 
 from __future__ import annotations
 

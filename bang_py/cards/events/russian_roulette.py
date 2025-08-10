@@ -1,6 +1,7 @@
-"""Russian Roulette card from the Fistful of Cards expansion. When Russian Roulette enters play,
-starting with the Sheriff each player discards a Missed! The first not to do so loses 2 life
-points."""
+"""Russian Roulette card from Fistful of Cards.
+
+Starting with the Sheriff, each player discards a Missed!; first to fail loses 2 life.
+"""
 
 from __future__ import annotations
 

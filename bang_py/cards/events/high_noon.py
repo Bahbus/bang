@@ -1,4 +1,4 @@
-"""High Noon card from the High Noon expansion. Lose 1 life at start of turn"""
+"""High Noon card from the High Noon expansion. Lose 1 life at start of turn."""
 
 from __future__ import annotations
 

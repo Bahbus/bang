@@ -1,5 +1,4 @@
-"""Rag Time card from the Fistful of Cards expansion. Discard another card to take a card from any
-player."""
+"""Rag Time card from Fistful of Cards. Discard a card to take a card from any player."""
 
 from __future__ import annotations
 from .card import BaseCard

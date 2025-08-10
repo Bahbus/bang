@@ -1,4 +1,4 @@
-"""Curse card from the High Noon expansion. All cards are Spades"""
+"""Curse card from High Noon. Treat all cards as Spades."""
 
 from __future__ import annotations
 

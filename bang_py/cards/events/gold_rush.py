@@ -1,5 +1,4 @@
-"""Gold Rush card from the High Noon expansion. The game proceeds counter-clockwise, but card
-effects still proceed clockwise."""
+"""Gold Rush card from High Noon. Turn order goes counter-clockwise, effects resolve clockwise."""
 
 from __future__ import annotations
 

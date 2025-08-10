@@ -1,5 +1,4 @@
-"""New Identity card from the High Noon expansion. At the start of their turn,
-each player may look at their other face down character card and switch to it with 2 life."""
+"""New Identity card from High Noon. At start of turn, swap to hidden character with 2 life."""
 
 from __future__ import annotations
 

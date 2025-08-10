@@ -1,4 +1,4 @@
-"""Ricochet card from the Fistful of Cards expansion. Bang! to discard cards in play"""
+"""Ricochet card from Fistful of Cards. Use Bang! to discard cards in play."""
 
 from __future__ import annotations
 

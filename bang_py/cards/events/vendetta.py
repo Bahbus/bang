@@ -1,5 +1,4 @@
-"""Vendetta card from the Fistful of Cards expansion. At the end of their turn, each player draws!
-On a heart, they may play another turn. They cannot benefit again."""
+"""Vendetta card from Fistful of Cards. At turn end, draw! and on a heart take another turn."""
 
 from __future__ import annotations
 

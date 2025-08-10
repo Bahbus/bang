@@ -1,4 +1,4 @@
-"""Ranch card from the Fistful of Cards expansion. Optional discard and redraw"""
+"""Ranch card from Fistful of Cards. Optionally discard and redraw."""
 
 from __future__ import annotations
 

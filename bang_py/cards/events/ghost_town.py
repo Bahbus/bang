@@ -1,5 +1,4 @@
-"""Ghost Town card from the High Noon expansion. During their turn, eliminated players come back as
-ghosts with 3 cards and cannot die. At the end of their turn, they are eliminated again."""
+"""Ghost Town card from High Noon. Eliminated players return as ghosts for one turn."""
 
 from __future__ import annotations
 
