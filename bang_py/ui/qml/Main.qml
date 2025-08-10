@@ -73,7 +73,7 @@ Item {
                 validator: IntValidator { bottom: 1; top: 65535 }
             }
             Label {
-                text: qsTr("Enter a valid port")
+                text: qsTr("Port must be 1-65535")
                 color: "red"
                 visible: portField.text !== "" && !portField.acceptableInput
             }
@@ -146,7 +146,7 @@ Item {
                 validator: IntValidator { bottom: 1; top: 65535 }
             }
             Label {
-                text: qsTr("Enter a valid port")
+                text: qsTr("Port must be 1-65535")
                 color: "red"
                 visible: portJoinField.text !== "" && !portJoinField.acceptableInput
             }

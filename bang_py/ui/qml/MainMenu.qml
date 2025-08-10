@@ -35,7 +35,7 @@ Rectangle {
             background: Rectangle {
                 color: theme === "dark" ? "#3c3c3c" : "#fff8dc"
             }
-            validator: RegExpValidator { regExp: /^[ -~]{1,20}$/ }
+            validator: RegExpValidator { regExp: /^[\x20-\x7E]{1,20}$/ }
         }
 
         Label {
