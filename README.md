@@ -20,6 +20,19 @@ Run the checks on changed files before committing:
 uv run pre-commit run --files <path> [<path> ...]
 ```
 
+Run the test suite:
+
+```bash
+uv run pytest
+```
+
+If you modify assets, update `bang_py/assets/ATTRIBUTION.md` with the source and
+license and run the asset tests:
+
+```bash
+uv run pytest tests/test_icon_usage.py tests/test_audio_usage.py tests/test_root_asset_usage.py
+```
+
 Run the type checker directly with:
 
 ```bash
