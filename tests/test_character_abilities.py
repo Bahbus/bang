@@ -8,6 +8,7 @@ from bang_py.game_manager import GameManager
 from bang_py.player import Player
 from bang_py.characters.sid_ketchum import SidKetchum
 from bang_py.characters.uncle_will import UncleWill
+from bang_py.characters.calamity_janet import CalamityJanet
 
 
 def test_sid_ketchum_heal_ability() -> None:
@@ -61,3 +62,18 @@ def test_uncle_will_general_store_ability() -> None:
     assert will.hand[0].card_name == "Bang!"
     assert other.hand[0].card_name == "Beer"
     assert gm.discard_pile[-1].card_name == "Missed!"
+
+
+def test_calamity_janet_bang_as_miss() -> None:
+    random.seed(0)
+    gm = GameManager()
+    attacker = Player("A")
+    janet = Player("Janet", character=CalamityJanet())
+    gm.add_player(attacker)
+    gm.add_player(janet)
+    attacker.hand.append(BangCard())
+    janet.hand.append(BangCard())
+    gm.play_card(attacker, attacker.hand[0], janet)
+    assert janet.health == janet.max_health
+    assert not janet.hand
+    assert any(isinstance(c, BangCard) for c in gm.discard_pile)

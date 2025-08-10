@@ -69,6 +69,15 @@ class GameManagerProtocol(Protocol):
     def _initialize_event_deck(self) -> None:
         """Build and shuffle the event deck based on active expansions."""
 
+    def draw_event_card(self) -> None:
+        """Draw and apply the next event card."""
+
+    def _prepare_high_noon_deck(self) -> deque[EventCard] | None:
+        """Create and shuffle the High Noon event deck."""
+
+    def _prepare_fistful_deck(self) -> deque[EventCard] | None:
+        """Create and shuffle the Fistful of Cards event deck."""
+
     def _register_card_handlers(self, groups: Iterable[str] | None = None) -> None:
         """Populate the card handler registry."""
 
@@ -210,6 +219,33 @@ class GameManagerProtocol(Protocol):
 
     def _apply_event_start_effects(self, player: Player) -> Player | None:
         """Apply start-of-turn event effects returning the acting player."""
+
+    def _sheriff_event_updates(self, player: Player, pre_ghost: bool) -> Player:
+        """Update sheriff counters and handle Ghost Town revivals."""
+
+    def _process_new_identity(self, player: Player) -> None:
+        """Handle the New Identity event for ``player``."""
+
+    def apply_new_identity(self, player: Player) -> None:
+        """Swap ``player`` to their unused character if the event is active."""
+
+    def _skip_turn_if_needed(self) -> bool:
+        """Skip the current turn if required by active events."""
+
+    def _apply_start_damage(self, player: Player) -> bool:
+        """Apply start-of-turn damage to ``player`` and return True if they survive."""
+
+    def _apply_fistful_of_cards(self, player: Player) -> bool:
+        """Resolve Fistful of Cards effects for ``player`` and return True if they survive."""
+
+    def _handle_dead_man(self, player: Player) -> None:
+        """Apply Dead Man event revival if conditions are met."""
+
+    def _increment_sheriff_turns(self) -> None:
+        """Increment sheriff turn count and draw events when eligible."""
+
+    def _ghost_town_cleanup(self, player: Player) -> Player:
+        """Remove revived ghosts after two sheriff turns."""
 
     def _reactivate_green_equipment(self, player: Player) -> None:
         """Reactivate green equipment on ``player``."""
