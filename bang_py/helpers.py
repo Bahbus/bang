@@ -1,4 +1,4 @@
-"""Utility helpers for card checks and ability resolution."""
+"""Helpers for card checks and ability resolution."""
 
 from __future__ import annotations
 
