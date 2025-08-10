@@ -8,6 +8,7 @@ import json
 import os
 import secrets
 from importlib import resources
+from typing import Callable
 
 from PySide6 import QtCore, QtWidgets, QtQuick, QtQml
 
@@ -52,6 +53,7 @@ class BangUI(QtCore.QObject):
         self.room_code = ""
         self.local_name = ""
         self.game_root: QtCore.QObject | None = None
+        self._prompt_queue: list[Callable[[], None]] = []
 
     # Menu callbacks --------------------------------------------------
     def _host_menu(
@@ -160,87 +162,158 @@ class BangUI(QtCore.QObject):
             if self.game_root is not None:
                 self.game_root.setProperty("theme", self.theme)
 
-    def _option_prompt(self, title: str, options: list[str]) -> int | None:
+    def _enqueue_prompt(self, func: Callable[[], None]) -> None:
+        """Schedule ``func`` to run after previous prompts complete."""
+
+        self._prompt_queue.append(func)
+        if len(self._prompt_queue) == 1:
+            func()
+
+    def _run_next_prompt(self) -> None:
+        """Advance to the next queued prompt, if any."""
+
+        if self._prompt_queue:
+            self._prompt_queue.pop(0)
+        if self._prompt_queue:
+            self._prompt_queue[0]()
+
+    def _option_prompt(
+        self,
+        title: str,
+        options: list[str],
+        callback: Callable[[int | None], None] | None = None,
+    ) -> int | None:
         qml_dir = resources.files("bang_py.ui") / "qml"
         with resources.as_file(qml_dir / "OptionPrompt.qml") as qml_path:
             comp = QtQml.QQmlComponent(self.view.engine(), str(qml_path))
         dialog = comp.create()
         if dialog is None:
+            if callback is not None:
+                callback(None)
             return None
         dialog.setProperty("titleText", title)
         dialog.setProperty("options", options)
-        loop = QtCore.QEventLoop()
-        result: dict[str, int | None] = {"index": None}
+
+        if callback is None:
+            loop = QtCore.QEventLoop()
+            result: dict[str, int | None] = {"index": None}
+
+            def _accepted_sync(i: int) -> None:
+                result["index"] = int(i)
+                loop.quit()
+
+            def _rejected_sync() -> None:
+                loop.quit()
+
+            dialog.acceptedIndex.connect(_accepted_sync)
+            dialog.rejected.connect(_rejected_sync)
+            dialog.open()
+            loop.exec()
+            dialog.deleteLater()
+            return result["index"]
 
         def _accepted(i: int) -> None:
-            result["index"] = int(i)
-            loop.quit()
+            dialog.deleteLater()
+            callback(int(i))
 
         def _rejected() -> None:
-            loop.quit()
+            dialog.deleteLater()
+            callback(None)
 
         dialog.acceptedIndex.connect(_accepted)
         dialog.rejected.connect(_rejected)
         dialog.open()
-        loop.exec()
-        dialog.deleteLater()
-        return result["index"]
+        return None
 
-    def _confirm_prompt(self, text: str) -> bool:
+    def _confirm_prompt(self, text: str, callback: Callable[[bool], None] | None = None) -> bool:
         qml_dir = resources.files("bang_py.ui") / "qml"
         with resources.as_file(qml_dir / "ConfirmPrompt.qml") as qml_path:
             comp = QtQml.QQmlComponent(self.view.engine(), str(qml_path))
         dialog = comp.create()
         if dialog is None:
+            if callback is not None:
+                callback(False)
             return False
         dialog.setProperty("message", text)
-        loop = QtCore.QEventLoop()
-        result = {"ok": False}
+
+        if callback is None:
+            loop = QtCore.QEventLoop()
+            result = {"ok": False}
+
+            def _accepted_sync() -> None:
+                result["ok"] = True
+                loop.quit()
+
+            def _rejected_sync() -> None:
+                loop.quit()
+
+            dialog.accepted.connect(_accepted_sync)
+            dialog.rejected.connect(_rejected_sync)
+            dialog.open()
+            loop.exec()
+            dialog.deleteLater()
+            return result["ok"]
 
         def _accepted() -> None:
-            result["ok"] = True
-            loop.quit()
+            dialog.deleteLater()
+            callback(True)
 
         def _rejected() -> None:
-            loop.quit()
+            dialog.deleteLater()
+            callback(False)
 
         dialog.accepted.connect(_accepted)
         dialog.rejected.connect(_rejected)
         dialog.open()
-        loop.exec()
-        dialog.deleteLater()
-        return result["ok"]
+        return False
 
-    def _message_dialog(self, text: str, error: bool = False) -> None:
+    def _message_dialog(
+        self, text: str, error: bool = False, callback: Callable[[], None] | None = None
+    ) -> None:
         qml_dir = resources.files("bang_py.ui") / "qml"
         with resources.as_file(qml_dir / "MessageDialog.qml") as qml_path:
             comp = QtQml.QQmlComponent(self.view.engine(), str(qml_path))
         dialog = comp.create()
         if dialog is None:
+            if callback is not None:
+                callback()
             return
         dialog.setProperty("message", text)
         dialog.setProperty("error", error)
-        loop = QtCore.QEventLoop()
-        dialog.accepted.connect(loop.quit)
+
+        if callback is None:
+            loop = QtCore.QEventLoop()
+            dialog.accepted.connect(loop.quit)
+            dialog.open()
+            loop.exec()
+            dialog.deleteLater()
+            return
+
+        def _accepted() -> None:
+            dialog.deleteLater()
+            callback()
+            self._run_next_prompt()
+
+        dialog.accepted.connect(_accepted)
         dialog.open()
-        loop.exec()
-        dialog.deleteLater()
 
     def _append_message(self, msg: str) -> None:
         try:
             data = json.loads(msg)
         except json.JSONDecodeError:
-            if self.game_root is not None:
-                cur = self.game_root.property("logText") or ""
-                self.game_root.setProperty("logText", cur + msg + "\n")
+            self._enqueue_prompt(lambda: self._message_dialog(msg, True, lambda: None))
             return
 
         if isinstance(data, dict):
             if "error" in data:
-                self._message_dialog(str(data["error"]), True)
+                self._enqueue_prompt(
+                    lambda: self._message_dialog(str(data["error"]), True, lambda: None)
+                )
                 return
             if "result" in data:
-                self._message_dialog(str(data["result"]))
+                self._enqueue_prompt(
+                    lambda: self._message_dialog(str(data["result"]), False, lambda: None)
+                )
                 return
             if "message" in data and self.game_root is not None:
                 cur = self.game_root.property("logText") or ""
@@ -318,36 +391,53 @@ class BangUI(QtCore.QObject):
         self.game_root.setProperty("hand", hand)
 
     def _show_prompt(self, prompt: str, data: dict) -> None:
-        if prompt == "general_store":
-            cards = data.get("cards", [])
-            index = self._option_prompt("General Store", cards)
-            if index is not None:
-                self._send_action({"action": "general_store_pick", "index": index})
+        def _run() -> None:
+            if prompt == "general_store":
+                cards = data.get("cards", [])
+
+                def _picked(index: int | None) -> None:
+                    if index is not None:
+                        self._send_action({"action": "general_store_pick", "index": index})
+                        self._run_next_prompt()
+                    else:
+                        self._message_dialog("Selection canceled", True, lambda: None)
+
+                self._option_prompt("General Store", cards, _picked)
+            elif "options" in data:
+                opts = [o.get("name", str(i)) for i, o in enumerate(data["options"])]
+
+                def _chosen(index: int | None) -> None:
+                    if index is not None:
+                        self._send_action(
+                            {
+                                "action": "use_ability",
+                                "ability": prompt,
+                                "target": data["options"][index]["index"],
+                            }
+                        )
+                        self._run_next_prompt()
+                    else:
+                        self._message_dialog("Selection canceled", True, lambda: None)
+
+                self._option_prompt(prompt.replace("_", " ").title(), opts, _chosen)
+            elif prompt == "confirm_discard":
+                msg = data.get("message", "Discard card?")
+
+                def _confirm(ok: bool) -> None:
+                    if ok:
+                        self._send_action({"action": "confirm_discard"})
+                        self._run_next_prompt()
+                    else:
+                        self._message_dialog("Discard canceled", True, lambda: None)
+
+                self._confirm_prompt(msg, _confirm)
             else:
-                self._message_dialog("Selection canceled", True)
-        elif "options" in data:
-            opts = [o.get("name", str(i)) for i, o in enumerate(data["options"])]
-            index = self._option_prompt(prompt.replace("_", " ").title(), opts)
-            if index is not None:
-                self._send_action(
-                    {
-                        "action": "use_ability",
-                        "ability": prompt,
-                        "target": data["options"][index]["index"],
-                    }
-                )
-            else:
-                self._message_dialog("Selection canceled", True)
-        elif prompt == "confirm_discard":
-            msg = data.get("message", "Discard card?")
-            if self._confirm_prompt(msg):
-                self._send_action({"action": "confirm_discard"})
-            else:
-                self._message_dialog("Discard canceled", True)
-        else:
-            if self.game_root is not None:
-                cur = self.game_root.property("logText") or ""
-                self.game_root.setProperty("logText", cur + f"Prompt: {prompt}\n")
+                if self.game_root is not None:
+                    cur = self.game_root.property("logText") or ""
+                    self.game_root.setProperty("logText", cur + f"Prompt: {prompt}\n")
+                self._run_next_prompt()
+
+        self._enqueue_prompt(_run)
 
     def show(self) -> None:
         self.view.setTitle("Bang!")

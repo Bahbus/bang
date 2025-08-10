@@ -73,7 +73,7 @@ def test_show_prompt_general_store_sends_action(qt_app, monkeypatch):
         called["payload"] = payload
 
     monkeypatch.setattr(ui, "_send_action", fake_send)
-    monkeypatch.setattr(ui, "_option_prompt", lambda title, opts: 1)
+    monkeypatch.setattr(ui, "_option_prompt", lambda title, opts, cb: cb(1))
     ui._show_prompt("general_store", {"cards": ["Bang", "Missed"]})
     assert called["payload"] == {"action": "general_store_pick", "index": 1}
     ui.close()
