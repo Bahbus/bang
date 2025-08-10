@@ -49,10 +49,25 @@ class SetAutoMissPayload(TypedDict):
     enabled: bool
 
 
+class ErrorInfo(TypedDict):
+    """Detail describing a payload validation error."""
+
+    code: str
+    message: str
+
+
+class ErrorPayload(TypedDict):
+    """Structured error response from the server."""
+
+    error: ErrorInfo
+
+
 __all__ = [
     "DrawPayload",
     "DiscardPayload",
     "PlayCardPayload",
     "UseAbilityPayload",
     "SetAutoMissPayload",
+    "ErrorInfo",
+    "ErrorPayload",
 ]

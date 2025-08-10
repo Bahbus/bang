@@ -50,7 +50,7 @@ def test_malformed_message_returns_error() -> None:
                 await ws.recv()
                 await ws.send("{not-json")
                 data = json.loads(await ws.recv())
-                assert data.get("error") == "invalid json"
+                assert data["error"]["code"] == "invalid_json"
 
     asyncio.run(run_flow())
 
@@ -69,7 +69,7 @@ def test_non_object_payload_rejected() -> None:
                 await ws.recv()
                 await ws.send(json.dumps([1, 2, 3]))
                 data = json.loads(await ws.recv())
-                assert data.get("error") == "invalid message"
+                assert data["error"]["code"] == "invalid_message"
 
     asyncio.run(run_flow())
 
@@ -88,6 +88,44 @@ def test_invalid_payload_rejected() -> None:
                 await ws.recv()
                 await ws.send(json.dumps({"action": "draw", "num": "two"}))
                 data = json.loads(await ws.recv())
-                assert data.get("error") == "invalid message"
+                assert data["error"]["code"] == "invalid_field"
+
+    asyncio.run(run_flow())
+
+
+def test_unknown_action_rejected() -> None:
+    async def run_flow() -> None:
+        server = BangServer(host="localhost", port=0, room_code="z995")
+        async with serve(server.handler, server.host, server.port) as ws_server:
+            server.port = next(iter(ws_server.sockets)).getsockname()[1]
+            async with connect(f"ws://localhost:{server.port}") as ws:
+                await ws.recv()
+                await ws.send("z995")
+                await ws.recv()
+                await ws.send("Dana")
+                await ws.recv()
+                await ws.recv()
+                await ws.send(json.dumps({"action": "unknown"}))
+                data = json.loads(await ws.recv())
+                assert data["error"]["code"] == "unknown_action"
+
+    asyncio.run(run_flow())
+
+
+def test_missing_required_field() -> None:
+    async def run_flow() -> None:
+        server = BangServer(host="localhost", port=0, room_code="z994")
+        async with serve(server.handler, server.host, server.port) as ws_server:
+            server.port = next(iter(ws_server.sockets)).getsockname()[1]
+            async with connect(f"ws://localhost:{server.port}") as ws:
+                await ws.recv()
+                await ws.send("z994")
+                await ws.recv()
+                await ws.send("Elena")
+                await ws.recv()
+                await ws.recv()
+                await ws.send(json.dumps({"action": "discard"}))
+                data = json.loads(await ws.recv())
+                assert data["error"]["code"] == "invalid_field"
 
     asyncio.run(run_flow())
