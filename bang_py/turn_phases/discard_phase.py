@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from bang_py.deck import Deck
+from ..deck import Deck
 from ..cards.card import BaseCard
 from ..event_flags import EventFlags
 from ..game_manager_protocol import GameManagerProtocol

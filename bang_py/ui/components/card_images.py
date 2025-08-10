@@ -142,6 +142,8 @@ def load_sound(name: str, parent: QtCore.QObject | None = None) -> QtCore.QObjec
     base = name.lower().replace(" ", "_")
     cached = _sound_cache.get(base)
     if cached is not None:
+        if parent is not None:
+            cached.setParent(parent)
         return cached
 
     class _MediaPlayer(QtMultimedia.QMediaPlayer):  # type: ignore[name-defined]

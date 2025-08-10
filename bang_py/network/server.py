@@ -25,7 +25,7 @@ from .messages import (
     SetAutoMissPayload,
     UseAbilityPayload,
 )
-from .token_utils import _token_key_bytes, generate_join_token, parse_join_token
+from .token_utils import _token_key_bytes, generate_join_token
 from .validation import validate_player_name
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 # Maximum allowed size for incoming websocket messages
 MAX_MESSAGE_SIZE = 4096
 
-__all__ = ["BangServer", "generate_join_token", "parse_join_token", "validate_player_name"]
+__all__ = ["BangServer", "validate_player_name"]
 
 
 # Use slots to reduce memory footprint and prevent dynamic attribute assignment.

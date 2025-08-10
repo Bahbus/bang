@@ -26,7 +26,7 @@ class KitCarlson(BaseCharacter):
             if p is not player:
                 return True
             options: dict[str, object] = opts if isinstance(opts, dict) else {}
-            cards = [gm._draw_from_deck(), gm._draw_from_deck(), gm._draw_from_deck()]
+            cards = [gm._draw_from_deck() for _ in range(3)]
             back_index = options.get("kit_back")
             if not isinstance(back_index, int) or not (0 <= back_index < len(cards)):
                 back_index = len(cards) - 1
