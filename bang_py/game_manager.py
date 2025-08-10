@@ -142,6 +142,44 @@ class GameManager(
         """Handle Pat Brennan's draw ability."""
         return super(GameManager, self).pat_brennan_draw(player, target, card)
 
+    # ------------------------------------------------------------------
+    # Hook stubs
+    def _hand_limit(self, player: Player) -> int:
+        """Return the maximum hand size for ``player``."""
+        return super(GameManager, self)._hand_limit(player)
+
+    def _discard_to_limit(self, player: Player, limit: int) -> None:
+        """Discard cards from ``player`` until ``limit`` is met."""
+        super(GameManager, self)._discard_to_limit(player, limit)
+
+    def _notify_damage_listeners(self, player: Player, source: Player | None) -> None:
+        """Inform damage listeners of health loss."""
+        super(GameManager, self)._notify_damage_listeners(player, source)
+
+    def _handle_ghost_town_revive(self, player: Player) -> bool:
+        """Return ``True`` if Ghost Town revives ``player``."""
+        return super(GameManager, self)._handle_ghost_town_revive(player)
+
+    def _record_first_elimination(self, player: Player) -> None:
+        """Record the first eliminated player."""
+        super(GameManager, self)._record_first_elimination(player)
+
+    def _bounty_reward(self, source: Player | None) -> None:
+        """Award Bounty rewards to ``source`` if applicable."""
+        super(GameManager, self)._bounty_reward(source)
+
+    def _notify_death_listeners(self, player: Player, source: Player | None) -> None:
+        """Inform listeners that ``player`` has been eliminated."""
+        super(GameManager, self)._notify_death_listeners(player, source)
+
+    def _update_turn_order_post_death(self) -> None:
+        """Adjust turn order after a player is eliminated."""
+        super(GameManager, self)._update_turn_order_post_death()
+
+    def _blood_brothers_transfer(self, player: Player, target: Player) -> None:
+        """Handle Blood Brothers life transfer."""
+        super(GameManager, self)._blood_brothers_transfer(player, target)
+
     def __post_init__(self) -> None:
         """Initialize decks and register card handlers."""
         self.initialize_main_deck()

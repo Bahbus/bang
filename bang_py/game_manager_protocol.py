@@ -108,6 +108,12 @@ class GameManagerProtocol(Protocol):
     def _notify_damage_listeners(self, player: Player, source: Player | None) -> None:
         """Inform damage listeners of health loss."""
 
+    def blood_brothers_transfer(self, donor: Player, target: Player) -> bool:
+        """Transfer one life from ``donor`` to ``target`` if allowed."""
+
+    def _blood_brothers_transfer(self, player: Player, target: Player) -> None:
+        """Handle Blood Brothers life transfer."""
+
     def _handle_ghost_town_revive(self, player: Player) -> bool:
         """Return True if Ghost Town revives ``player``."""
 

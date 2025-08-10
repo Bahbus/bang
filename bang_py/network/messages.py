@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 
 class DrawPayload(TypedDict, total=False):
     """Payload for drawing cards from the deck."""
 
     action: Literal["draw"]
-    num: int
+    num: NotRequired[int]
 
 
 class DiscardPayload(TypedDict):
@@ -24,14 +24,7 @@ class PlayCardPayload(TypedDict, total=False):
 
     action: Literal["play_card"]
     card_index: int
-    target: int
-
-
-class GeneralStorePickPayload(TypedDict):
-    """Payload for choosing a card from the general store."""
-
-    action: Literal["general_store_pick"]
-    index: int
+    target: NotRequired[int]
 
 
 class UseAbilityPayload(TypedDict, total=False):
@@ -39,85 +32,27 @@ class UseAbilityPayload(TypedDict, total=False):
 
     action: Literal["use_ability"]
     ability: str
-    indices: list[int]
-    target: int
-    card_index: int
-    discard: int
-    equipment: int
-    card: int
-    use_discard: bool
-    enabled: bool
+    indices: NotRequired[list[int]]
+    target: NotRequired[int]
+    card_index: NotRequired[int]
+    discard: NotRequired[int]
+    equipment: NotRequired[int]
+    card: NotRequired[int]
+    use_discard: NotRequired[bool]
+    enabled: NotRequired[bool]
 
 
-class SetAutoMissPayload(TypedDict, total=False):
-    """Payload for toggling automatic responses to BANG! cards."""
+class SetAutoMissPayload(TypedDict):
+    """Payload for toggling automatic responses to Bang! cards."""
 
     action: Literal["set_auto_miss"]
     enabled: bool
-
-
-class SidKetchumPayload(TypedDict, total=False):
-    indices: list[int]
-
-
-class ChuckWengamPayload(TypedDict, total=False):
-    pass
-
-
-class DocHolydayPayload(TypedDict, total=False):
-    indices: list[int]
-
-
-class VeraCusterPayload(TypedDict, total=False):
-    target: int
-
-
-class JesseJonesPayload(TypedDict, total=False):
-    target: int
-    card_index: int
-
-
-class KitCarlsonPayload(TypedDict, total=False):
-    discard: int
-
-
-class PedroRamirezPayload(TypedDict, total=False):
-    use_discard: bool
-
-
-class JoseDelgadoPayload(TypedDict, total=False):
-    equipment: int
-
-
-class PatBrennanPayload(TypedDict, total=False):
-    target: int
-    card: int
-
-
-class LuckyDukePayload(TypedDict, total=False):
-    card_index: int
-
-
-class UncleWillPayload(TypedDict, total=False):
-    card_index: int
 
 
 __all__ = [
     "DrawPayload",
     "DiscardPayload",
     "PlayCardPayload",
-    "GeneralStorePickPayload",
     "UseAbilityPayload",
     "SetAutoMissPayload",
-    "SidKetchumPayload",
-    "ChuckWengamPayload",
-    "DocHolydayPayload",
-    "VeraCusterPayload",
-    "JesseJonesPayload",
-    "KitCarlsonPayload",
-    "PedroRamirezPayload",
-    "JoseDelgadoPayload",
-    "PatBrennanPayload",
-    "LuckyDukePayload",
-    "UncleWillPayload",
 ]
