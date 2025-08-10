@@ -1,15 +1,12 @@
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
-import shutil
-import importlib.util
 
 import pytest
 
-pytest.importorskip(
-    "PySide6", reason="PySide6 not installed; skipping executable test"
-)
+pytest.importorskip("PySide6", reason="PySide6 not installed; skipping executable test")
 
 pytestmark = [
     pytest.mark.skipif(
@@ -19,12 +16,11 @@ pytestmark = [
     pytest.mark.slow,
 ]
 
+
 def test_bang_executable_exits(tmp_path):
     try:
         subprocess.run(["make", "build-exe"], check=True)
-        exe = Path(
-            "dist/bang.exe" if sys.platform.startswith("win") else "dist/bang"
-        )
+        exe = Path("dist/bang.exe" if sys.platform.startswith("win") else "dist/bang")
         env = os.environ.copy()
         env["QT_QPA_PLATFORM"] = "offscreen"
         env["BANG_AUTO_CLOSE"] = "1"
