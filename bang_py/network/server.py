@@ -21,6 +21,7 @@ from ..cards.general_store import GeneralStoreCard
 from .messages import (
     DiscardPayload,
     DrawPayload,
+    ErrorPayload,
     PlayCardPayload,
     SetAutoMissPayload,
     UseAbilityPayload,
@@ -166,46 +167,115 @@ class BangServer:
             await self.broadcast_state()
             tg.create_task(client_loop())
 
-    def _validate_payload(self, payload: dict[str, object]) -> bool:
-        """Validate that ``payload`` conforms to the expected schema."""
+    def _parse_payload(
+        self, payload: dict[str, object]
+    ) -> (
+        DrawPayload
+        | DiscardPayload
+        | PlayCardPayload
+        | UseAbilityPayload
+        | SetAutoMissPayload
+        | ErrorPayload
+    ):
+        """Validate and coerce a raw ``payload`` from the client."""
+
         action = payload.get("action")
-        if not isinstance(action, str):
-            return False
-
-        schemas: dict[str, dict[str, tuple[type, ...]]] = {
-            "draw": {"num": (int,)},
-            "discard": {"card_index": (int,)},
-            "play_card": {"card_index": (int,), "target": (int,)},
-            "use_ability": {
-                "ability": (str,),
-                "indices": (list,),
-                "target": (int,),
-                "card_index": (int,),
-                "discard": (int,),
-                "equipment": (int,),
-                "card": (int,),
-                "use_discard": (bool,),
-                "enabled": (bool,),
-            },
-            "set_auto_miss": {"enabled": (bool,)},
-        }
-
-        schema = schemas.get(action)
-        if schema is None:
-            return False
-
-        for key, value in payload.items():
-            if key == "action":
-                continue
-            expected = schema.get(key)
-            if expected is None:
-                return False
-            if key == "indices":
-                if not isinstance(value, list) or not all(isinstance(v, int) for v in value):
-                    return False
-            elif not isinstance(value, expected):
-                return False
-        return True
+        if action == "draw":
+            num = payload.get("num", 1)
+            if not isinstance(num, int):
+                return {"error": {"code": "invalid_field", "message": "num must be int"}}
+            return cast(DrawPayload, {"action": "draw", "num": num})
+        if action == "discard":
+            idx = payload.get("card_index")
+            if not isinstance(idx, int):
+                return {
+                    "error": {
+                        "code": "invalid_field",
+                        "message": "card_index must be int",
+                    }
+                }
+            return cast(DiscardPayload, {"action": "discard", "card_index": idx})
+        if action == "play_card":
+            idx = payload.get("card_index")
+            target = payload.get("target")
+            if not isinstance(idx, int) or (target is not None and not isinstance(target, int)):
+                return {
+                    "error": {
+                        "code": "invalid_field",
+                        "message": "invalid card_index or target",
+                    }
+                }
+            play_parsed: PlayCardPayload = {"action": "play_card", "card_index": idx}
+            if isinstance(target, int):
+                play_parsed["target"] = target
+            return cast(PlayCardPayload, play_parsed)
+        if action == "use_ability":
+            ability = payload.get("ability")
+            if not isinstance(ability, str):
+                return {"error": {"code": "invalid_field", "message": "ability must be str"}}
+            ability_parsed: UseAbilityPayload = {"action": "use_ability", "ability": ability}
+            indices = payload.get("indices")
+            if indices is not None:
+                if not isinstance(indices, list) or not all(isinstance(v, int) for v in indices):
+                    return {
+                        "error": {
+                            "code": "invalid_field",
+                            "message": "indices must be list[int]",
+                        }
+                    }
+                ability_parsed["indices"] = indices
+            target = payload.get("target")
+            if target is not None:
+                if not isinstance(target, int):
+                    return {"error": {"code": "invalid_field", "message": "target must be int"}}
+                ability_parsed["target"] = target
+            card_index = payload.get("card_index")
+            if card_index is not None:
+                if not isinstance(card_index, int):
+                    return {
+                        "error": {
+                            "code": "invalid_field",
+                            "message": "card_index must be int",
+                        }
+                    }
+                ability_parsed["card_index"] = card_index
+            discard = payload.get("discard")
+            if discard is not None:
+                if not isinstance(discard, int):
+                    return {"error": {"code": "invalid_field", "message": "discard must be int"}}
+                ability_parsed["discard"] = discard
+            equipment = payload.get("equipment")
+            if equipment is not None:
+                if not isinstance(equipment, int):
+                    return {"error": {"code": "invalid_field", "message": "equipment must be int"}}
+                ability_parsed["equipment"] = equipment
+            card = payload.get("card")
+            if card is not None:
+                if not isinstance(card, int):
+                    return {"error": {"code": "invalid_field", "message": "card must be int"}}
+                ability_parsed["card"] = card
+            use_discard = payload.get("use_discard")
+            if use_discard is not None:
+                if not isinstance(use_discard, bool):
+                    return {
+                        "error": {
+                            "code": "invalid_field",
+                            "message": "use_discard must be bool",
+                        }
+                    }
+                ability_parsed["use_discard"] = use_discard
+            enabled = payload.get("enabled")
+            if enabled is not None:
+                if not isinstance(enabled, bool):
+                    return {"error": {"code": "invalid_field", "message": "enabled must be bool"}}
+                ability_parsed["enabled"] = enabled
+            return cast(UseAbilityPayload, ability_parsed)
+        if action == "set_auto_miss":
+            enabled = payload.get("enabled")
+            if not isinstance(enabled, bool):
+                return {"error": {"code": "invalid_field", "message": "enabled must be bool"}}
+            return cast(SetAutoMissPayload, {"action": "set_auto_miss", "enabled": enabled})
+        return {"error": {"code": "unknown_action", "message": "unknown action"}}
 
     async def _process_message(self, websocket: ServerConnection, message: str | bytes) -> None:
         """Parse and route a single message from ``websocket``."""
@@ -219,37 +289,47 @@ class BangServer:
             payload = json.loads(message)
         except json.JSONDecodeError:
             logger.warning("Malformed JSON from client: %r", message)
-            await websocket.send(json.dumps({"error": "invalid json"}))
+            await websocket.send(
+                json.dumps({"error": {"code": "invalid_json", "message": "invalid json"}})
+            )
             return
 
         if not isinstance(payload, dict):
             logger.warning("Non-object payload received: %r", payload)
-            await websocket.send(json.dumps({"error": "invalid message"}))
+            await websocket.send(
+                json.dumps(
+                    {
+                        "error": {
+                            "code": "invalid_message",
+                            "message": "payload must be object",
+                        }
+                    }
+                )
+            )
             return
 
-        if not self._validate_payload(payload):
+        parsed = self._parse_payload(payload)
+        if "error" in parsed:
             logger.warning("Invalid payload received: %r", payload)
-            await websocket.send(json.dumps({"error": "invalid message"}))
+            await websocket.send(json.dumps(parsed))
             return
 
-        action = payload.get("action")
+        action = parsed.get("action")
         if action == "draw":
-            draw_payload: DrawPayload = cast(DrawPayload, payload)
+            draw_payload = cast(DrawPayload, parsed)
             await self._handle_draw(websocket, draw_payload)
         elif action == "discard":
-            discard_payload: DiscardPayload = cast(DiscardPayload, payload)
+            discard_payload = cast(DiscardPayload, parsed)
             await self._handle_discard(websocket, discard_payload)
         elif action == "play_card":
-            play_payload: PlayCardPayload = cast(PlayCardPayload, payload)
+            play_payload = cast(PlayCardPayload, parsed)
             await self._handle_play_card(websocket, play_payload)
         elif action == "use_ability":
-            ability_payload: UseAbilityPayload = cast(UseAbilityPayload, payload)
+            ability_payload = cast(UseAbilityPayload, parsed)
             await self._handle_use_ability(websocket, ability_payload)
         elif action == "set_auto_miss":
-            auto_miss_payload: SetAutoMissPayload = cast(SetAutoMissPayload, payload)
+            auto_miss_payload = cast(SetAutoMissPayload, parsed)
             await self._handle_set_auto_miss(websocket, auto_miss_payload)
-        else:
-            await websocket.send(json.dumps({"error": "invalid message"}))
 
     async def _handle_draw(self, websocket: ServerConnection, payload: DrawPayload) -> None:
         num = int(payload.get("num", 1))
