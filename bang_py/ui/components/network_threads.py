@@ -1,18 +1,20 @@
 from __future__ import annotations
 
 """Qt threads for running the Bang server and client in the background."""
-# mypy: ignore-errors
 
 import asyncio
 import json
 import logging
 import ssl
-from typing import override
+from typing import TYPE_CHECKING, override
 
-from PySide6 import QtCore
-from typing import TYPE_CHECKING
+from PySide6 import QtCore  # type: ignore[import-not-found]
 
-from websockets import ClientConnection, WebSocketException, connect
+from websockets import (
+    ClientConnection,
+    WebSocketException,
+    connect,
+)  # type: ignore[import-not-found]
 
 from ...network.server import BangServer
 
@@ -110,7 +112,7 @@ class ClientThread(_QThread):
 
     async def _run(self) -> None:
         try:
-            ssl_ctx = None
+            ssl_ctx: ssl.SSLContext | None = None
             if self.uri.startswith("wss://") or self.cafile:
                 ssl_ctx = ssl.create_default_context()
                 if self.cafile:
@@ -140,7 +142,7 @@ class ClientThread(_QThread):
         if self.loop.is_running():
             asyncio.run_coroutine_threadsafe(self._send("end_turn"), self.loop)
 
-    def send_json(self, payload: dict) -> None:
+    def send_json(self, payload: dict[str, object]) -> None:
         """Serialize ``payload`` and send it to the server."""
         if self.loop.is_running():
             msg = json.dumps(payload)

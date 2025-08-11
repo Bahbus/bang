@@ -1,23 +1,21 @@
 """Qt Quick based interface for the Bang card game."""
 
-# mypy: ignore-errors
-
 from __future__ import annotations
 
 import json
 import os
 import secrets
 from importlib import resources
-from typing import Callable
+from typing import Any, Callable, cast
 
-from PySide6 import QtCore, QtWidgets, QtQuick, QtQml
+from PySide6 import QtCore, QtWidgets, QtQuick, QtQml  # type: ignore[import-not-found]
 
 from .components import ClientThread, ServerThread
 from .components.card_images import get_loader
 from .theme import get_current_theme
 from ..network.token_utils import parse_join_token
 from ..network.validation import validate_player_name
-from cryptography.fernet import InvalidToken
+from cryptography.fernet import InvalidToken  # type: ignore[import-not-found]
 
 CHARACTER_ASSETS = resources.files("bang_py") / "assets" / "characters"
 
@@ -35,17 +33,18 @@ class BangUI(QtCore.QObject):
             self.view.setSource(QtCore.QUrl.fromLocalFile(str(qml_path)))
         self.root = self.view.rootObject()
         if self.root is not None:
-            self.root.setProperty("theme", self.theme)
-            self.root.hostRequested.connect(self._host_menu)
-            self.root.joinRequested.connect(self._join_menu)
-            self.root.settingsChanged.connect(self._settings_changed)
-            self.root.drawCard.connect(lambda: self._send_action({"action": "draw"}))
-            self.root.discardCard.connect(lambda: self._send_action({"action": "discard"}))
-            self.root.endTurn.connect(self._end_turn)
-            self.root.playCard.connect(
+            root = cast(Any, self.root)
+            root.setProperty("theme", self.theme)
+            root.hostRequested.connect(self._host_menu)
+            root.joinRequested.connect(self._join_menu)
+            root.settingsChanged.connect(self._settings_changed)
+            root.drawCard.connect(lambda: self._send_action({"action": "draw"}))
+            root.discardCard.connect(lambda: self._send_action({"action": "discard"}))
+            root.endTurn.connect(self._end_turn)
+            root.playCard.connect(
                 lambda i: self._send_action({"action": "play_card", "card_index": int(i)})
             )
-            self.root.discardFromHand.connect(
+            root.discardFromHand.connect(
                 lambda i: self._send_action({"action": "discard", "card_index": int(i)})
             )
         self.client: ClientThread | None = None
@@ -158,7 +157,7 @@ class BangUI(QtCore.QObject):
     def _build_game_view(self) -> None:
         if self.root is not None:
             QtCore.QMetaObject.invokeMethod(self.root, "showGame")
-            self.game_root = self.root.property("gameBoardItem")
+            self.game_root = cast(QtCore.QObject | None, self.root.property("gameBoardItem"))
             if self.game_root is not None:
                 self.game_root.setProperty("theme", self.theme)
 
@@ -186,11 +185,12 @@ class BangUI(QtCore.QObject):
         qml_dir = resources.files("bang_py.ui") / "qml"
         with resources.as_file(qml_dir / "OptionPrompt.qml") as qml_path:
             comp = QtQml.QQmlComponent(self.view.engine(), str(qml_path))
-        dialog = comp.create()
-        if dialog is None:
+        dialog_obj = comp.create()
+        if dialog_obj is None:
             if callback is not None:
                 callback(None)
             return None
+        dialog = cast(Any, dialog_obj)
         dialog.setProperty("titleText", title)
         dialog.setProperty("options", options)
 
@@ -214,11 +214,13 @@ class BangUI(QtCore.QObject):
 
         def _accepted(i: int) -> None:
             dialog.deleteLater()
-            callback(int(i))
+            if callback is not None:
+                callback(int(i))
 
         def _rejected() -> None:
             dialog.deleteLater()
-            callback(None)
+            if callback is not None:
+                callback(None)
 
         dialog.acceptedIndex.connect(_accepted)
         dialog.rejected.connect(_rejected)
@@ -229,16 +231,17 @@ class BangUI(QtCore.QObject):
         qml_dir = resources.files("bang_py.ui") / "qml"
         with resources.as_file(qml_dir / "ConfirmPrompt.qml") as qml_path:
             comp = QtQml.QQmlComponent(self.view.engine(), str(qml_path))
-        dialog = comp.create()
-        if dialog is None:
+        dialog_obj = comp.create()
+        if dialog_obj is None:
             if callback is not None:
                 callback(False)
             return False
+        dialog = cast(Any, dialog_obj)
         dialog.setProperty("message", text)
 
         if callback is None:
             loop = QtCore.QEventLoop()
-            result = {"ok": False}
+            result: dict[str, bool] = {"ok": False}
 
             def _accepted_sync() -> None:
                 result["ok"] = True
@@ -256,11 +259,13 @@ class BangUI(QtCore.QObject):
 
         def _accepted() -> None:
             dialog.deleteLater()
-            callback(True)
+            if callback is not None:
+                callback(True)
 
         def _rejected() -> None:
             dialog.deleteLater()
-            callback(False)
+            if callback is not None:
+                callback(False)
 
         dialog.accepted.connect(_accepted)
         dialog.rejected.connect(_rejected)
@@ -273,11 +278,12 @@ class BangUI(QtCore.QObject):
         qml_dir = resources.files("bang_py.ui") / "qml"
         with resources.as_file(qml_dir / "MessageDialog.qml") as qml_path:
             comp = QtQml.QQmlComponent(self.view.engine(), str(qml_path))
-        dialog = comp.create()
-        if dialog is None:
+        dialog_obj = comp.create()
+        if dialog_obj is None:
             if callback is not None:
                 callback()
             return
+        dialog = cast(Any, dialog_obj)
         dialog.setProperty("message", text)
         dialog.setProperty("error", error)
 
@@ -292,7 +298,8 @@ class BangUI(QtCore.QObject):
 
         def _accepted() -> None:
             dialog.deleteLater()
-            callback()
+            if callback is not None:
+                callback()
             self._run_next_prompt()
 
         dialog.accepted.connect(_accepted)
