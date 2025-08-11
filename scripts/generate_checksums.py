@@ -1,8 +1,8 @@
-"""Generate SHA256 checksums for build artifacts.
+"""Generate the SHA256 checksum for ``bang.exe``.
 
-This script scans the ``dist`` directory for files and writes their SHA256 hashes to
-``dist/SHA256SUMS``. It should be executed after the build process creates the final
-artifacts.
+This script computes the checksum for ``dist/bang.exe`` and writes it to
+``dist/SHA256SUMS``. The output file is overwritten and contains a single line in
+the form ``<hash>  bang.exe``.
 """
 
 from __future__ import annotations
@@ -21,19 +21,21 @@ def compute_sha256(path: Path) -> str:
 
 
 def main() -> None:
-    """Write ``SHA256SUMS`` for all files in ``dist`` except itself."""
+    """Write ``dist/SHA256SUMS`` for ``bang.exe`` only."""
     dist_dir = Path("dist")
-    sums_path = dist_dir / "SHA256SUMS"
+    exe_path = dist_dir / "bang.exe"
+    if not exe_path.is_file():
+        msg = "dist/bang.exe not found"
+        raise FileNotFoundError(msg)
 
+    entry = f"{compute_sha256(exe_path)}  {exe_path.name}"
+    if entry.count("  ") != 1 or "\n" in entry:
+        msg = f"Malformed checksum entry: {entry!r}"
+        raise ValueError(msg)
+
+    sums_path = dist_dir / "SHA256SUMS"
     with sums_path.open("w", newline="\n") as handle:
-        for artifact in sorted(dist_dir.iterdir()):
-            if artifact.name == "SHA256SUMS" or not artifact.is_file():
-                continue  # Skip the checksum list itself
-            entry = f"{compute_sha256(artifact)}  {artifact.name}"
-            if entry.count("  ") != 1 or "\n" in entry:
-                msg = f"Malformed checksum entry: {entry!r}"
-                raise ValueError(msg)
-            handle.write(f"{entry}\n")
+        handle.write(f"{entry}\n")
 
 
 if __name__ == "__main__":
