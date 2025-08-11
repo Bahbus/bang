@@ -29,13 +29,36 @@ jobs:
       - name: Build executable
         shell: bash
         run: uv run pyinstaller scripts/bang.spec
+      - name: Generate checksums
+        shell: bash
+        run: uv run python scripts/generate_checksums.py
+      - name: Verify checksums
+        shell: bash
+        run: |
+          cd dist
+          sha256sum -c SHA256SUMS
+      - name: Prepare release notes
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          {
+            echo '### SHA256 Checksums';
+            echo '```';
+            cat dist/SHA256SUMS;
+            echo '```';
+          } > dist/RELEASE_NOTES.md
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: bang-exe
-          path: dist/bang.exe
+          path: |
+            dist/bang.exe
+            dist/SHA256SUMS
       - name: Attach to release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
-          files: dist/bang.exe
+          files: |
+            dist/bang.exe
+            dist/SHA256SUMS
+          body_path: dist/RELEASE_NOTES.md
