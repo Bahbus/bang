@@ -93,10 +93,20 @@ Item {
                 placeholderText: qsTr("Certificate")
                 validator: RegExpValidator { regExp: /^[\x20-\x7E]{0,255}$/ }
             }
+            Label {
+                text: qsTr("Use printable characters only")
+                color: "red"
+                visible: certField.text !== "" && !certField.acceptableInput
+            }
             TextField {
                 id: keyField
                 placeholderText: qsTr("Key File")
                 validator: RegExpValidator { regExp: /^[\x20-\x7E]{0,255}$/ }
+            }
+            Label {
+                text: qsTr("Use printable characters only")
+                color: "red"
+                visible: keyField.text !== "" && !keyField.acceptableInput
             }
         }
         onAccepted: {
@@ -165,6 +175,11 @@ Item {
                 id: cafileField
                 placeholderText: qsTr("CA File")
                 validator: RegExpValidator { regExp: /^[\x20-\x7E]{0,255}$/ }
+            }
+            Label {
+                text: qsTr("Use printable characters only")
+                color: "red"
+                visible: cafileField.text !== "" && !cafileField.acceptableInput
             }
         }
         onAccepted: {
