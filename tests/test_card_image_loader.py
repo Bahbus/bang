@@ -17,8 +17,9 @@ pytest.importorskip(
 from PySide6 import QtGui  # noqa: E402
 from bang_py.ui.components.ranksuit_loader import RankSuitIconLoader  # noqa: E402
 from bang_py.ui.components.card_images import (  # noqa: E402
-    CardImageLoader,
     ACTION_ICON_MAP,
+    CardImageLoader,
+    clear_asset_pixmap_cache,
 )
 
 
@@ -115,3 +116,13 @@ def test_reload_assets_clears_cache(qt_app):
     loader.reload_assets()
     second = loader.compose_card("brown", rank="A", suit="Spades")
     assert first is not second
+
+
+def test_template_cache_across_instances(qt_app):
+    clear_asset_pixmap_cache()
+    loader1 = CardImageLoader()
+    loader2 = CardImageLoader()
+    assert loader1.templates["brown"] is loader2.templates["brown"]
+    clear_asset_pixmap_cache()
+    loader3 = CardImageLoader()
+    assert loader1.templates["brown"] is not loader3.templates["brown"]

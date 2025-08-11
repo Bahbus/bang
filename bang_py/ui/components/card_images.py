@@ -29,6 +29,7 @@ AUDIO_DIR = ASSETS_DIR / "audio"
 ICON_DIR = ASSETS_DIR / "icons"
 
 _character_image_cache: dict[str, QtGui.QPixmap] = {}
+_asset_pixmap_cache: dict[str, QtGui.QPixmap] = {}
 _sound_cache: dict[str, QtCore.QObject] = {}
 _composed_pixmap_cache: dict[
     tuple[str, int | str | None, str | None, str | None, str | None],
@@ -41,8 +42,15 @@ def clear_character_image_cache() -> None:
     _character_image_cache.clear()
 
 
-# Backwards compatible alias for older tests
-clear_pixmap_cache = clear_character_image_cache
+def clear_asset_pixmap_cache() -> None:
+    """Clear the module level asset pixmap cache."""
+    _asset_pixmap_cache.clear()
+
+
+def clear_pixmap_cache() -> None:
+    """Clear all module level pixmap caches."""
+    clear_character_image_cache()
+    clear_asset_pixmap_cache()
 
 
 def clear_sound_cache() -> None:
@@ -202,6 +210,11 @@ class CardImageLoader:
     def _load_templates(cls, width: int, height: int) -> dict[str, QtGui.QPixmap]:
         templates: dict[str, QtGui.QPixmap] = {}
         for key, fname in _TEMPLATE_FILES.items():
+            cache_key = f"template:{key}:{width}x{height}"
+            cached = _asset_pixmap_cache.get(cache_key)
+            if cached is not None:
+                templates[key] = cached
+                continue
             path = ASSETS_DIR / fname
             with resources.as_file(path) as file_path:
                 pix = QtGui.QPixmap(str(file_path))
@@ -214,6 +227,7 @@ class CardImageLoader:
                     QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                     QtCore.Qt.TransformationMode.SmoothTransformation,
                 )
+            _asset_pixmap_cache[cache_key] = pix
             templates[key] = pix
         return templates
 
@@ -221,6 +235,11 @@ class CardImageLoader:
     def _load_card_backs(cls, width: int, height: int) -> dict[str, QtGui.QPixmap]:
         backs: dict[str, QtGui.QPixmap] = {}
         for key, fname in _CARD_BACK_FILES.items():
+            cache_key = f"card_back:{key}:{width}x{height}"
+            cached = _asset_pixmap_cache.get(cache_key)
+            if cached is not None:
+                backs[key] = cached
+                continue
             path = ASSETS_DIR / fname
             with resources.as_file(path) as file_path:
                 pix = QtGui.QPixmap(str(file_path))
@@ -233,6 +252,7 @@ class CardImageLoader:
                     QtCore.Qt.AspectRatioMode.KeepAspectRatio,
                     QtCore.Qt.TransformationMode.SmoothTransformation,
                 )
+            _asset_pixmap_cache[cache_key] = pix
             backs[key] = pix
         return backs
 
@@ -240,11 +260,17 @@ class CardImageLoader:
     def _load_action_icons(cls) -> dict[str, QtGui.QPixmap]:
         icons: dict[str, QtGui.QPixmap] = {}
         for key, fname in ACTION_ICON_MAP.items():
+            cache_key = f"icon:{fname}"
+            cached = _asset_pixmap_cache.get(cache_key)
+            if cached is not None:
+                icons[key] = cached
+                continue
             path = ICON_DIR / fname
             with resources.as_file(path) as file_path:
                 pix = QtGui.QPixmap(str(file_path))
             if pix.isNull():
                 pix = cls._fallback_pixmap(int(DEFAULT_SIZE[0] * 0.4), int(DEFAULT_SIZE[1] * 0.4))
+            _asset_pixmap_cache[cache_key] = pix
             icons[key] = pix
         return icons
 
@@ -261,6 +287,7 @@ class CardImageLoader:
 
     def reload_assets(self) -> None:
         """Reload templates and icons, invalidating the compose cache."""
+        clear_asset_pixmap_cache()
         self.templates = self._load_templates(self.width, self.height)
         self.card_backs = self._load_card_backs(self.width, self.height)
         self.action_icons = self._load_action_icons()
