@@ -21,14 +21,14 @@ def compute_sha256(path: Path) -> str:
 
 
 def main() -> None:
-    """Write ``SHA256SUMS`` for all files in ``dist``."""
+    """Write ``SHA256SUMS`` for all files in ``dist`` except itself."""
     dist_dir = Path("dist")
     sums_path = dist_dir / "SHA256SUMS"
 
     with sums_path.open("w", newline="\n") as handle:
         for artifact in sorted(dist_dir.iterdir()):
             if artifact.name == "SHA256SUMS" or not artifact.is_file():
-                continue
+                continue  # Skip the checksum list itself
             entry = f"{compute_sha256(artifact)}  {artifact.name}"
             if entry.count("  ") != 1 or "\n" in entry:
                 msg = f"Malformed checksum entry: {entry!r}"
