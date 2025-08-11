@@ -27,7 +27,7 @@ from .messages import (
     SetAutoMissPayload,
     UseAbilityPayload,
 )
-from .token_utils import _token_key_bytes, generate_join_token
+from .token_utils import _token_key_bytes
 from .validation import validate_player_name
 
 logger = logging.getLogger(__name__)
@@ -94,11 +94,6 @@ class BangServer:
         self.game.player_healed_listeners.append(self._on_player_healed)
         self.game.game_over_listeners.append(self._on_game_over)
         self.game.turn_started_listeners.append(self._on_turn_started)
-
-    def generate_join_token(self) -> str:
-        """Return an encoded join token for this server."""
-
-        return generate_join_token(self.host, self.port, self.room_code, self.token_key)
 
     def _create_send_task(self, conn: Connection, payload: str | Mapping[str, object]) -> None:
         """Create a supervised task to send ``payload``.
