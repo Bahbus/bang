@@ -7,6 +7,16 @@ Example screenshots of the Qt interface are available under `docs/images` and sh
 ![Bang main menu screenshot](docs/images/example-bang-menu-ui.jpg)
 ![Bang gameplay screenshot](docs/images/example_bang_ui.jpg)
 
+## Verifying downloads
+
+Releases include a `SHA256SUMS` file alongside the build artifacts and list the
+checksums in the release notes. After downloading a release, run the following
+from the directory containing the files:
+
+```bash
+sha256sum -c SHA256SUMS
+```
+
 ## Development
 
 Use [uv](https://astral.sh/uv) to manage the development environment. Install dependencies and set up the hooks:
