@@ -129,3 +129,48 @@ def test_missing_required_field() -> None:
                 assert data["error"]["code"] == "invalid_field"
 
     asyncio.run(run_flow())
+
+
+def test_disconnect_cleans_up_connection() -> None:
+    async def run_flow() -> None:
+        server = BangServer(host="localhost", port=0, room_code="z993")
+        async with serve(server.handler, server.host, server.port) as ws_server:
+            server.port = next(iter(ws_server.sockets)).getsockname()[1]
+            async with connect(f"ws://localhost:{server.port}") as ws:
+                await ws.recv()
+                await ws.send("z993")
+                await ws.recv()
+                await ws.send("Finn")
+                await ws.recv()
+                await ws.recv()
+            await asyncio.sleep(0)
+            assert not server.connections
+
+    asyncio.run(run_flow())
+
+
+def test_reconnect_after_disconnect() -> None:
+    async def run_flow() -> None:
+        server = BangServer(host="localhost", port=0, room_code="z992")
+        async with serve(server.handler, server.host, server.port) as ws_server:
+            server.port = next(iter(ws_server.sockets)).getsockname()[1]
+            async with connect(f"ws://localhost:{server.port}") as ws:
+                await ws.recv()
+                await ws.send("z992")
+                await ws.recv()
+                await ws.send("Gabe")
+                await ws.recv()
+                await ws.recv()
+            await asyncio.sleep(0)
+            assert not server.connections
+            async with connect(f"ws://localhost:{server.port}") as ws:
+                await ws.recv()
+                await ws.send("z992")
+                await ws.recv()
+                await ws.send("Gabe")
+                join_msg = await ws.recv()
+                assert "Joined game as Gabe" in join_msg
+                state = json.loads(await ws.recv())
+                assert state["players"][0]["name"] == "Gabe"
+
+    asyncio.run(run_flow())

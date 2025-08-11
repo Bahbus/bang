@@ -49,6 +49,11 @@ class SetAutoMissPayload(TypedDict):
     enabled: bool
 
 
+ClientPayload = (
+    DrawPayload | DiscardPayload | PlayCardPayload | UseAbilityPayload | SetAutoMissPayload
+)
+
+
 class ErrorInfo(TypedDict):
     """Detail describing a payload validation error."""
 
@@ -70,4 +75,5 @@ __all__ = [
     "SetAutoMissPayload",
     "ErrorInfo",
     "ErrorPayload",
+    "ClientPayload",
 ]
