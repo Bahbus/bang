@@ -1,4 +1,4 @@
-"""Typed payload definitions for websocket communication."""
+"""Typed websocket payload structures shared by the server and client."""
 
 from __future__ import annotations
 
