@@ -19,6 +19,7 @@ from ..game_manager_protocol import GameManagerProtocol
 from ..player import Player
 from ..cards.general_store import GeneralStoreCard
 from .messages import (
+    ClientPayload,
     DiscardPayload,
     DrawPayload,
     ErrorPayload,
@@ -167,16 +168,7 @@ class BangServer:
             await self.broadcast_state()
             tg.create_task(client_loop())
 
-    def _parse_payload(
-        self, payload: dict[str, object]
-    ) -> (
-        DrawPayload
-        | DiscardPayload
-        | PlayCardPayload
-        | UseAbilityPayload
-        | SetAutoMissPayload
-        | ErrorPayload
-    ):
+    def _parse_payload(self, payload: dict[str, object]) -> ClientPayload | ErrorPayload:
         """Validate and coerce a raw ``payload`` from the client."""
 
         action = payload.get("action")
