@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from collections.abc import Callable, Iterable, Sequence
 from collections import deque
-from typing import cast
+from typing import cast, override
 
 from .ability_dispatch import AbilityDispatchMixin
 from .card_handlers import CardHandlersMixin
@@ -132,6 +132,7 @@ class GameManager(
         """Treat Missed! cards as Bang."""
         return super(GameManager, self)._handle_missed_as_bang(player, card, target)
 
+    @override
     def _advance_turn(self) -> None:
         """Advance to the next player's turn."""
         super(GameManager, self)._advance_turn()
@@ -148,14 +149,17 @@ class GameManager(
 
     # ------------------------------------------------------------------
     # Hook stubs
+    @override
     def _hand_limit(self, player: Player) -> int:
         """Return the maximum hand size for ``player``."""
         return super(GameManager, self)._hand_limit(player)
 
+    @override
     def _discard_to_limit(self, player: Player, limit: int) -> None:
         """Discard cards from ``player`` until ``limit`` is met."""
         super(GameManager, self)._discard_to_limit(player, limit)
 
+    @override
     def _notify_damage_listeners(self, player: Player, source: Player | None) -> None:
         """Inform damage listeners of health loss."""
         super(GameManager, self)._notify_damage_listeners(player, source)

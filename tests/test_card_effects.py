@@ -8,6 +8,8 @@ from bang_py.cards.missed import MissedCard
 from bang_py.deck import Deck
 from bang_py.game_manager import GameManager
 from bang_py.player import Player
+from bang_py.cards.events.gold_rush import GoldRushEventCard
+from types import MethodType
 
 
 def test_ricochet_shoot_discards_equipment() -> None:
@@ -76,3 +78,34 @@ def test_bang_triggers_damage_listeners() -> None:
     gm.play_card(shooter, shooter.hand[0], target)
     assert events == [(target, shooter)]
     assert target.health == target.max_health - 1
+
+
+def test_abandoned_mine_returns_discards_to_deck() -> None:
+    """Discarding to hand limit should push cards onto the deck when Abandoned Mine is active."""
+    deck = Deck([])
+    gm = GameManager(deck=deck)
+    player = Player("P")
+    gm.add_player(player)
+    player.health = 4
+    player.hand = [BangCard() for _ in range(5)]
+    gm.event_flags["abandoned_mine"] = True
+    gm.discard_phase(player)
+    assert len(player.hand) == 4
+    assert len(deck) == 1
+    assert not gm.discard_pile
+
+
+def test_gold_rush_reverses_turn_order() -> None:
+    """Gold Rush should cause turn order to advance counter-clockwise."""
+    gm = GameManager()
+    players = [Player(str(i)) for i in range(3)]
+    for p in players:
+        gm.add_player(p)
+    gm.turn_order = [0, 1, 2]
+    gm.current_turn = 0
+    GoldRushEventCard().play(game=gm)
+    object.__setattr__(
+        gm, "_begin_turn", MethodType(lambda self: None, gm)
+    )  # type: ignore[attr-defined]
+    gm._advance_turn()
+    assert gm.current_turn == 2

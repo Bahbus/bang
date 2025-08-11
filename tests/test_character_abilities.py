@@ -9,6 +9,7 @@ from bang_py.player import Player
 from bang_py.characters.sid_ketchum import SidKetchum
 from bang_py.characters.uncle_will import UncleWill
 from bang_py.characters.calamity_janet import CalamityJanet
+from bang_py.characters.bart_cassidy import BartCassidy
 
 
 def test_sid_ketchum_heal_ability() -> None:
@@ -77,3 +78,16 @@ def test_calamity_janet_bang_as_miss() -> None:
     assert janet.health == janet.max_health
     assert not janet.hand
     assert any(isinstance(c, BangCard) for c in gm.discard_pile)
+
+
+def test_bart_cassidy_draws_on_damage() -> None:
+    """Bart Cassidy should draw a card whenever he is damaged."""
+    deck = Deck([BangCard()])
+    gm = GameManager(deck=deck)
+    bart = Player("Bart", character=BartCassidy())
+    attacker = Player("Att")
+    gm.add_player(bart)
+    gm.add_player(attacker)
+    bart.take_damage(1)
+    gm.on_player_damaged(bart, attacker)
+    assert len(bart.hand) == 1
