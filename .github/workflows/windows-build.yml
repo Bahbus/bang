@@ -1,4 +1,4 @@
-name: Windows Executable
+name: Windows Installer
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  build-exe:
+  build-msi:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -26,12 +26,11 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: uv sync --extra dev
-      - name: Build executable
+      - name: Install WiX Toolset
+        run: choco install wixtoolset --yes
+      - name: Build installer
         shell: bash
-        run: uv run pyinstaller scripts/bang.spec
-      - name: Generate checksums
-        shell: bash
-        run: uv run python scripts/generate_checksums.py
+        run: make build-msi
       - name: Verify checksums
         shell: bash
         run: |
@@ -40,12 +39,12 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bang-exe
+          name: bang-msi
           path: |
-            dist/bang.exe
+            dist/bang.msi
       - name: Attach to release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/bang.exe
+            dist/bang.msi

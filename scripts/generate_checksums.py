@@ -1,8 +1,8 @@
-"""Generate the SHA256 checksum for ``bang.exe``.
+"""Generate the SHA256 checksum for ``bang.msi``.
 
-This script computes the checksum for ``dist/bang.exe`` and writes it to
+This script computes the checksum for ``dist/bang.msi`` and writes it to
 ``dist/SHA256SUMS``. The output file is overwritten and contains a single line in
-the form ``<hash>  bang.exe``.
+the form ``<hash>  bang.msi``.
 """
 
 from __future__ import annotations
@@ -21,14 +21,14 @@ def compute_sha256(path: Path) -> str:
 
 
 def main() -> None:
-    """Write ``dist/SHA256SUMS`` for ``bang.exe`` only."""
+    """Write ``dist/SHA256SUMS`` for ``bang.msi`` only."""
     dist_dir = Path("dist")
-    exe_path = dist_dir / "bang.exe"
-    if not exe_path.is_file():
-        msg = "dist/bang.exe not found"
+    msi_path = dist_dir / "bang.msi"
+    if not msi_path.is_file():
+        msg = "dist/bang.msi not found"
         raise FileNotFoundError(msg)
 
-    entry = f"{compute_sha256(exe_path)}  {exe_path.name}"
+    entry = f"{compute_sha256(msi_path)}  {msi_path.name}"
     if entry.count("  ") != 1 or "\n" in entry:
         msg = f"Malformed checksum entry: {entry!r}"
         raise ValueError(msg)

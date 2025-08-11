@@ -1,4 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
+"""PyInstaller spec for building ``bang`` in a directory layout."""
 
 from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
 from glob import glob
@@ -56,4 +57,14 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    upx_exclude=[],
+    name='bang',
 )
