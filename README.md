@@ -2,19 +2,21 @@
 
 This repository now contains a Python implementation of the Bang card game along with a very small websocket server to experiment with multiplayer connectivity.
 
+Example screenshots of the Qt interface are available under `docs/images` and shown below. These JPEGs are documentation assets only and are not loaded by the application code.
+
+![Bang main menu screenshot](docs/images/example-bang-menu-ui.jpg)
+![Bang gameplay screenshot](docs/images/example_bang_ui.jpg)
+
 ## Development
 
-This project uses [pre-commit](https://pre-commit.com/) to run linters,
-formatters and static type checks (Black, Flake8, pydocstyle and mypy).
-Use [uv](https://astral.sh/uv) to manage the development environment.
-Install the project with its development dependencies and set up the hooks:
+Use [uv](https://astral.sh/uv) to manage the development environment. Install dependencies and set up the hooks:
 
 ```bash
 uv sync --extra dev
 uv run pre-commit install
 ```
 
-Run the checks on changed files before committing:
+Before committing, run formatting, linting and type checks on changed files:
 
 ```bash
 uv run pre-commit run --files <path> [<path> ...]
@@ -26,17 +28,16 @@ Run the test suite:
 uv run pytest
 ```
 
-If you modify assets, update `bang_py/assets/ATTRIBUTION.md` with the source and
-license and run the asset tests:
-
-```bash
-uv run pytest tests/test_icon_usage.py tests/test_audio_usage.py tests/test_root_asset_usage.py
-```
-
 Run the type checker directly with:
 
 ```bash
 uv run mypy bang_py tests
+```
+
+If you modify assets, document the source and license in `bang_py/assets/ATTRIBUTION.md` and verify with the asset tests:
+
+```bash
+uv run pytest tests/test_icon_usage.py tests/test_audio_usage.py tests/test_root_asset_usage.py
 ```
 
 Alternatively, use the Makefile targets:
