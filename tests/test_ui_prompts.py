@@ -1,6 +1,5 @@
 import pytest
-
-# mypy: ignore-errors
+from typing import Any, cast
 
 pytest.importorskip(
     "PySide6", reason="PySide6 not installed; skipping GUI tests", exc_type=ImportError
@@ -21,7 +20,7 @@ pytest.importorskip(
     exc_type=ImportError,
 )
 
-from PySide6 import QtQml  # noqa: E402
+from PySide6 import QtQml  # type: ignore[import-not-found]  # noqa: E402
 
 
 def _load_component(name: str) -> QtQml.QQmlComponent:
@@ -31,15 +30,17 @@ def _load_component(name: str) -> QtQml.QQmlComponent:
     with resources.as_file(qml_dir / name) as path:
         engine = QtQml.QQmlEngine()
         comp = QtQml.QQmlComponent(engine, str(path))
-        comp._engine = engine  # prevent engine from being garbage-collected
+        setattr(comp, "_engine", engine)  # prevent engine from being garbage-collected
         return comp
 
 
-def test_option_prompt_emits_index(qt_app):
+def test_option_prompt_emits_index(qt_app) -> None:
     comp = _load_component("OptionPrompt.qml")
-    dialog = comp.create()
+    dialog_obj = comp.create()
+    assert dialog_obj is not None
+    dialog = cast(Any, dialog_obj)
     dialog.setProperty("options", ["a", "b"])
-    captured = {}
+    captured: dict[str, int] = {}
 
     def _got(i: int) -> None:
         captured["index"] = i
@@ -52,10 +53,12 @@ def test_option_prompt_emits_index(qt_app):
     dialog.deleteLater()
 
 
-def test_confirm_prompt_accepts(qt_app):
+def test_confirm_prompt_accepts(qt_app) -> None:
     comp = _load_component("ConfirmPrompt.qml")
-    dialog = comp.create()
-    result = {"ok": False}
+    dialog_obj = comp.create()
+    assert dialog_obj is not None
+    dialog = cast(Any, dialog_obj)
+    result: dict[str, bool] = {"ok": False}
     dialog.accepted.connect(lambda: result.__setitem__("ok", True))
     dialog.accept()
     qt_app.processEvents()
@@ -63,13 +66,13 @@ def test_confirm_prompt_accepts(qt_app):
     dialog.deleteLater()
 
 
-def test_show_prompt_general_store_sends_action(qt_app, monkeypatch):
+def test_show_prompt_general_store_sends_action(qt_app, monkeypatch) -> None:
     from bang_py.ui import BangUI
 
     ui = BangUI()
-    called = {}
+    called: dict[str, dict[str, object]] = {}
 
-    def fake_send(payload: dict) -> None:
+    def fake_send(payload: dict[str, object]) -> None:
         called["payload"] = payload
 
     monkeypatch.setattr(ui, "_send_action", fake_send)

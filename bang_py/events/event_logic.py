@@ -1,12 +1,10 @@
 """Event deck related utilities for GameManager."""
 
-# mypy: ignore-errors
-
 from __future__ import annotations
 
 from collections import deque
 import random
-from typing import Any
+from typing import Any, cast
 
 from .event_decks import EventCard, create_high_noon_deck, create_fistful_deck
 from ..cards.roles import SheriffRoleCard
@@ -35,7 +33,7 @@ class EventLogicMixin:
         if not self.event_deck:
             return
         self.current_event = self.event_deck.popleft()
-        self.event_flags.clear()
+        self.event_flags = EventFlags()
         self.current_event.apply(self)
 
     def _initialize_event_deck(self: GameManagerProtocol) -> None:
@@ -60,7 +58,7 @@ class EventLogicMixin:
                 random.shuffle(deck_list)
                 deck_list.append(final)
             deck = deque(deck_list)
-        return deck
+        return cast(deque[EventCard] | None, deck)
 
     def _prepare_fistful_deck(self: GameManagerProtocol) -> deque[EventCard] | None:
         """Create and shuffle the Fistful of Cards event deck."""
@@ -73,7 +71,7 @@ class EventLogicMixin:
                 random.shuffle(deck_list)
                 deck_list.append(final)
             deck = deque(deck_list)
-        return deck
+        return cast(deque[EventCard] | None, deck)
 
     def _apply_event_start_effects(self: GameManagerProtocol, player: Player) -> Player | None:
         """Run start-of-turn event logic."""
@@ -95,7 +93,9 @@ class EventLogicMixin:
 
         return player
 
-    def _sheriff_event_updates(self: GameManagerProtocol, player, pre_ghost: bool):
+    def _sheriff_event_updates(
+        self: GameManagerProtocol, player: Player, pre_ghost: bool
+    ) -> Player:
         """Update sheriff counters and remove Ghost Town revivals."""
         if isinstance(player.role, SheriffRoleCard):
             self._increment_sheriff_turns()
@@ -109,7 +109,7 @@ class EventLogicMixin:
         if self.event_deck and self.sheriff_turns >= 2:
             self.draw_event_card()
 
-    def _ghost_town_cleanup(self: GameManagerProtocol, player):
+    def _ghost_town_cleanup(self: GameManagerProtocol, player: Player) -> Player:
         """Remove revived ghosts after two sheriff turns."""
         removed = False
         for pl in self._players:
@@ -128,7 +128,7 @@ class EventLogicMixin:
                         player = self._players[idx]
         return player
 
-    def _process_new_identity(self: GameManagerProtocol, player) -> None:
+    def _process_new_identity(self: GameManagerProtocol, player: Player) -> None:
         if self.event_flags.get("new_identity") and player.metadata.unused_character:
             if self.prompt_new_identity(player):
                 self.apply_new_identity(player)
@@ -188,7 +188,7 @@ class EventLogicMixin:
             self.draw_card(player, 2)
             self.event_flags["dead_man_used"] = True
 
-    def _maybe_revive_ghost_town(self: GameManagerProtocol, player) -> bool:
+    def _maybe_revive_ghost_town(self: GameManagerProtocol, player: Player) -> bool:
         if self.event_flags.get("ghost_town") and not player.is_alive():
             player.health = 1
             player.metadata.ghost_revived = True
@@ -199,7 +199,7 @@ class EventLogicMixin:
             return True
         return False
 
-    def _handle_vendetta(self: GameManagerProtocol, player) -> bool:
+    def _handle_vendetta(self: GameManagerProtocol, player: Player) -> bool:
         if not self.event_flags.get("vendetta") or player in self.event_flags.get(
             "vendetta_used", set()
         ):
