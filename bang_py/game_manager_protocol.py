@@ -98,9 +98,11 @@ class GameManagerProtocol(Protocol):
 
     def _hand_limit(self, player: Player) -> int:
         """Return the maximum hand size for ``player``."""
+        ...
 
     def _discard_to_limit(self, player: Player, limit: int) -> None:
         """Discard cards from ``player`` until ``limit`` is met."""
+        ...
 
     def discard_card(self, player: Player, card: BaseCard) -> None:
         """Remove ``card`` from ``player``'s hand and discard it."""
@@ -116,6 +118,7 @@ class GameManagerProtocol(Protocol):
 
     def _notify_damage_listeners(self, player: Player, source: Player | None) -> None:
         """Inform damage listeners of health loss."""
+        ...
 
     def blood_brothers_transfer(self, donor: Player, target: Player) -> bool:
         """Transfer one life from ``donor`` to ``target`` if allowed."""
