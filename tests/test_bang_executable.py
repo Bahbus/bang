@@ -20,7 +20,7 @@ pytestmark = [
 def test_bang_executable_exits(tmp_path):
     try:
         subprocess.run(["make", "build-exe"], check=True)
-        exe = Path("dist/bang.exe" if sys.platform.startswith("win") else "dist/bang")
+        exe = Path("dist/bang/bang.exe" if sys.platform.startswith("win") else "dist/bang/bang")
         env = os.environ.copy()
         env["QT_QPA_PLATFORM"] = "offscreen"
         env["BANG_AUTO_CLOSE"] = "1"

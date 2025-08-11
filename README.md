@@ -203,29 +203,29 @@ sudo apt install libgl1 libxkbcommon0 libegl1
 
 These packages provide the OpenGL and keyboard functionality that PySide6 needs.
 
-## Building a Windows Executable
+## Building a Windows Installer
 
-`pyinstaller` can bundle the UI into a standalone Windows executable. Install the
-build dependencies and run the target:
+`pyinstaller` bundles the UI into a directory containing `bang.exe` and its assets.
+WiX then packages that directory into an MSI installer. Install the build dependencies
+and run the target:
 
 ```bash
 uv sync --extra dev
 uv run pre-commit install
-make build-exe
+make build-msi
 ```
 
-The command produces `dist/bang.exe`. Launch it on Windows by double-clicking or
-from the command line:
+The command produces `dist/bang.msi`. Run the installer on Windows and then launch
+`bang.exe` from the Start menu or the command line:
 
 ```cmd
 bang.exe
 ```
-The entry script now sets the Qt plugin path automatically. When running the
-executable non-interactively, set `BANG_AUTO_CLOSE=1` to exit shortly after
-startup.
-A GitHub Actions workflow builds this executable for each tagged release and
-automatically attaches `bang.exe` to the release as a downloadable asset. The workflow
-needs the `contents: write` permission (or a PAT) to upload the file.
+The entry script now sets the Qt plugin path automatically. When running the executable
+non-interactively, set `BANG_AUTO_CLOSE=1` to exit shortly after startup. A GitHub
+Actions workflow builds this installer for each tagged release and automatically
+attaches `bang.msi` to the release as a downloadable asset. The workflow needs the
+`contents: write` permission (or a PAT) to upload the file.
 
 ## Running Tests
 

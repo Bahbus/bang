@@ -1,10 +1,17 @@
+
 .RECIPEPREFIX := >
-.PHONY: build-exe lint test
+.PHONY: build-exe build-msi lint test
 
 build-exe:
 >mkdir -p build/bang
 >echo "[Paths]\nPrefix=." > build/bang/qt.conf
 >uv run pyinstaller scripts/bang.spec
+
+build-msi: build-exe
+>heat dir dist/bang --out bang.wixobj --cg BangFiles
+>candle scripts/bang.wxs
+>light bang.wixobj scripts/bang.wixobj -ext WixUIExtension -out dist/bang.msi
+>signtool sign /fd SHA256 /a dist/bang.msi
 >uv run python scripts/generate_checksums.py
 
 lint:
