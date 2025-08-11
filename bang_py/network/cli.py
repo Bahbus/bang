@@ -8,6 +8,7 @@ import logging
 from collections.abc import Sequence
 
 from .server import BangServer
+from .token_utils import generate_join_token
 
 
 def main(argv: Sequence[str] | None = None) -> None:
@@ -39,7 +40,14 @@ def main(argv: Sequence[str] | None = None) -> None:
     )
 
     if args.show_token:
-        logging.info(server.generate_join_token())
+        logging.info(
+            generate_join_token(
+                server.host,
+                server.port,
+                server.room_code,
+                server.token_key,
+            )
+        )
         return
 
     asyncio.run(server.start())

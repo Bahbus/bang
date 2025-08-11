@@ -11,6 +11,8 @@ DEFAULT_TOKEN_KEY = b"xPv7Sx0hWCLo5A9HhF_zvg87gdRSB8OYBjWM7lV-H2I="
 
 ENV_TOKEN_KEY = "BANG_TOKEN_KEY"
 
+__all__ = ["generate_join_token", "parse_join_token", "DEFAULT_TOKEN_KEY"]
+
 
 def _token_key_bytes(key: bytes | str | None) -> bytes:
     """Return ``key`` as bytes or read it from ``BANG_TOKEN_KEY``.
