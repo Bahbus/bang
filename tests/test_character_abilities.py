@@ -10,6 +10,9 @@ from bang_py.characters.sid_ketchum import SidKetchum
 from bang_py.characters.uncle_will import UncleWill
 from bang_py.characters.calamity_janet import CalamityJanet
 from bang_py.characters.bart_cassidy import BartCassidy
+from bang_py.characters.vera_custer import VeraCuster
+from bang_py.characters.willy_the_kid import WillyTheKid
+from bang_py.helpers import has_ability
 
 
 def test_sid_ketchum_heal_ability() -> None:
@@ -91,3 +94,26 @@ def test_bart_cassidy_draws_on_damage() -> None:
     bart.take_damage(1)
     gm.on_player_damaged(bart, attacker)
     assert len(bart.hand) == 1
+
+
+def test_vera_custer_copies_other_ability() -> None:
+    random.seed(0)
+    gm = GameManager()
+    vera = Player("Vera", character=VeraCuster())
+    willy = Player("Willy", character=WillyTheKid())
+    target = Player("Target")
+    for p in (vera, willy, target):
+        gm.add_player(p)
+
+    assert isinstance(vera.character, VeraCuster)
+    assert isinstance(willy.character, WillyTheKid)
+    vera.character.copy_ability(gm, vera, willy)
+    assert has_ability(vera, WillyTheKid)
+
+    vera.hand.extend([BangCard(), BangCard()])
+    gm.play_card(vera, vera.hand[0], target)
+    gm.play_card(vera, vera.hand[0], target)
+    assert not vera.hand
+
+    gm.reset_turn_flags(vera)
+    assert not has_ability(vera, WillyTheKid)
