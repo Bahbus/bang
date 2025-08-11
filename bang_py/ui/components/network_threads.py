@@ -15,6 +15,7 @@ from websockets import (
     WebSocketException,
     connect,
 )  # type: ignore[import-not-found]
+from websockets.protocol import State  # type: ignore[import-not-found]
 
 from ...network.server import BangServer
 
@@ -101,7 +102,7 @@ class ClientThread(_QThread):
         self.loop.close()
 
     def stop(self) -> None:
-        if self.websocket and not self.websocket.closed:
+        if self.websocket and self.websocket.state is State.OPEN:
             fut = asyncio.run_coroutine_threadsafe(self.websocket.close(), self.loop)
             try:
                 fut.result(timeout=1)
@@ -149,7 +150,7 @@ class ClientThread(_QThread):
             asyncio.run_coroutine_threadsafe(self._send(msg), self.loop)
 
     async def _send(self, msg: str) -> None:
-        if not self.websocket or self.websocket.closed:
+        if not self.websocket or self.websocket.state is not State.OPEN:
             self.message_received.emit("Send error: not connected")
             return
         try:

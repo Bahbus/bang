@@ -27,7 +27,7 @@ class BangUI(QtCore.QObject):
         super().__init__()
         self.theme = theme or get_current_theme()
         self.view = QtQuick.QQuickView()
-        self.view.setResizeMode(QtQuick.QQuickView.SizeRootObjectToView)
+        self.view.setResizeMode(QtQuick.QQuickView.ResizeMode.SizeRootObjectToView)
         qml_dir = resources.files("bang_py.ui") / "qml"
         with resources.as_file(qml_dir / "Main.qml") as qml_path:
             self.view.setSource(QtCore.QUrl.fromLocalFile(str(qml_path)))
@@ -156,7 +156,7 @@ class BangUI(QtCore.QObject):
     # QML interaction -------------------------------------------------
     def _build_game_view(self) -> None:
         if self.root is not None:
-            QtCore.QMetaObject.invokeMethod(self.root, "showGame")
+            QtCore.QMetaObject.invokeMethod(cast(QtCore.QObject, self.root), b"showGame")
             self.game_root = cast(QtCore.QObject | None, self.root.property("gameBoardItem"))
             if self.game_root is not None:
                 self.game_root.setProperty("theme", self.theme)
@@ -328,13 +328,13 @@ class BangUI(QtCore.QObject):
                 text = str(data["message"])
                 self.game_root.setProperty("logText", cur + text + "\n")
                 if "BangCard" in text:
-                    QtCore.QMetaObject.invokeMethod(self.game_root, "playBang")
+                    QtCore.QMetaObject.invokeMethod(self.game_root, b"playBang")
                 if "GatlingCard" in text:
-                    QtCore.QMetaObject.invokeMethod(self.game_root, "playManyBangs")
+                    QtCore.QMetaObject.invokeMethod(self.game_root, b"playManyBangs")
                 if "IndiansCard" in text:
-                    QtCore.QMetaObject.invokeMethod(self.game_root, "playIndians")
+                    QtCore.QMetaObject.invokeMethod(self.game_root, b"playIndians")
                 if "MissedCard" in text:
-                    QtCore.QMetaObject.invokeMethod(self.game_root, "playMissed")
+                    QtCore.QMetaObject.invokeMethod(self.game_root, b"playMissed")
             if "players" in data:
                 self._update_players(data["players"])
             if "hand" in data:
@@ -389,9 +389,10 @@ class BangUI(QtCore.QObject):
             pix = loader.compose_card(ctype, rank, suit, cset, name)
             if not pix.isNull():
                 buffer = QtCore.QBuffer()
-                buffer.open(QtCore.QIODevice.WriteOnly)
+                buffer.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
                 pix.save(buffer, "PNG")
-                encoded = QtCore.QByteArray(buffer.data()).toBase64().data().decode()
+                encoded_bytes = cast(bytes, QtCore.QByteArray(buffer.data()).toBase64().data())
+                encoded = encoded_bytes.decode()
                 source = f"data:image/png;base64,{encoded}"
             else:
                 source = ""
