@@ -287,6 +287,7 @@ class BangUI(QtCore.QObject):
             dialog.open()
             loop.exec()
             dialog.deleteLater()
+            self._run_next_prompt()
             return
 
         def _accepted() -> None:
