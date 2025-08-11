@@ -1,4 +1,4 @@
-"""Minimal shuffled deck supporting card draws and additions."""
+"""Shuffled deck supporting card draws and additions."""
 
 from __future__ import annotations
 

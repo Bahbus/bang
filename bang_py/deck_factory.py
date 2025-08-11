@@ -1,4 +1,4 @@
-"""Build decks with balanced suits and optional expansion cards."""
+"""Construct decks with balanced suits and optional expansions."""
 
 from __future__ import annotations
 
