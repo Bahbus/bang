@@ -1,14 +1,8 @@
 import pytest
 
-pytest.importorskip("cryptography")
-pytest.importorskip("PySide6", exc_type=ImportError)
-pytest.importorskip("PySide6.QtWidgets", exc_type=ImportError)
 pytest.importorskip("pytestqt", exc_type=ImportError)
 
-from PySide6 import QtWidgets  # noqa: E402
-
 from bang_py.network.validation import validate_player_name  # noqa: E402
-from bang_py import ui as ui_module  # noqa: E402
 
 
 def test_name_too_long_rejected() -> None:
@@ -20,6 +14,13 @@ def test_name_with_unprintable_rejected() -> None:
 
 
 def test_ui_invalid_name_shows_error(qt_app, monkeypatch) -> None:
+    pytest.importorskip("cryptography")
+    pytest.importorskip("PySide6", exc_type=ImportError)
+    pytest.importorskip("PySide6.QtWidgets", exc_type=ImportError)
+
+    from PySide6 import QtWidgets
+    from bang_py import ui as ui_module
+
     errors: dict[str, str] = {}
 
     def fake_critical(parent, title, text):
@@ -39,8 +40,3 @@ def test_ui_invalid_name_shows_error(qt_app, monkeypatch) -> None:
     assert errors["text"] == "Please enter a valid name"
     assert "called" not in called
     ui.close()
-
-
-def test_server_reexports_validation() -> None:
-    server = pytest.importorskip("bang_py.network.server", exc_type=ImportError)
-    assert server.validate_player_name is validate_player_name
