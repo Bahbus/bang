@@ -8,10 +8,10 @@ build-exe:
 >uv run pyinstaller scripts/bang.spec
 
 build-msi: build-exe
->heat dir dist/bang -out bang-files.wxs -cg BangFiles -dr INSTALLDIR -gg -srd -sw5150
->candle -b dist/bang -o bang-files.wixobj bang-files.wxs
->candle -b dist/bang -o scripts/bang.wixobj scripts/bang.wxs
->light bang-files.wixobj scripts/bang.wixobj -b dist/bang -ext WixUIExtension -out dist/bang.msi
+>heat dir dist/bang -out bang-files.wxs -cg BangFiles -dr INSTALLDIR -gg -srd -sw5150 -var var.DistDir
+>candle -dDistDir=dist/bang -o bang-files.wixobj bang-files.wxs
+>candle -dDistDir=dist/bang -o scripts/bang.wixobj scripts/bang.wxs
+>light bang-files.wixobj scripts/bang.wixobj -dDistDir=dist/bang -ext WixUIExtension -out dist/bang.msi
 >if [ -n "$$PFX_PATH" ] && [ -n "$$PFX_PASS" ]; then \
 >  signtool sign /fd SHA256 /f "$$PFX_PATH" /p "$$PFX_PASS" dist/bang.msi; \
 >else \
