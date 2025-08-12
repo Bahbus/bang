@@ -12,6 +12,9 @@ permissions:
 jobs:
   build-msi:
     runs-on: windows-latest
+    env:
+      PFX_B64: ${{ secrets.WINDOWS_PFX }}
+      PFX_PASS: ${{ secrets.WINDOWS_PFX_PASS }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -34,10 +37,10 @@ jobs:
         shell: bash
         run: uv --version
       - name: Import code signing certificate
-        if: ${{ secrets.WINDOWS_PFX && secrets.WINDOWS_PFX_PASS }}
+        if: ${{ env.PFX_B64 != '' && env.PFX_PASS != '' }}
         env:
-          PFX_B64: ${{ secrets.WINDOWS_PFX }}
-          PFX_PASS: ${{ secrets.WINDOWS_PFX_PASS }}
+          PFX_B64: ${{ env.PFX_B64 }}
+          PFX_PASS: ${{ env.PFX_PASS }}
         shell: pwsh
         run: |
           $pfxPath = "$env:RUNNER_TEMP\cert.pfx"
