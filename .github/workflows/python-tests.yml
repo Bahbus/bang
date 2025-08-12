@@ -28,6 +28,8 @@ jobs:
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Install dependencies
         run: uv sync --extra dev
+      - name: Verify uv installation
+        run: uv --version
       - name: Run pre-commit
         run: uv run --extra dev pre-commit run --files $(git ls-files '*.py')
       - name: Run mypy

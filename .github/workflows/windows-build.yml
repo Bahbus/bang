@@ -22,13 +22,17 @@ jobs:
         shell: bash
         run: curl -LsSf https://astral.sh/uv/install.ps1 | powershell -noprofile -
       - name: Add uv to PATH
-        shell: bash
-        run: echo "$HOME/AppData/Local/uv/bin" >> $GITHUB_PATH
+        shell: pwsh
+        run: |
+          echo "$env:USERPROFILE\AppData\Local\uv\bin" >> $env:GITHUB_PATH
       - name: Install dependencies
         shell: bash
         run: uv sync --extra dev
       - name: Install WiX Toolset
         run: choco install wixtoolset --yes
+      - name: Verify uv installation
+        shell: bash
+        run: uv --version
       - name: Build installer
         shell: bash
         run: make build-msi
