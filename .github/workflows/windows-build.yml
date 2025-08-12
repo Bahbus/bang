@@ -33,6 +33,18 @@ jobs:
       - name: Verify uv installation
         shell: bash
         run: uv --version
+      - name: Import code signing certificate
+        if: ${{ secrets.WINDOWS_PFX && secrets.WINDOWS_PFX_PASS }}
+        env:
+          PFX_B64: ${{ secrets.WINDOWS_PFX }}
+          PFX_PASS: ${{ secrets.WINDOWS_PFX_PASS }}
+        shell: pwsh
+        run: |
+          $pfxPath = "$env:RUNNER_TEMP\cert.pfx"
+          [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:PFX_B64))
+          certutil -f -p "$env:PFX_PASS" -importpfx "$pfxPath"
+          "PFX_PATH=$pfxPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PFX_PASS=$env:PFX_PASS" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Build installer
         shell: bash
         run: make build-msi
