@@ -11,7 +11,11 @@ build-msi: build-exe
 >heat dir dist/bang --out bang.wixobj --cg BangFiles
 >candle scripts/bang.wxs
 >light bang.wixobj scripts/bang.wixobj -ext WixUIExtension -out dist/bang.msi
->signtool sign /fd SHA256 /a dist/bang.msi
+>if [ -n "$$PFX_PATH" ] && [ -n "$$PFX_PASS" ]; then \
+>  signtool sign /fd SHA256 /f "$$PFX_PATH" /p "$$PFX_PASS" dist/bang.msi; \
+>else \
+>  echo "Skipping signing"; \
+>fi
 >uv run python scripts/generate_checksums.py
 
 lint:
