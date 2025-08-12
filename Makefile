@@ -10,8 +10,8 @@ build-exe:
 build-msi: build-exe
 >heat dir dist/bang -out bang-files.wxs -cg BangFiles -dr INSTALLDIR -gg -srd -sw5150
 >candle bang-files.wxs -o bang-files.wixobj
->candle scripts/bang.wxs -o bang-script.wixobj
->light bang-files.wixobj bang-script.wixobj -ext WixUIExtension -out dist/bang.msi
+>candle scripts/bang.wxs -o scripts/bang.wixobj
+>light bang-files.wixobj scripts/bang.wixobj -ext WixUIExtension -out dist/bang.msi
 >if [ -n "$$PFX_PATH" ] && [ -n "$$PFX_PASS" ]; then \
 >  signtool sign /fd SHA256 /f "$$PFX_PATH" /p "$$PFX_PASS" dist/bang.msi; \
 >else \
