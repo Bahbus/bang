@@ -20,9 +20,10 @@ jobs:
           python-version: '3.13-dev'
       - name: Install uv
         shell: bash
-        run: |
-          curl -LsSf https://astral.sh/uv/install.ps1 | powershell -noprofile -
-          echo "$HOME/AppData/Local/uv/bin" >> $GITHUB_PATH
+        run: curl -LsSf https://astral.sh/uv/install.ps1 | powershell -noprofile -
+      - name: Add uv to PATH
+        shell: bash
+        run: echo "$HOME/AppData/Local/uv/bin" >> $GITHUB_PATH
       - name: Install dependencies
         shell: bash
         run: uv sync --extra dev
