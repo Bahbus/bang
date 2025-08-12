@@ -22,19 +22,17 @@ jobs:
         with:
           python-version: '3.13-dev'
       - name: Install uv
-        shell: bash
-        run: curl -LsSf https://astral.sh/uv/install.ps1 | powershell -noprofile -
-      - name: Add uv to PATH
         shell: pwsh
         run: |
-          echo "$env:USERPROFILE\AppData\Local\uv\bin" >> $env:GITHUB_PATH
+          irm https://astral.sh/uv/install.ps1 | iex
+          "$env:USERPROFILE\AppData\Local\uv\bin" >> $env:GITHUB_PATH
       - name: Install dependencies
-        shell: bash
+        shell: pwsh
         run: uv sync --extra dev
       - name: Install WiX Toolset
         run: choco install wixtoolset --yes
       - name: Verify uv installation
-        shell: bash
+        shell: pwsh
         run: uv --version
       - name: Import code signing certificate
         if: ${{ env.PFX_B64 != '' && env.PFX_PASS != '' }}
