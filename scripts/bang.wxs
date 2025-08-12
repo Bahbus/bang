@@ -18,7 +18,7 @@
         <Directory Id="ApplicationProgramsFolder" Name="Bang" />
       </Directory>
     </Directory>
-    <Icon Id="BangIcon" SourceFile="dist/bang/bang.exe" />
+    <Icon Id="BangIcon" SourceFile="bang.exe" />
     <Component Id="BangShortcut" Directory="ApplicationProgramsFolder">
       <Shortcut Id="ApplicationStartMenuShortcut" Name="Bang"
                 Target="[INSTALLDIR]bang.exe" WorkingDirectory="INSTALLDIR"
