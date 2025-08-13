@@ -32,7 +32,15 @@ qt_libs = [
     lib
     for lib in collect_dynamic_libs('PySide6')
     if Path(lib[0]).name.startswith(
-        ('Qt6Core', 'Qt6Gui', 'Qt6Quick', 'Qt6Qml', 'Qt6Widgets')
+        (
+            'Qt6Core',
+            'Qt6Gui',
+            'Qt6Quick',
+            'Qt6QuickControls2',
+            'Qt6QuickTemplates2',
+            'Qt6Qml',
+            'Qt6Widgets',
+        )
     )
 ]
 
