@@ -3,7 +3,7 @@
   <Product Id="*" Name="Bang" Manufacturer="Bang" Version="0.1.0" Language="1033"
            UpgradeCode="{90c8636b-9051-4fc6-b97d-cffbfd8b9baf}">
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
-    <MediaTemplate />
+    <MediaTemplate EmbedCab="yes" />
     <Feature Id="MainFeature" Title="Bang" Level="1">
       <ComponentGroupRef Id="BangFiles" />
       <ComponentRef Id="BangShortcut" />
