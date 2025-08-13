@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 """PyInstaller spec for building ``bang`` in a directory layout."""
 
+from pathlib import Path
 from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
 from glob import glob
 
@@ -27,13 +28,25 @@ qml_paths = [
     for path in glob(pattern)
 ]
 
+qt_libs = [
+    lib
+    for lib in collect_dynamic_libs('PySide6')
+    if Path(lib[0]).name.startswith(
+        ('Qt6Core', 'Qt6Gui', 'Qt6Quick', 'Qt6Qml', 'Qt6Widgets')
+    )
+]
+
 a = Analysis(
     ['../pyinstaller_entry.py'],
     pathex=[],
-    binaries=collect_dynamic_libs('PySide6'),
+    binaries=qt_libs,
     datas=asset_paths + qml_paths,
     hiddenimports=
-        collect_submodules('PySide6')
+        collect_submodules('PySide6.QtCore')
+        + collect_submodules('PySide6.QtGui')
+        + collect_submodules('PySide6.QtQuick')
+        + collect_submodules('PySide6.QtQml')
+        + collect_submodules('PySide6.QtWidgets')
         + collect_submodules('websockets')
         + ['bang_py.card_handlers.dispatch', 'bang_py.card_handlers.bang_handlers'],
     hookspath=[],
@@ -54,8 +67,8 @@ exe = EXE(
     name='bang',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
-    upx=False,
+    strip=True,
+    upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
@@ -70,8 +83,8 @@ coll = COLLECT(
     exe,
     a.binaries,
     a.datas,
-    strip=False,
-    upx=False,
+    strip=True,
+    upx=True,
     upx_exclude=[],
     name='bang',
 )
