@@ -20,11 +20,18 @@ asset_paths = [
     for path in glob(pattern)
 ]
 
+qml_patterns = ('../bang_py/ui/qml/*.qml',)
+qml_paths = [
+    (path, 'bang_py/ui/qml')
+    for pattern in qml_patterns
+    for path in glob(pattern)
+]
+
 a = Analysis(
     ['../pyinstaller_entry.py'],
     pathex=[],
     binaries=collect_dynamic_libs('PySide6'),
-    datas=asset_paths,
+    datas=asset_paths + qml_paths,
     hiddenimports=
         collect_submodules('PySide6')
         + collect_submodules('websockets')
