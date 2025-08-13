@@ -38,6 +38,8 @@ qt_libs = [
             'Qt6Quick',
             'Qt6QuickControls2',
             'Qt6QuickTemplates2',
+            'Qt6QuickLayouts',
+            'Qt6Multimedia',
             'Qt6Qml',
             'Qt6Widgets',
         )
@@ -53,6 +55,8 @@ a = Analysis(
         collect_submodules('PySide6.QtCore')
         + collect_submodules('PySide6.QtGui')
         + collect_submodules('PySide6.QtQuick')
+        + collect_submodules('PySide6.QtQuickLayouts')
+        + collect_submodules('PySide6.QtMultimedia')
         + collect_submodules('PySide6.QtQml')
         + collect_submodules('PySide6.QtWidgets')
         + collect_submodules('websockets')
