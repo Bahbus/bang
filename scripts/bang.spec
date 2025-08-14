@@ -2,7 +2,11 @@
 """PyInstaller spec for building ``bang`` in a directory layout."""
 
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
+from PyInstaller.utils.hooks import (
+    collect_dynamic_libs,
+    collect_submodules,
+    collect_qml_files,
+)
 from glob import glob
 
 asset_patterns = (
@@ -46,11 +50,16 @@ qt_libs = [
     )
 ]
 
+qt_qml = collect_qml_files(
+    "PySide6",
+    filters=("QtQuick/*", "QtQuick/Controls/*", "QtQuick/Layouts/*", "QtMultimedia/*"),
+)
+
 a = Analysis(
     ['../pyinstaller_entry.py'],
     pathex=[],
     binaries=qt_libs,
-    datas=asset_paths + qml_paths,
+    datas=asset_paths + qml_paths + qt_qml,
     hiddenimports=
         collect_submodules('PySide6.QtCore')
         + collect_submodules('PySide6.QtGui')
